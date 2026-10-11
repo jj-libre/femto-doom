@@ -233,15 +233,18 @@ static void P_LoadThings(int16_t lump, int16_t map)
 {
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
 
+	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
+
 #if defined LOW_MEMORY
 	if (map == 1 || map == 8)
 	{
-		_g_thingPoolSize = mapThingCount;
+		_g_thingPoolSize = 0;
+		for (int16_t i = 0; i < mapThingCount; i++)
+			if (P_MapThingSpawns(&data[i]))
+				_g_thingPoolSize++;
 	}
 	else
 	{
-		const mapthing_t *data = W_GetMapLumpByNum(lump);
-
 		_g_thingPoolSize = 0;
 		for (int16_t i = 0; i < mapThingCount; i++)
 		{
@@ -256,7 +259,10 @@ static void P_LoadThings(int16_t lump, int16_t map)
 		}
 	}
 #else
-	_g_thingPoolSize = mapThingCount;
+	_g_thingPoolSize = 0;
+	for (int16_t i = 0; i < mapThingCount; i++)
+		if (P_MapThingSpawns(&data[i]))
+			_g_thingPoolSize++;
 #endif
 
 	_g_thingPool = Z_CallocLevel(_g_thingPoolSize * sizeof(mobj_t));

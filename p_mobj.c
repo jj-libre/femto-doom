@@ -992,6 +992,20 @@ static void P_SpawnPlayer(int16_t playerx, int16_t playery, int8_t playerangle)
 // Deaf monsters/do not react to sound.
 #define MTF_AMBUSH              8
 
+boolean P_MapThingSpawns(const mapthing_t __far* mthing)
+{
+    if (mthing->type == 1)
+        return true;
+
+    if (_g_gameskill == sk_baby || _g_gameskill == sk_easy)
+        return (mthing->options & MTF_EASY) != 0;
+    else if (_g_gameskill == sk_hard || _g_gameskill == sk_nightmare)
+        return (mthing->options & MTF_HARD) != 0;
+    else
+        return (mthing->options & MTF_NORMAL) != 0;
+}
+
+
 void P_SpawnMapThing(const mapthing_t __far* mthing)
 {
     int16_t     i;
@@ -999,7 +1013,8 @@ void P_SpawnMapThing(const mapthing_t __far* mthing)
     fixed_t x;
     fixed_t y;
 
-    // check for players specially
+    if (!P_MapThingSpawns(mthing))
+        return;
 
     //Only care about start spot for player 1.
     if (mthing->type == 1)
@@ -1007,13 +1022,6 @@ void P_SpawnMapThing(const mapthing_t __far* mthing)
         P_SpawnPlayer(mthing->x, mthing->y, mthing->angle);
         return;
     }
-
-    // check for apropriate skill level
-    if (_g_gameskill == sk_baby || _g_gameskill == sk_easy ?
-            !(mthing->options & MTF_EASY) :
-            _g_gameskill == sk_hard || _g_gameskill == sk_nightmare ?
-            !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
-        return;
 
     // find which type to spawn
 
