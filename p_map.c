@@ -217,7 +217,7 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
 
   thing->floorz = _g_tmfloorz;
   thing->ceilingz = _g_tmceilingz;
-  thing->dropoffz = _g_tmdropoffz;        // killough 11/98
+  P_Ext(thing)->dropoffz = _g_tmdropoffz;        // killough 11/98
 
   thing->x = x;
   thing->y = y;
@@ -353,9 +353,9 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
       if (tmthing->z+tmthing->height < thing->z)
   return true;    // underneath
 
-      if (tmthing->target && (tmthing->target->type == thing->type))
+      if (P_Ext(tmthing)->target && (P_Ext(tmthing)->target->type == thing->type))
       {
-  if (thing == tmthing->target)
+  if (thing == P_Ext(tmthing)->target)
     return true;                // Don't hit same species as originator.
   else
     if (thing->type != MT_PLAYER) // Explode, but do no damage.
@@ -369,12 +369,12 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
   if (!(thing->flags & MF_SOLID)) {
       return true;
   } else {
-      tmthing->momx = -tmthing->momx;
-      tmthing->momy = -tmthing->momy;
+      P_Ext(tmthing)->momx = -P_Ext(tmthing)->momx;
+      P_Ext(tmthing)->momy = -P_Ext(tmthing)->momy;
       if (!(tmthing->flags & MF_NOGRAVITY))
         {
-    tmthing->momx >>= 2;
-    tmthing->momy >>= 2;
+    P_Ext(tmthing)->momx >>= 2;
+    P_Ext(tmthing)->momy >>= 2;
         }
       return false;
   }
@@ -386,7 +386,7 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
       // damage / explode
 
       damage = ((P_Random()%8)+1)*mobjinfo[tmthing->type].damage;
-      P_DamageMobj (thing, tmthing, tmthing->target, damage);
+      P_DamageMobj (thing, tmthing, P_Ext(tmthing)->target, damage);
 
       // don't traverse any more
       return false;
@@ -686,7 +686,7 @@ boolean P_TryMove(mobj_t __far* thing, fixed_t x, fixed_t y)
     oldy = thing->y;
     thing->floorz = _g_tmfloorz;
     thing->ceilingz = _g_tmceilingz;
-    thing->dropoffz = _g_tmdropoffz;      // killough 11/98: keep track of dropoffs
+    P_Ext(thing)->dropoffz = _g_tmdropoffz;      // killough 11/98: keep track of dropoffs
     thing->x = x;
     thing->y = y;
 

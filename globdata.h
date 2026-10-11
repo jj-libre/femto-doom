@@ -191,8 +191,11 @@ extern mobj_t    __far*__far* _g_blocklinks;           // for thing chains
 extern const byte __far* _g_rejectmatrix;
 
 
-extern mobj_t __far*      _g_thingPool;
+extern mobjext_t __far*   _g_thingPool;
 extern int16_t _g_thingPoolSize;
+
+extern mobj_t __far*      _g_staticPool;
+extern int16_t _g_staticPoolSize;
 
 
 //******************************************************************************

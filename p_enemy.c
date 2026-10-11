@@ -70,13 +70,13 @@ static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
 boolean P_CheckMeleeRange(mobj_t __far* actor)
 {
-  mobj_t __far* pl = actor->target;
+  mobj_t __far* pl = P_Ext(actor)->target;
 
   return
     pl &&
     (P_AproxDistance(pl->x-actor->x, pl->y-actor->y) <
      MELEERANGE - 20*FRACUNIT + mobjinfo[pl->type].radius) &&
-    P_CheckSight(actor, actor->target);
+    P_CheckSight(actor, P_Ext(actor)->target);
 }
 
 
@@ -87,7 +87,7 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
 {
   fixed_t dist;
 
-  if (!P_CheckSight(actor, actor->target))
+  if (!P_CheckSight(actor, P_Ext(actor)->target))
     return false;
 
   if (actor->flags & MF_JUSTHIT)
@@ -97,12 +97,12 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
       return true;
   }
 
-  if (actor->reactiontime)
+  if (P_Ext(actor)->reactiontime)
     return false;       // do not attack yet
 
   // OPTIMIZE: get this from a global checksight
-  dist = P_AproxDistance ( actor->x-actor->target->x,
-                           actor->y-actor->target->y) - 64*FRACUNIT;
+  dist = P_AproxDistance ( actor->x-P_Ext(actor)->target->x,
+                           actor->y-P_Ext(actor)->target->y) - 64*FRACUNIT;
 
   if (!mobjinfo[actor->type].meleestate)
     dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -131,7 +131,7 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
 static void P_DoNewChaseDir(mobj_t __far* actor, fixed_t deltax, fixed_t deltay)
 {
   int16_t xdir, ydir, tdir;
-  uint8_t olddir = actor->movedir;
+  uint8_t olddir = P_Ext(actor)->movedir;
   uint8_t turnaround = olddir;
 
   if (turnaround != DI_NODIR)         // find reverse direction
@@ -147,7 +147,7 @@ static void P_DoNewChaseDir(mobj_t __far* actor, fixed_t deltax, fixed_t deltay)
 
   // try direct route
   if (xdir != DI_NODIR && ydir != DI_NODIR && turnaround !=
-      (actor->movedir = deltay < 0 ? deltax > 0 ? DI_SOUTHEAST : DI_SOUTHWEST :
+      (P_Ext(actor)->movedir = deltay < 0 ? deltax > 0 ? DI_SOUTHEAST : DI_SOUTHWEST :
        deltax > 0 ? DI_NORTHEAST : DI_NORTHWEST) && P_TryWalk(actor))
     return;
 
@@ -156,33 +156,33 @@ static void P_DoNewChaseDir(mobj_t __far* actor, fixed_t deltax, fixed_t deltay)
     tdir = xdir, xdir = ydir, ydir = tdir;
 
   if ((xdir == turnaround ? xdir = DI_NODIR : xdir) != DI_NODIR &&
-      (actor->movedir = xdir, P_TryWalk(actor)))
+      (P_Ext(actor)->movedir = xdir, P_TryWalk(actor)))
     return;         // either moved forward or attacked
 
   if ((ydir == turnaround ? ydir = DI_NODIR : ydir) != DI_NODIR &&
-      (actor->movedir = ydir, P_TryWalk(actor)))
+      (P_Ext(actor)->movedir = ydir, P_TryWalk(actor)))
     return;
 
   // there is no direct path to the player, so pick another direction.
-  if (olddir != DI_NODIR && (actor->movedir = olddir, P_TryWalk(actor)))
+  if (olddir != DI_NODIR && (P_Ext(actor)->movedir = olddir, P_TryWalk(actor)))
     return;
 
   // randomly determine direction of search
   if (P_Random() & 1)
   {
       for (tdir = DI_EAST; tdir <= DI_SOUTHEAST; tdir++)
-          if (tdir != turnaround && (actor->movedir = tdir, P_TryWalk(actor)))
+          if (tdir != turnaround && (P_Ext(actor)->movedir = tdir, P_TryWalk(actor)))
               return;
   }
   else
   {
       for (tdir = DI_SOUTHEAST; tdir >= DI_EAST; tdir--)
-          if (tdir != turnaround && (actor->movedir = tdir, P_TryWalk(actor)))
+          if (tdir != turnaround && (P_Ext(actor)->movedir = tdir, P_TryWalk(actor)))
               return;
   }
 
-  if ((actor->movedir = turnaround) != DI_NODIR && !P_TryWalk(actor))
-    actor->movedir = DI_NODIR;
+  if ((P_Ext(actor)->movedir = turnaround) != DI_NODIR && !P_TryWalk(actor))
+    P_Ext(actor)->movedir = DI_NODIR;
 }
 
 //
@@ -263,14 +263,14 @@ static boolean P_AvoidDropoff(mobj_t __far* actor)
 
 void P_NewChaseDir(mobj_t __far* actor)
 {
-    mobj_t __far* target = actor->target;
+    mobj_t __far* target = P_Ext(actor)->target;
     fixed_t deltax = target->x - actor->x;
     fixed_t deltay = target->y - actor->y;
 
     // killough 8/8/98: sometimes move away from target, keeping distance
     // Take advantage over an enemy without missiles, by keeping distance
 
-    if (actor->floorz - actor->dropoffz > FRACUNIT*24 &&
+    if (actor->floorz - P_Ext(actor)->dropoffz > FRACUNIT*24 &&
             actor->z <= actor->floorz &&
             !(actor->flags & MF_DROPOFF) &&
             P_AvoidDropoff(actor)) /* Move away from dropoff */
@@ -280,7 +280,7 @@ void P_NewChaseDir(mobj_t __far* actor)
         // If moving away from dropoff, set movecount to 1 so that
         // small steps are taken to get monster away from dropoff.
 
-        actor->movecount = 1;
+        P_Ext(actor)->movecount = 1;
         return;
     }
 
@@ -297,12 +297,12 @@ void P_NewChaseDir(mobj_t __far* actor)
 //
 void A_FaceTarget(mobj_t __far* actor)
 {
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   actor->flags &= ~MF_AMBUSH;
   actor->angle = R_PointToAngle2(actor->x, actor->y,
-                                 actor->target->x, actor->target->y);
-  if (actor->target->flags & MF_SHADOW)
+                                 P_Ext(actor)->target->x, P_Ext(actor)->target->y);
+  if (P_Ext(actor)->target->flags & MF_SHADOW)
     { // killough 5/5/98: remove dependence on order of evaluation:
       int32_t t = P_Random();
       actor->angle += (t-P_Random())<<21;
@@ -320,7 +320,7 @@ void A_PosAttack(mobj_t __far* actor)
   fixed_t slope;
   angle_t t;
 
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   A_FaceTarget(actor);
   angle = actor->angle;
@@ -340,7 +340,7 @@ void A_SPosAttack(mobj_t __far* actor)
   angle_t bangle;
   fixed_t slope;
 
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   S_StartSound(actor, sfx_shotgn);
   A_FaceTarget(actor);
@@ -362,7 +362,7 @@ void A_SPosAttack(mobj_t __far* actor)
 
 void A_TroopAttack(mobj_t __far* actor)
 {
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   A_FaceTarget(actor);
   if (P_CheckMeleeRange(actor))
@@ -370,38 +370,38 @@ void A_TroopAttack(mobj_t __far* actor)
       int16_t damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random()%8+1)*3;
-      P_DamageMobj(actor->target, actor, actor, damage);
+      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
       return;
     }
-  P_SpawnMissile(actor, actor->target, MT_TROOPSHOT);  // launch a missile
+  P_SpawnMissile(actor, P_Ext(actor)->target, MT_TROOPSHOT);  // launch a missile
 }
 
 void A_SargAttack(mobj_t __far* actor)
 {
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   A_FaceTarget(actor);
   if (P_CheckMeleeRange(actor))
     {
       int16_t damage = ((P_Random()%10)+1)*4;
-      P_DamageMobj(actor->target, actor, actor, damage);
+      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
     }
 }
 
 
 void A_BruisAttack(mobj_t __far* actor)
 {
-  if (!actor->target)
+  if (!P_Ext(actor)->target)
     return;
   if (P_CheckMeleeRange(actor))
     {
       int16_t damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random()%8+1)*10;
-      P_DamageMobj(actor->target, actor, actor, damage);
+      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
       return;
     }
-  P_SpawnMissile(actor, actor->target, MT_BRUISERSHOT);  // launch a missile
+  P_SpawnMissile(actor, P_Ext(actor)->target, MT_BRUISERSHOT);  // launch a missile
 }
 
 
@@ -455,7 +455,7 @@ void A_Fall(mobj_t __far* actor)
 //
 void A_Explode(mobj_t __far* thingy)
 {
-  P_RadiusAttack( thingy, thingy->target, 128 );
+  P_RadiusAttack( thingy, P_Ext(thingy)->target, 128 );
 }
 
 //
@@ -482,8 +482,8 @@ void A_BossDeath(mobj_t __far* mo)
     for (th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
         if (th->function == P_MobjThinker)
         {
-            mobj_t __far* mo2 = (mobj_t __far*) th;
-            if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
+            mobj_t __far* mo2 = P_MobjOfThinker(th);
+            if (mo2 != mo && mo2->type == mo->type && P_Ext(mo2)->health > 0)
                 return;         // other boss not dead
         }
 

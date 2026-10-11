@@ -75,7 +75,8 @@ static boolean P_ThingHeightClip(mobj_t __far* thing)
 
   thing->floorz = _g_tmfloorz;
   thing->ceilingz = _g_tmceilingz;
-  thing->dropoffz = _g_tmdropoffz;    /* killough 11/98: remember dropoffs */
+  if (!(thing->flags & MF_STATIC))
+    P_Ext(thing)->dropoffz = _g_tmdropoffz;    /* killough 11/98: remember dropoffs */
 
   if (onfloor)
     {
@@ -123,7 +124,7 @@ static void PIT_ChangeSector(mobj_t __far* thing)
 
   // crunch bodies to giblets
 
-  if (thing->health <= 0)
+  if (!(thing->flags & MF_STATIC) && P_Ext(thing)->health <= 0)
     {
     P_SetMobjState (thing, S_GIBS);
 

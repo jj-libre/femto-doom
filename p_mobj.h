@@ -177,6 +177,8 @@
 #define MF_COUNTITEM    0x00800000UL
 
 #define MF_POOLED       0x10000000UL
+#define MF_STATIC       0x20000000UL
+#define MF_REMOVED      0x40000000UL
 
 
 // Map Object definition.
@@ -200,9 +202,6 @@
 
 typedef struct mobj_s
 {
-    // List: thinker links.
-    thinker_t           thinker;
-
     // Info for drawing: position.
     fixed_t             x;
     fixed_t             y;
@@ -226,20 +225,44 @@ typedef struct mobj_s
     fixed_t             floorz;
     fixed_t             ceilingz;
 
-    // killough 11/98: the lowest floor over all contacted Sectors.
-    fixed_t             dropoffz;
-
     // For movement checking.
     fixed_t             radius;
     fixed_t             height;
+
+    const state_t*      state;
+    uint32_t            flags;
+
+                                       // phares 3/17/98
+    // a linked list of sectors where this object appears
+    struct msecnode_s __far* touching_sectorlist;
+
+    uint16_t            frame;  // might be ORed with FF_FULLBRIGHT
+
+    int16_t             tics;   // state tic counter
+
+    spritenum_t         sprite; // used to find patch_t and flip value
+
+    mobjtype_t          type;
+} mobj_t;
+
+typedef char assertMobjSize[sizeof(mobj_t) == 72 ? 1 : -1];
+
+// A thing of type MT_MISC0 or later lives in the static pool as a bare
+// mobj_t with MF_STATIC set. Every other thing is the mo of an mobjext_t:
+// its thinker sits at offset 0 of the allocation, the thinker list links it
+// and Z_Free releases it through that pointer.
+typedef struct
+{
+    // List: thinker links.
+    thinker_t           thinker;
+
+    // killough 11/98: the lowest floor over all contacted Sectors.
+    fixed_t             dropoffz;
 
     // Momentums, used to update position.
     fixed_t             momx;
     fixed_t             momy;
     fixed_t             momz;
-
-    const state_t*      state;
-    uint32_t            flags;
 
     // Thing being chased/attacked (or NULL),
     // also the originator for missiles.
@@ -248,15 +271,7 @@ typedef struct mobj_s
     // new field: last known enemy -- killough 2/15/98
     struct mobj_s __far*      lastenemy;
 
-                                       // phares 3/17/98
-    // a linked list of sectors where this object appears
-    struct msecnode_s __far* touching_sectorlist;
-
-    uint16_t            frame;  // might be ORed with FF_FULLBRIGHT
-
     int16_t             health;
-
-    int16_t             tics;   // state tic counter
 
     // killough 9/9/98: How long a monster pursues a target.
     uint16_t            pursuecount;
@@ -267,10 +282,6 @@ typedef struct mobj_s
     // Used by player to freeze a bit after teleporting.
     int16_t             reactiontime;
 
-    spritenum_t         sprite; // used to find patch_t and flip value
-
-    mobjtype_t          type;
-
     // Movement direction, movement generation (zig-zagging).
 
     uint8_t            movedir;
@@ -279,10 +290,11 @@ typedef struct mobj_s
     // matter what (even if shot by another object)
     uint8_t            threshold;
 
-    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
-} mobj_t;
+    mobj_t              mo;
+} mobjext_t;
 
-typedef char assertMobjSize[sizeof(mobj_t) == 116 ? 1 : -1];
+typedef char assertMobjExtSize[sizeof(mobjext_t) == 120 ? 1 : -1];
+
 
 
 // External declarations (fomerly in p_local.h) -- killough 5/2/98
@@ -298,13 +310,18 @@ mobj_t __far* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 void    P_RemoveMobj(mobj_t __far* th);
 boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state);
 
-void    P_MobjThinker(mobj_t __far* mobj);
+void    P_MobjThinker(thinker_t __far* th);
+
+mobjext_t __far* P_Ext(mobj_t __far* mobj);
+mobj_t __far* P_MobjOfThinker(thinker_t __far* th);
+void    P_RunStatics(void);
 
 void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z);
 void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, int16_t damage);
 mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_t type);
 void    P_SpawnPlayerMissile(mobj_t __far* source);
 boolean P_MapThingSpawns(const mapthing_t __far* mthing);
+boolean P_MapThingIsStatic(const mapthing_t __far* mthing);
 void    P_SpawnMapThing (const mapthing_t __far* mthing);
 
 struct player_s* P_MobjIsPlayer(const mobj_t __far* mobj);

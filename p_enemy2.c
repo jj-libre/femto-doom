@@ -46,7 +46,7 @@ static const fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-470
 
 static boolean P_Move(mobj_t __far* actor)
 {
-  if (actor->movedir == DI_NODIR)
+  if (P_Ext(actor)->movedir == DI_NODIR)
     return false;
 
 #ifdef RANGECHECK
@@ -56,8 +56,8 @@ static boolean P_Move(mobj_t __far* actor)
 
   int32_t speed = mobjinfo[actor->type].speed;
 
-  fixed_t tryx = actor->x + speed * xspeed[actor->movedir];
-  fixed_t tryy = actor->y + speed * yspeed[actor->movedir];
+  fixed_t tryx = actor->x + speed * xspeed[P_Ext(actor)->movedir];
+  fixed_t tryy = actor->y + speed * yspeed[P_Ext(actor)->movedir];
 
   boolean try_ok = P_TryMove(actor, tryx, tryy);
 
@@ -66,7 +66,7 @@ static boolean P_Move(mobj_t __far* actor)
       if (!_g_numspechit)
         return false;
 
-      actor->movedir = DI_NODIR;
+      P_Ext(actor)->movedir = DI_NODIR;
 
       /* if the special is not a door that can be opened, return false
        *
@@ -121,7 +121,7 @@ boolean P_TryWalk(mobj_t __far* actor)
 {
   if (!P_Move(actor))
     return false;
-  actor->movecount = P_Random()&15;
+  P_Ext(actor)->movecount = P_Random()&15;
   return true;
 }
 
@@ -163,12 +163,12 @@ static boolean P_LookForPlayers(mobj_t __far* actor, boolean allaround)
     if (!P_IsVisible(actor, player->mo, allaround))
         return false;
 
-    actor->target = player->mo;
+    P_Ext(actor)->target = player->mo;
 
     /* killough 9/9/98: give monsters a threshold towards getting players
      * (we don't want it to be too easy for a player with dogs :)
      */
-    actor->threshold = 60;
+    P_Ext(actor)->threshold = 60;
 
     return true;
 }
@@ -194,18 +194,18 @@ static boolean P_LookForTargets(mobj_t __far* actor, boolean allaround)
 void A_Look(mobj_t __far* actor)
 {
     mobj_t __far* targ = actor->subsector->sector->soundtarget;
-    actor->threshold = 0; // any shot will wake up
-    actor->pursuecount = 0;
+    P_Ext(actor)->threshold = 0; // any shot will wake up
+    P_Ext(actor)->pursuecount = 0;
 
     boolean seen = false;
 
     if (targ && (targ->flags & MF_SHOOTABLE) )
     {
-        actor->target = targ;
+        P_Ext(actor)->target = targ;
 
         if ( actor->flags & MF_AMBUSH )
         {
-            if (P_CheckSight (actor, actor->target))
+            if (P_CheckSight (actor, P_Ext(actor)->target))
                 seen = true;
         }
         else
@@ -254,31 +254,31 @@ void A_Look(mobj_t __far* actor)
 
 void A_Chase(mobj_t __far* actor)
 {
-    if (actor->reactiontime)
-        actor->reactiontime--;
+    if (P_Ext(actor)->reactiontime)
+        P_Ext(actor)->reactiontime--;
 
-    if (actor->threshold)
+    if (P_Ext(actor)->threshold)
     { /* modify target threshold */
-        if (!actor->target || actor->target->health <= 0)
-            actor->threshold = 0;
+        if (!P_Ext(actor)->target || P_Ext(P_Ext(actor)->target)->health <= 0)
+            P_Ext(actor)->threshold = 0;
         else
-            actor->threshold--;
+            P_Ext(actor)->threshold--;
     }
 
     /* turn towards movement direction if not there yet
    * killough 9/7/98: keep facing towards target if strafing or backing out
    */
 
-    if (actor->movedir < 8)
+    if (P_Ext(actor)->movedir < 8)
     {
-        int32_t delta = (actor->angle &= (((int32_t)7)<<29)) - (((int32_t)actor->movedir) << 29);
+        int32_t delta = (actor->angle &= (((int32_t)7)<<29)) - (((int32_t)P_Ext(actor)->movedir) << 29);
         if (delta > 0)
             actor->angle -= ANG90/2;
         else if (delta < 0)
             actor->angle += ANG90/2;
     }
 
-    if (!actor->target || !(actor->target->flags&MF_SHOOTABLE))
+    if (!P_Ext(actor)->target || !(P_Ext(actor)->target->flags&MF_SHOOTABLE))
     {
         if (!P_LookForTargets(actor,true)) // look for a new target
             P_SetMobjState(actor, mobjinfo[actor->type].spawnstate); // no new target
@@ -311,7 +311,7 @@ void A_Chase(mobj_t __far* actor)
     // check for missile attack
     if (mobjinfo[actor->type].missilestate)
     {
-        if (!(_g_gameskill < sk_nightmare && actor->movecount))
+        if (!(_g_gameskill < sk_nightmare && P_Ext(actor)->movecount))
         {
             if (P_CheckMissileRange(actor))
             {
@@ -323,27 +323,27 @@ void A_Chase(mobj_t __far* actor)
     }
 
 
-    if (!actor->threshold)
+    if (!P_Ext(actor)->threshold)
     {
-        if (actor->pursuecount)
-            actor->pursuecount--;
+        if (P_Ext(actor)->pursuecount)
+            P_Ext(actor)->pursuecount--;
         else
         {
             /* Our pursuit time has expired. We're going to think about
              * changing targets */
-            actor->pursuecount = BASETHRESHOLD;
+            P_Ext(actor)->pursuecount = BASETHRESHOLD;
 
           /* Unless (we have a live target
            *         and we can see it)
            *  try to find a new one; return if sucessful */
 
-            if (!(actor->target && actor->target->health > 0 && P_CheckSight(actor, actor->target)) && P_LookForTargets(actor, true))
+            if (!(P_Ext(actor)->target && P_Ext(P_Ext(actor)->target)->health > 0 && P_CheckSight(actor, P_Ext(actor)->target)) && P_LookForTargets(actor, true))
                 return;
         }
     }
 
     // chase towards player
-    if (--actor->movecount<0 || !P_Move(actor))
+    if (--P_Ext(actor)->movecount<0 || !P_Move(actor))
         P_NewChaseDir(actor);
 
     // make active sound

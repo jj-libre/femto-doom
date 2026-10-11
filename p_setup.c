@@ -114,8 +114,11 @@ mobj_t    __far*__far* _g_blocklinks;           // for thing chains
 
 const byte __far* _g_rejectmatrix;
 
-mobj_t __far*      _g_thingPool;
+mobjext_t __far*   _g_thingPool;
 int16_t _g_thingPoolSize;
+
+mobj_t __far*      _g_staticPool;
+int16_t _g_staticPoolSize;
 
 
 // Lump order in a map WAD: each map needs a couple of lumps
@@ -229,45 +232,55 @@ static void P_LoadNodes (int16_t lump)
  *
  */
 
+static boolean P_ThingLoads(const mapthing_t __far* mt, int16_t map)
+{
+#if defined LOW_MEMORY
+	if (map != 1 && map != 8
+	 && mt->type != 1	// start spot player 1
+	 && mt->type != 5	// blue keycard
+	 && mt->type != 6	// yellow keycard
+	 && mt->type != 13)	// red keycard
+		return false;
+#else
+	UNUSED(map);
+#endif
+	return P_MapThingSpawns(mt);
+}
+
+
+static void __far* P_CallocPool(int16_t count, uint16_t size)
+{
+	uint32_t bytes = (uint32_t)count * size;
+	if (bytes > UINT16_MAX)
+		I_Error("P_CallocPool: %li B", bytes);
+	return Z_CallocLevel(bytes);
+}
+
+
 static void P_LoadThings(int16_t lump, int16_t map)
 {
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
-
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
-#if defined LOW_MEMORY
-	if (map == 1 || map == 8)
-	{
-		_g_thingPoolSize = 0;
-		for (int16_t i = 0; i < mapThingCount; i++)
-			if (P_MapThingSpawns(&data[i]))
-				_g_thingPoolSize++;
-	}
-	else
-	{
-		_g_thingPoolSize = 0;
-		for (int16_t i = 0; i < mapThingCount; i++)
-		{
-			const mapthing_t *mt = &data[i];
-			if (mt->type == 1	// start spot player 1
-			 || mt->type == 5	// blue keycard
-			 || mt->type == 6	// yellow keycard
-			 || mt->type == 13)	// red keycard
-			 {
-				 _g_thingPoolSize++;
-			 }
-		}
-	}
-#else
-	_g_thingPoolSize = 0;
+	_g_thingPoolSize  = 0;
+	_g_staticPoolSize = 0;
 	for (int16_t i = 0; i < mapThingCount; i++)
-		if (P_MapThingSpawns(&data[i]))
+	{
+		if (!P_ThingLoads(&data[i], map))
+			continue;
+		if (P_MapThingIsStatic(&data[i]))
+			_g_staticPoolSize++;
+		else
 			_g_thingPoolSize++;
-#endif
+	}
 
-	_g_thingPool = Z_CallocLevel(_g_thingPoolSize * sizeof(mobj_t));
+	_g_thingPool = P_CallocPool(_g_thingPoolSize, sizeof(mobjext_t));
 	for (int16_t i = 0; i < _g_thingPoolSize; i++)
-		_g_thingPool[i].type = MT_NOTHING;
+		_g_thingPool[i].mo.type = MT_NOTHING;
+
+	_g_staticPool = P_CallocPool(_g_staticPoolSize, sizeof(mobj_t));
+	for (int16_t i = 0; i < _g_staticPoolSize; i++)
+		_g_staticPool[i].type = MT_NOTHING;
 }
 
 
@@ -277,29 +290,8 @@ static void P_LoadThings2(int16_t lump, int16_t map)
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
 	for (int16_t i = 0; i < mapThingCount; i++)
-	{
-		const mapthing_t __far* mt = &data[i];
-
-#if defined LOW_MEMORY
-		if (map == 1 || map == 8)
-		{
-			P_SpawnMapThing(mt);
-		}
-		else
-		{
-			if (mt->type == 1	// start spot player 1
-			 || mt->type == 5	// blue keycard
-			 || mt->type == 6	// yellow keycard
-			 || mt->type == 13)	// red keycard
-			 {
-				 P_SpawnMapThing(mt);
-			 }
-		}
-#else
-		// Do spawn all other stuff.
-		P_SpawnMapThing(mt);
-#endif
-	}
+		if (P_ThingLoads(&data[i], map))
+			P_SpawnMapThing(&data[i]);
 }
 
 //

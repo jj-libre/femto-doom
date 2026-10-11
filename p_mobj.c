@@ -98,7 +98,7 @@ boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state)
 
 static void P_ExplodeMissile(mobj_t __far* mo)
   {
-  mo->momx = mo->momy = mo->momz = 0;
+  P_Ext(mo)->momx = P_Ext(mo)->momy = P_Ext(mo)->momz = 0;
 
   P_SetMobjState (mo, mobjinfo[mo->type].deathstate);
 
@@ -277,23 +277,23 @@ static void P_SlideMove(mobj_t __far* mo)
 
       // trace along the three leading corners
 
-      if (mo->momx > 0)
+      if (P_Ext(mo)->momx > 0)
   leadx = mo->x + mo->radius, trailx = mo->x - mo->radius;
       else
   leadx = mo->x - mo->radius, trailx = mo->x + mo->radius;
 
-      if (mo->momy > 0)
+      if (P_Ext(mo)->momy > 0)
   leady = mo->y + mo->radius, traily = mo->y - mo->radius;
       else
   leady = mo->y - mo->radius, traily = mo->y + mo->radius;
 
       bestslidefrac = FRACUNIT+1;
 
-      P_PathTraverse(leadx, leady, leadx+mo->momx, leady+mo->momy,
+      P_PathTraverse(leadx, leady, leadx+P_Ext(mo)->momx, leady+P_Ext(mo)->momy,
          PT_ADDLINES, PTR_SlideTraverse);
-      P_PathTraverse(trailx, leady, trailx+mo->momx, leady+mo->momy,
+      P_PathTraverse(trailx, leady, trailx+P_Ext(mo)->momx, leady+P_Ext(mo)->momy,
          PT_ADDLINES, PTR_SlideTraverse);
-      P_PathTraverse(leadx, traily, leadx+mo->momx, traily+mo->momy,
+      P_PathTraverse(leadx, traily, leadx+P_Ext(mo)->momx, traily+P_Ext(mo)->momy,
          PT_ADDLINES, PTR_SlideTraverse);
 
       // move up to the wall
@@ -313,8 +313,8 @@ static void P_SlideMove(mobj_t __far* mo)
      * cph 2000/09//23: buggy code was only in Boom v2.01
      */
 
-    if (!P_TryMove(mo, mo->x, mo->y + mo->momy))
-      P_TryMove(mo, mo->x + mo->momx, mo->y);
+    if (!P_TryMove(mo, mo->x, mo->y + P_Ext(mo)->momy))
+      P_TryMove(mo, mo->x + P_Ext(mo)->momx, mo->y);
 
 
     break;
@@ -324,8 +324,8 @@ static void P_SlideMove(mobj_t __far* mo)
 
       if ((bestslidefrac -= 0x800) > 0)
   {
-    fixed_t newx = FixedMul(mo->momx, bestslidefrac);
-    fixed_t newy = FixedMul(mo->momy, bestslidefrac);
+    fixed_t newx = FixedMul(P_Ext(mo)->momx, bestslidefrac);
+    fixed_t newy = FixedMul(P_Ext(mo)->momy, bestslidefrac);
 
     if (!P_TryMove(mo, mo->x+newx, mo->y+newy))
       goto stairstep;
@@ -342,13 +342,13 @@ static void P_SlideMove(mobj_t __far* mo)
       if (bestslidefrac <= 0)
   break;
 
-      tmxmove = FixedMul(mo->momx, bestslidefrac);
-      tmymove = FixedMul(mo->momy, bestslidefrac);
+      tmxmove = FixedMul(P_Ext(mo)->momx, bestslidefrac);
+      tmymove = FixedMul(P_Ext(mo)->momy, bestslidefrac);
 
       P_HitSlideLine(bestslideline); // clip the moves
 
-      mo->momx = tmxmove;
-      mo->momy = tmymove;
+      P_Ext(mo)->momx = tmxmove;
+      P_Ext(mo)->momy = tmymove;
 
       /* killough 10/98: affect the bobbing the same way (but not voodoo dolls)
        * cph - DEMOSYNC? */
@@ -389,25 +389,25 @@ static void P_XYMovement(mobj_t __far* mo)
     player_t *player;
     fixed_t xmove, ymove;
 
-    if (!(mo->momx | mo->momy)) // Any momentum?
+    if (!(P_Ext(mo)->momx | P_Ext(mo)->momy)) // Any momentum?
     {
         return;
     }
 
     player = P_MobjIsPlayer(mo);
 
-    if (mo->momx > MAXMOVE)
-        mo->momx = MAXMOVE;
-    else if (mo->momx < -MAXMOVE)
-        mo->momx = -MAXMOVE;
+    if (P_Ext(mo)->momx > MAXMOVE)
+        P_Ext(mo)->momx = MAXMOVE;
+    else if (P_Ext(mo)->momx < -MAXMOVE)
+        P_Ext(mo)->momx = -MAXMOVE;
 
-    if (mo->momy > MAXMOVE)
-        mo->momy = MAXMOVE;
-    else if (mo->momy < -MAXMOVE)
-        mo->momy = -MAXMOVE;
+    if (P_Ext(mo)->momy > MAXMOVE)
+        P_Ext(mo)->momy = MAXMOVE;
+    else if (P_Ext(mo)->momy < -MAXMOVE)
+        P_Ext(mo)->momy = -MAXMOVE;
 
-    xmove = mo->momx;
-    ymove = mo->momy;
+    xmove = P_Ext(mo)->momx;
+    ymove = P_Ext(mo)->momy;
 
     do
     {
@@ -466,7 +466,7 @@ static void P_XYMovement(mobj_t __far* mo)
                 }
                 else // whatever else it is, it is now standing still in (x,y)
                 {
-                    mo->momx = mo->momy = 0;
+                    P_Ext(mo)->momx = P_Ext(mo)->momy = 0;
                 }
             }
         }
@@ -483,8 +483,8 @@ static void P_XYMovement(mobj_t __far* mo)
    * killough 11/98: only include bouncers hanging off ledges
    */
     if ((mo->flags & MF_CORPSE) &&
-            (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
-             mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
+            (P_Ext(mo)->momx > FRACUNIT/4 || P_Ext(mo)->momx < -FRACUNIT/4 ||
+             P_Ext(mo)->momy > FRACUNIT/4 || P_Ext(mo)->momy < -FRACUNIT/4) &&
             mo->floorz != mo->subsector->sector->floorheight)
         return;  // do not stop sliding if halfway off a step with some momentum
 
@@ -492,8 +492,8 @@ static void P_XYMovement(mobj_t __far* mo)
     // Stop voodoo dolls that have come to rest, despite any
     // moving corresponding player, except in old demos:
 
-    if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED &&
-            mo->momy > -STOPSPEED && mo->momy < STOPSPEED &&
+    if (P_Ext(mo)->momx > -STOPSPEED && P_Ext(mo)->momx < STOPSPEED &&
+            P_Ext(mo)->momy > -STOPSPEED && P_Ext(mo)->momy < STOPSPEED &&
             (!player || !(player->cmd.forwardmove | player->cmd.sidemove) ||
              (player->mo != mo)))
     {
@@ -506,7 +506,7 @@ static void P_XYMovement(mobj_t __far* mo)
                 && (player->mo == mo))
             P_SetMobjState(player->mo, S_PLAY);
 
-        mo->momx = mo->momy = 0;
+        P_Ext(mo)->momx = P_Ext(mo)->momy = 0;
 
         /* killough 10/98: kill any bobbing momentum too (except in voodoo dolls)
        * cph - DEMOSYNC - needs compatibility check?
@@ -533,8 +533,8 @@ static void P_XYMovement(mobj_t __far* mo)
        * cph - DEMOSYNC - need old code for Boom demos?
        */
 
-        mo->momx = FixedMul32OrigFriction(mo->momx);
-        mo->momy = FixedMul32OrigFriction(mo->momy);
+        P_Ext(mo)->momx = FixedMul32OrigFriction(P_Ext(mo)->momx);
+        P_Ext(mo)->momy = FixedMul32OrigFriction(P_Ext(mo)->momy);
 
         /* killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
        * This prevents problems with bobbing on ice, where it was not being
@@ -573,7 +573,7 @@ static void P_ZMovement(mobj_t __far* mo)
 
   // adjust altitude
 
-  mo->z += mo->momz;
+  mo->z += P_Ext(mo)->momz;
 
   // clip movement
 
@@ -581,21 +581,21 @@ static void P_ZMovement(mobj_t __far* mo)
     {
     // hit the floor
 
-    if (mo->momz < 0)
+    if (P_Ext(mo)->momz < 0)
       {
     if (P_MobjIsPlayer(mo) && /* killough 5/12/98: exclude voodoo dolls */
-        P_MobjIsPlayer(mo)->mo == mo && mo->momz < -GRAVITY*8)
+        P_MobjIsPlayer(mo)->mo == mo && P_Ext(mo)->momz < -GRAVITY*8)
       {
         // Squat down.
         // Decrease viewheight for a moment
         // after hitting the ground (hard),
         // and utter appropriate sound.
 
-        P_MobjIsPlayer(mo)->deltaviewheight = mo->momz>>3;
-        if (mo->health > 0) /* cph - prevent "oof" when dead */
+        P_MobjIsPlayer(mo)->deltaviewheight = P_Ext(mo)->momz>>3;
+        if (P_Ext(mo)->health > 0) /* cph - prevent "oof" when dead */
     S_StartSound (mo, sfx_oof);
       }
-  mo->momz = 0;
+  P_Ext(mo)->momz = 0;
       }
     mo->z = mo->floorz;
 
@@ -608,17 +608,17 @@ static void P_ZMovement(mobj_t __far* mo)
   else // still above the floor                                     // phares
     if (!(mo->flags & MF_NOGRAVITY))
       {
-  if (!mo->momz)
-    mo->momz = -GRAVITY;
-        mo->momz -= GRAVITY;
+  if (!P_Ext(mo)->momz)
+    P_Ext(mo)->momz = -GRAVITY;
+        P_Ext(mo)->momz -= GRAVITY;
       }
 
   if (mo->z + mo->height > mo->ceilingz)
     {
     // hit the ceiling
 
-    if (mo->momz > 0)
-      mo->momz = 0;
+    if (P_Ext(mo)->momz > 0)
+      P_Ext(mo)->momz = 0;
 
     mo->z = mo->ceilingz - mo->height;
 
@@ -695,7 +695,7 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 
     mo = P_SpawnMobj(x, y, ONFLOORZ, mobj->type);
     mo->angle = mobj->angle;
-    mo->reactiontime = 18;
+    P_Ext(mo)->reactiontime = 18;
 
     // remove the old monster,
 
@@ -703,20 +703,38 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 }
 
 
-void P_MobjThinker (mobj_t __far* mobj)
+mobjext_t __far* P_Ext(mobj_t __far* mobj)
 {
+    if (mobj->flags & MF_STATIC)
+        I_Error("P_Ext: static thing %i", mobj->type);
+
+    return (mobjext_t __far*)((uint8_t __far*)mobj - offsetof(mobjext_t, mo));
+}
+
+
+mobj_t __far* P_MobjOfThinker(thinker_t __far* th)
+{
+    return &((mobjext_t __far*)th)->mo;
+}
+
+
+void P_MobjThinker (thinker_t __far* th)
+{
+    mobjext_t __far* ext = (mobjext_t __far*)th;
+    mobj_t __far* mobj = &ext->mo;
+
     // momentum movement
-    if (mobj->momx | mobj->momy)
+    if (ext->momx | ext->momy)
     {
         P_XYMovement(mobj);
-        if (mobj->thinker.function != P_MobjThinker) // cph - Must've been removed
+        if (th->function != P_MobjThinker) // cph - Must've been removed
             return;       // killough - mobj was removed
     }
 
-    if (mobj->z != mobj->floorz || mobj->momz)
+    if (mobj->z != mobj->floorz || ext->momz)
     {
         P_ZMovement(mobj);
-        if (mobj->thinker.function != P_MobjThinker) // cph - Must've been removed
+        if (th->function != P_MobjThinker) // cph - Must've been removed
             return;       // killough - mobj was removed
     }
 
@@ -744,9 +762,9 @@ void P_MobjThinker (mobj_t __far* mobj)
         if (!_g_respawnmonsters)
             return;
 
-        mobj->movecount++;
+        ext->movecount++;
 
-        if (mobj->movecount < 12*35)
+        if (ext->movecount < 12*35)
             return;
 
         if (_g_leveltime & 31)
@@ -761,10 +779,8 @@ void P_MobjThinker (mobj_t __far* mobj)
 }
 
 
-//Thinker function for stuff that doesn't need to do anything
-//interesting.
 //Just cycles through the states. Allows sprite animation to work.
-static void P_MobjBrainlessThinker(mobj_t __far* mobj)
+static void P_CycleState(mobj_t __far* mobj)
 {
     // cycle through states,
     // calling action functions at transitions
@@ -777,6 +793,31 @@ static void P_MobjBrainlessThinker(mobj_t __far* mobj)
 
         if (!mobj->tics)
             P_SetMobjState (mobj, mobj->state->nextstate);
+    }
+}
+
+
+//Thinker function for stuff that doesn't need to do anything
+//interesting.
+static void P_MobjBrainlessThinker(thinker_t __far* th)
+{
+    P_CycleState(P_MobjOfThinker(th));
+}
+
+
+void P_RunStatics(void)
+{
+    for (int16_t i = 0; i < _g_staticPoolSize; i++)
+    {
+        mobj_t __far* mobj = &_g_staticPool[i];
+
+        if (mobj->type == MT_NOTHING)
+            continue;
+
+        if (mobj->flags & MF_REMOVED)
+            mobj->type = MT_NOTHING;
+        else
+            P_CycleState(mobj);
     }
 }
 
@@ -800,29 +841,40 @@ static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t __far* mobj)
 // P_SpawnMobj
 //
 
-static mobj_t __far* P_NewMobj()
+static mobj_t __far* P_NewMobj(mobjtype_t type)
 {
-    mobj_t __far* mobj = NULL;
+    mobjext_t __far* ext;
 
-    for(int16_t i = _g_thingPoolSize-1; i >= 0; i--)
+    if (type >= MT_MISC0)
     {
-        if(_g_thingPool[i].type == MT_NOTHING)
+        for (int16_t i = _g_staticPoolSize-1; i >= 0; i--)
         {
-            mobj = &_g_thingPool[i];
-            _fmemset (mobj, 0, sizeof (*mobj));
+            if (_g_staticPool[i].type == MT_NOTHING)
+            {
+                mobj_t __far* mobj = &_g_staticPool[i];
+                _fmemset (mobj, 0, sizeof (*mobj));
 
-            mobj->flags = MF_POOLED;
-            return mobj;
+                mobj->flags = MF_STATIC;
+                return mobj;
+            }
         }
     }
 
-    if(mobj == NULL)
+    for(int16_t i = _g_thingPoolSize-1; i >= 0; i--)
     {
-        mobj = Z_MallocLevel(sizeof(*mobj), NULL);
-        _fmemset (mobj, 0, sizeof (*mobj));
+        if(_g_thingPool[i].mo.type == MT_NOTHING)
+        {
+            ext = &_g_thingPool[i];
+            _fmemset (ext, 0, sizeof (*ext));
+
+            ext->mo.flags = MF_POOLED;
+            return &ext->mo;
+        }
     }
 
-    return mobj;
+    ext = Z_MallocLevel(sizeof(*ext), NULL);
+    _fmemset (ext, 0, sizeof (*ext));
+    return &ext->mo;
 }
 
 mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
@@ -830,7 +882,8 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
     const state_t*    st;
     const mobjinfo_t* info;
 
-    mobj_t __far*     mobj = P_NewMobj();
+    mobj_t __far*     mobj = P_NewMobj(type);
+    mobjext_t __far*  ext  = NULL;
 
     info = &mobjinfo[type];
     mobj->type = type;
@@ -839,10 +892,20 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
     mobj->radius = info->radius;
     mobj->height = info->height;                                      // phares
     mobj->flags |= info->flags;
-    mobj->health = info->spawnhealth;
 
-    if (_g_gameskill != sk_nightmare)
-        mobj->reactiontime = info->reactiontime;
+    if (mobj->flags & MF_STATIC)
+    {
+        if (mobj->flags & (MF_SHOOTABLE | MF_MISSILE | MF_COUNTKILL))
+            I_Error("P_SpawnMobj: static thing %i acts", type);
+    }
+    else
+    {
+        ext = P_Ext(mobj);
+        ext->health = info->spawnhealth;
+
+        if (_g_gameskill != sk_nightmare)
+            ext->reactiontime = info->reactiontime;
+    }
 
     P_Random(); // only to call random for compatibiltiy
     // do not set the state with P_SetMobjState,
@@ -860,17 +923,19 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 
     P_SetThingPosition (mobj);
 
-    mobj->dropoffz =           /* killough 11/98: for tracking dropoffs */
-            mobj->floorz   = mobj->subsector->sector->floorheight;
+    mobj->floorz   = mobj->subsector->sector->floorheight;
     mobj->ceilingz = mobj->subsector->sector->ceilingheight;
 
     mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
                                   mobj->ceilingz - mobj->height : z;
 
-    mobj->thinker.function = P_ThinkerFunctionForType(type, mobj);
-
-    mobj->target = mobj->lastenemy = NULL;
-    P_AddThinker (&mobj->thinker);
+    if (ext)
+    {
+        ext->dropoffz = mobj->floorz;   /* killough 11/98: for tracking dropoffs */
+        ext->thinker.function = P_ThinkerFunctionForType(type, mobj);
+        ext->target = ext->lastenemy = NULL;
+        P_AddThinker (&ext->thinker);
+    }
     if (!((mobj->flags ^ MF_COUNTKILL) & MF_COUNTKILL))
         _g_totallive++;
     return mobj;
@@ -901,10 +966,11 @@ void P_RemoveMobj(mobj_t __far* mobj)
   // CPhipps - only leave dead references in old demos; I hope lxdoom_1 level
   // demos are rare and don't rely on this. I hope.
 
-  if (!_g_demoplayback)
+  if (!_g_demoplayback && !(mobj->flags & MF_STATIC))
   {
-    mobj->target    = NULL;
-    mobj->lastenemy = NULL;
+    mobjext_t __far* ext = P_Ext(mobj);
+    ext->target    = NULL;
+    ext->lastenemy = NULL;
   }
   // free block
 
@@ -957,7 +1023,7 @@ static void P_SpawnPlayer(int16_t playerx, int16_t playery, int8_t playerangle)
   // set color translations for player sprites
 
   mobj->angle      = ANG45 * playerangle;
-  mobj->health     = p->health;
+  P_Ext(mobj)->health     = p->health;
 
   p->mo            = mobj;
   p->playerstate   = PST_LIVE;
@@ -1003,6 +1069,12 @@ boolean P_MapThingSpawns(const mapthing_t __far* mthing)
         return (mthing->options & MTF_HARD) != 0;
     else
         return (mthing->options & MTF_NORMAL) != 0;
+}
+
+
+boolean P_MapThingIsStatic(const mapthing_t __far* mthing)
+{
+    return mthing->type != 1 && P_FindDoomedNum(mthing->type) >= MT_MISC0;
 }
 
 
@@ -1062,7 +1134,7 @@ void P_SpawnPuff(fixed_t x,fixed_t y,fixed_t z)
   z += (t - P_Random())<<10;
 
   th = P_SpawnMobj (x,y,z, MT_PUFF);
-  th->momz = FRACUNIT;
+  P_Ext(th)->momz = FRACUNIT;
   th->tics -= P_Random()&3;
 
   if (th->tics < 1)
@@ -1085,7 +1157,7 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z,int16_t damage)
   fixed_t t = P_Random();
   z += (t - P_Random())<<10;
   th = P_SpawnMobj(x,y,z, MT_BLOOD);
-  th->momz = FRACUNIT*2;
+  P_Ext(th)->momz = FRACUNIT*2;
   th->tics -= P_Random()&3;
 
   if (th->tics < 1)
@@ -1113,9 +1185,9 @@ static void P_CheckMissileSpawn(mobj_t __far* th)
   // move a little forward so an angle can
   // be computed if it immediately explodes
 
-  th->x += (th->momx>>1);
-  th->y += (th->momy>>1);
-  th->z += (th->momz>>1);
+  th->x += (P_Ext(th)->momx>>1);
+  th->y += (P_Ext(th)->momy>>1);
+  th->z += (P_Ext(th)->momz>>1);
 
   // killough 8/12/98: for non-missile objects (e.g. grenades)
   if (!(th->flags & MF_MISSILE))
@@ -1141,7 +1213,7 @@ mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_
   if (mobjinfo[th->type].seesound)
     S_StartSound (th, mobjinfo[th->type].seesound);
 
-  th->target = source;    // where it came from
+  P_Ext(th)->target = source;    // where it came from
   an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);
 
   // fuzzy player
@@ -1154,8 +1226,8 @@ mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_
 
   th->angle = an;
   an >>= ANGLETOFINESHIFT;
-  th->momx = FixedMulAngle(mobjinfo[th->type].speed, finecosine(an));
-  th->momy = FixedMulAngle(mobjinfo[th->type].speed, finesine(  an));
+  P_Ext(th)->momx = FixedMulAngle(mobjinfo[th->type].speed, finecosine(an));
+  P_Ext(th)->momy = FixedMulAngle(mobjinfo[th->type].speed, finesine(  an));
 
   dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
   dist = dist / mobjinfo[th->type].speed;
@@ -1163,7 +1235,7 @@ mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_
   if (dist < 1)
     dist = 1;
 
-  th->momz = (dest->z - source->z) / dist;
+  P_Ext(th)->momz = (dest->z - source->z) / dist;
   P_CheckMissileSpawn (th);
 
   return th;
@@ -1201,11 +1273,11 @@ void P_SpawnPlayerMissile(mobj_t __far* source)
 	if (mobjinfo[th->type].seesound)
 		S_StartSound(th, mobjinfo[th->type].seesound);
 
-	th->target = source;
+	P_Ext(th)->target = source;
 	th->angle  = an;
-	th->momx   = FixedMulAngle(mobjinfo[th->type].speed,finecosine(an >> ANGLETOFINESHIFT));
-	th->momy   = FixedMulAngle(mobjinfo[th->type].speed,finesine(  an >> ANGLETOFINESHIFT));
-	th->momz   = FixedMul(mobjinfo[th->type].speed,slope);
+	P_Ext(th)->momx   = FixedMulAngle(mobjinfo[th->type].speed,finecosine(an >> ANGLETOFINESHIFT));
+	P_Ext(th)->momy   = FixedMulAngle(mobjinfo[th->type].speed,finesine(  an >> ANGLETOFINESHIFT));
+	P_Ext(th)->momz   = FixedMul(mobjinfo[th->type].speed,slope);
 
 	P_CheckMissileSpawn(th);
 }

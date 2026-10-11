@@ -74,8 +74,8 @@ static void P_BobAndThrust(player_t *player, int16_t angle, int8_t move)
 {
 	fixed_t x = FixedMulAngle(move * ORIG_FRICTION_FACTOR,finecosine(angle));
 	fixed_t y = FixedMulAngle(move * ORIG_FRICTION_FACTOR,finesine(  angle));
-	player->mo->momx += x;
-	player->mo->momy += y;
+	P_Ext(player->mo)->momx += x;
+	P_Ext(player->mo)->momy += y;
 	player->momx     += x;
 	player->momy     += y;
 }
@@ -382,8 +382,8 @@ void P_PlayerThink (player_t* player)
   // Reactiontime is used to prevent movement
   //  for a bit after a teleport.
 
-  if (player->mo->reactiontime)
-    player->mo->reactiontime--;
+  if (P_Ext(player->mo)->reactiontime)
+    P_Ext(player->mo)->reactiontime--;
   else
     P_MovePlayer (player);
 

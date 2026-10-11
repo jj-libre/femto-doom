@@ -251,7 +251,6 @@ void S_StartSound2(degenmobj_t __far* origin, sfxenum_t sfx_id)
 
     static struct fake_mobj
     {
-        thinker_t ununsed;
         degenmobj_t origin;
     } __far fm;
 

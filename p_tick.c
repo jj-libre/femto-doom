@@ -122,7 +122,7 @@ static void P_RemoveThingDelayed(thinker_t __far* thinker)
          * thinker->prev->next = thinker->next */
     (next->prev = thinker->prev)->next = next;
 
-    mobj_t __far* thing = (mobj_t __far*)thinker;
+    mobj_t __far* thing = P_MobjOfThinker(thinker);
 
     if(thing->flags & MF_POOLED)
         thing->type = MT_NOTHING;
@@ -150,7 +150,10 @@ void P_RemoveThinker(thinker_t __far* thinker)
 
 void P_RemoveThing(mobj_t __far* thing)
 {
-  thing->thinker.function = P_RemoveThingDelayed;
+  if (thing->flags & MF_STATIC)
+    thing->flags |= MF_REMOVED;
+  else
+    P_Ext(thing)->thinker.function = P_RemoveThingDelayed;
 }
 
 
@@ -202,6 +205,8 @@ static void P_RunThinkers (void)
 
         th = th_next;
     }
+
+    P_RunStatics();
 }
 
 

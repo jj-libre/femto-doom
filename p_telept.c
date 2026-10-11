@@ -53,7 +53,7 @@ static mobj_t __far* P_TeleportDestination(const line_t __far* line)
     thinker_t __far* th = NULL;
     while ((th = P_NextThinker(th)) != NULL)
       if (th->function == P_MobjThinker) {
-        mobj_t __far* m = (mobj_t __far*)th;
+        mobj_t __far* m = P_MobjOfThinker(th);
         if (m->type == MT_TELEPORTMAN  &&
             m->subsector->sector-_g_sectors == i)
             return m;
@@ -107,11 +107,11 @@ boolean EV_Teleport(const line_t __far* line, int16_t side, mobj_t __far* thing)
     /* don't move for a bit
      * cph - DEMOSYNC - BOOM had (player) here? */
           if (P_MobjIsPlayer(thing))
-            thing->reactiontime = 18;
+            P_Ext(thing)->reactiontime = 18;
 
           thing->angle = m->angle;
 
-          thing->momx = thing->momy = thing->momz = 0;
+          P_Ext(thing)->momx = P_Ext(thing)->momy = P_Ext(thing)->momz = 0;
 
     /* killough 10/98: kill all bobbing momentum too */
     if (player)

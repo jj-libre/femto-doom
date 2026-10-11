@@ -200,7 +200,7 @@ static boolean P_GiveBody(player_t *player, int16_t num)
   player->health += num;
   if (player->health > maxhealth)
     player->health = maxhealth;
-  player->mo->health = player->health;
+  P_Ext(player->mo)->health = player->health;
   return true;
 }
 
@@ -282,7 +282,7 @@ void P_TouchSpecialThing(mobj_t __far* special, mobj_t __far* toucher)
 
   // Dead thing touching.
   // Can happen with a sliding player corpse.
-  if (toucher->health <= 0)
+  if (P_Ext(toucher)->health <= 0)
     return;
 
     // Identify by sprite.
@@ -307,7 +307,7 @@ void P_TouchSpecialThing(mobj_t __far* special, mobj_t __far* toucher)
       player->health++;               // can go over 100%
       if (player->health > (maxhealth * 2))
         player->health = (maxhealth * 2);
-      player->mo->health = player->health;
+      P_Ext(player->mo)->health = player->health;
       player->message = GOTHTHBONUS; // Ty 03/22/98 - externalized
       break;
 
@@ -324,7 +324,7 @@ void P_TouchSpecialThing(mobj_t __far* special, mobj_t __far* toucher)
       player->health += soul_health;
       if (player->health > max_soul)
         player->health = max_soul;
-      player->mo->health = player->health;
+      P_Ext(player->mo)->health = player->health;
       player->message = GOTSUPER; // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
@@ -545,7 +545,7 @@ static void P_KillMobj(mobj_t __far* source, mobj_t __far* target)
         AM_Stop();    // don't die in auto map; switch view prior to dying
     }
 
-  if (target->health < -mobjinfo[target->type].spawnhealth && mobjinfo[target->type].xdeathstate)
+  if (P_Ext(target)->health < -mobjinfo[target->type].spawnhealth && mobjinfo[target->type].xdeathstate)
     P_SetMobjState (target, mobjinfo[target->type].xdeathstate);
   else
     P_SetMobjState (target, mobjinfo[target->type].deathstate);
@@ -598,7 +598,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
   if (!(target->flags & (MF_SHOOTABLE)))
     return; // shouldn't happen...
 
-  if (target->health <= 0)
+  if (P_Ext(target)->health <= 0)
     return;
 
   player = P_MobjIsPlayer(target);
@@ -619,7 +619,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
       fixed_t thrust = damage*(FRACUNIT>>3)*100/mobjinfo[target->type].mass;
 
       // make fall forwards sometimes
-      if ( target->health < damage && damage < 40
+      if ( P_Ext(target)->health < damage && damage < 40
            && target->z - inflictor->z > 64*FRACUNIT
            && P_Random() & 1)
         {
@@ -628,16 +628,16 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
         }
 
       ang >>= ANGLETOFINESHIFT;
-      target->momx += FixedMulAngle(thrust, finecosine(ang));
-      target->momy += FixedMulAngle(thrust, finesine(  ang));
+      P_Ext(target)->momx += FixedMulAngle(thrust, finecosine(ang));
+      P_Ext(target)->momy += FixedMulAngle(thrust, finesine(  ang));
     }
 
   // player specific
   if (player)
     {
       // end of game hell hack
-      if (target->subsector->sector->special == 11 && damage >= target->health)
-        damage = target->health - 1;
+      if (target->subsector->sector->special == 11 && damage >= P_Ext(target)->health)
+        damage = P_Ext(target)->health - 1;
 
       // Below certain threshold,
       // ignore damage in GOD mode.
@@ -672,15 +672,15 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
     }
 
   // do the damage
-  target->health -= damage;
-  if (target->health <= 0)
+  P_Ext(target)->health -= damage;
+  if (P_Ext(target)->health <= 0)
     {
       P_KillMobj (source, target);
       return;
     }
 
       if (player)
-        target->target = source;
+        P_Ext(target)->target = source;
 
   if (P_Random () < mobjinfo[target->type].painchance)
   {
@@ -689,11 +689,11 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
     P_SetMobjState(target, mobjinfo[target->type].painstate);
   }
 
-  target->reactiontime = 0;           // we're awake now...
+  P_Ext(target)->reactiontime = 0;           // we're awake now...
 
   /* killough 9/9/98: cleaned up, made more consistent: */
 
-  if (source && source != target && !target->threshold)
+  if (source && source != target && !P_Ext(target)->threshold)
     {
       /* if not intent on another player, chase after this one
        *
@@ -702,11 +702,11 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
        * killough 9/9/98: cleaned up, made more consistent:
        */
 
-      if (!target->lastenemy || target->lastenemy->health <= 0 || target->target != source) // remember last enemy - killough
-       target->lastenemy = target->target;
+      if (!P_Ext(target)->lastenemy || P_Ext(P_Ext(target)->lastenemy)->health <= 0 || P_Ext(target)->target != source) // remember last enemy - killough
+       P_Ext(target)->lastenemy = P_Ext(target)->target;
 
-      target->target    = source;
-      target->threshold = BASETHRESHOLD;
+      P_Ext(target)->target    = source;
+      P_Ext(target)->threshold = BASETHRESHOLD;
       if (target->state == &states[mobjinfo[target->type].spawnstate]
           && mobjinfo[target->type].seestate != S_NULL)
         P_SetMobjState (target, mobjinfo[target->type].seestate);
