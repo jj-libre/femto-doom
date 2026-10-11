@@ -353,9 +353,9 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
       if (tmthing->z+tmthing->height < thing->z)
   return true;    // underneath
 
-      if (P_Ext(tmthing)->target && (P_Ext(tmthing)->target->type == thing->type))
+      if (P_Ext(tmthing)->target && (P_Mobj(P_Ext(tmthing)->target)->type == thing->type))
       {
-  if (thing == P_Ext(tmthing)->target)
+  if (thing == P_Mobj(P_Ext(tmthing)->target))
     return true;                // Don't hit same species as originator.
   else
     if (thing->type != MT_PLAYER) // Explode, but do no damage.
@@ -386,7 +386,7 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
       // damage / explode
 
       damage = ((P_Random()%8)+1)*mobjinfo[tmthing->type].damage;
-      P_DamageMobj (thing, tmthing, P_Ext(tmthing)->target, damage);
+      P_DamageMobj (thing, tmthing, P_Mobj(P_Ext(tmthing)->target), damage);
 
       // don't traverse any more
       return false;
@@ -1220,40 +1220,42 @@ inline static void P_PutSecnode(msecnode_t __far* node)
 static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
   {
   msecnode_t __far* node;
+  zref_t sref = Z_Ref(s);
 
   node = _s_sector_list;
   while (node)
     {
-    if (node->m_sector == s)   // Already have a node for this sector?
+    if (node->m_sector == sref)   // Already have a node for this sector?
       {
-      node->m_thing = thing; // Yes. Setting m_thing says 'keep it'.
+      node->m_thing = Z_Ref(thing); // Yes. Setting m_thing says 'keep it'.
       return;
       }
-    node = node->m_tnext;
+    node = P_Node(node->m_tnext);
     }
 
   // Couldn't find an existing node for this sector. Add one at the head
   // of the list.
 
   node = P_GetSecnode();
+  zref_t nref = Z_Ref(node);
 
   // killough 4/4/98, 4/7/98: mark new nodes unvisited.
   node->visited = false;
 
-  node->m_sector = s;       // sector
-  node->m_thing  = thing;     // mobj
-  node->m_tprev  = NULL;    // prev node on Thing thread
-  node->m_tnext  = _s_sector_list;  // next node on Thing thread
+  node->m_sector = sref;       // sector
+  node->m_thing  = Z_Ref(thing);     // mobj
+  node->m_tprev  = 0;    // prev node on Thing thread
+  node->m_tnext  = Z_Ref(_s_sector_list);  // next node on Thing thread
   if (_s_sector_list)
-    _s_sector_list->m_tprev = node; // set back link on Thing
+    _s_sector_list->m_tprev = nref; // set back link on Thing
 
   // Add new node at head of sector thread starting at s->touching_thinglist
 
-  node->m_sprev  = NULL;    // prev node on sector thread
+  node->m_sprev  = 0;    // prev node on sector thread
   node->m_snext  = s->touching_thinglist; // next node on sector thread
   if (s->touching_thinglist)
-    node->m_snext->m_sprev = node;
-  s->touching_thinglist = node;
+    P_Node(node->m_snext)->m_sprev = nref;
+  s->touching_thinglist = nref;
   _s_sector_list = node;
   }
 
@@ -1264,10 +1266,10 @@ static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
 
 static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
   {
-  msecnode_t __far* tp;  // prev node on thing thread
-  msecnode_t __far* tn;  // next node on thing thread
-  msecnode_t __far* sp;  // prev node on sector thread
-  msecnode_t __far* sn;  // next node on sector thread
+  zref_t tp;  // prev node on thing thread
+  zref_t tn;  // next node on thing thread
+  zref_t sp;  // prev node on sector thread
+  zref_t sn;  // next node on sector thread
 
   if (node)
     {
@@ -1278,9 +1280,9 @@ static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
     tp = node->m_tprev;
     tn = node->m_tnext;
     if (tp)
-      tp->m_tnext = tn;
+      P_Node(tp)->m_tnext = tn;
     if (tn)
-      tn->m_tprev = tp;
+      P_Node(tn)->m_tprev = tp;
 
     // Unlink from the sector thread. This thread begins at
     // sector_t->touching_thinglist.
@@ -1288,16 +1290,16 @@ static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
     sp = node->m_sprev;
     sn = node->m_snext;
     if (sp)
-      sp->m_snext = sn;
+      P_Node(sp)->m_snext = sn;
     else
-      node->m_sector->touching_thinglist = sn;
+      P_Sector(node->m_sector)->touching_thinglist = sn;
     if (sn)
-      sn->m_sprev = sp;
+      P_Node(sn)->m_sprev = sp;
 
     // Return this node to the freelist
 
     P_PutSecnode(node);
-    return(tn);
+    return P_Node(tn);
     }
   return(NULL);
   }                             // phares 3/13/98
@@ -1381,8 +1383,8 @@ void P_CreateSecNodeList(mobj_t __far* thing)
   msecnode_t __far* node = _s_sector_list;
   while (node)
     {
-    node->m_thing = NULL;
-    node = node->m_tnext;
+    node->m_thing = 0;
+    node = P_Node(node->m_tnext);
     }
 
   tmthing = thing;
@@ -1408,7 +1410,7 @@ void P_CreateSecNodeList(mobj_t __far* thing)
 
   // Add the sector of the (x,y) point to sector_list.
 
-  P_AddSecnode(thing->subsector->sector,thing);
+  P_AddSecnode(P_Subsector(thing->subsector)->sector,thing);
 
   // Now delete any nodes that won't be used. These are the ones where
   // m_thing is still NULL.
@@ -1416,14 +1418,14 @@ void P_CreateSecNodeList(mobj_t __far* thing)
   node = _s_sector_list;
   while (node)
     {
-    if (node->m_thing == NULL)
+    if (node->m_thing == 0)
       {
       if (node == _s_sector_list)
-        _s_sector_list = node->m_tnext;
+        _s_sector_list = P_Node(node->m_tnext);
       node = P_DelSecnode(node);
       }
     else
-      node = node->m_tnext;
+      node = P_Node(node->m_tnext);
     }
 
   /* cph -
@@ -1436,7 +1438,7 @@ void P_CreateSecNodeList(mobj_t __far* thing)
    */
   tmthing = saved_tmthing;
 
-  thing->touching_sectorlist = _s_sector_list; // Attach to Thing's mobj_t
+  thing->touching_sectorlist = Z_Ref(_s_sector_list); // Attach to Thing's mobj_t
   _s_sector_list = NULL; // clear for next time
 }
 

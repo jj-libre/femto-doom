@@ -212,7 +212,7 @@ static void P_MovePlayer (player_t* player)
           P_BobAndThrust(player, (mo->angle-ANG90) >> ANGLETOFINESHIFT, cmd->sidemove);
         }
       }
-      if (mo->state == states+S_PLAY)
+      if (mo->state == S_PLAY)
         P_SetMobjState(mo,S_PLAY_RUN1);
     }
 }
@@ -289,7 +289,7 @@ static void P_PlayerInSpecialSector (player_t* player)
 {
   sector_t __far*   sector;
 
-  sector = player->mo->subsector->sector;
+  sector = P_Subsector(player->mo->subsector)->sector;
 
   // Falling, not all the way down yet?
   // Sector specials don't apply in mid-air
@@ -392,7 +392,7 @@ void P_PlayerThink (player_t* player)
   // Determine if there's anything about the sector you're in that's
   // going to affect you, like painful floors.
 
-  if (player->mo->subsector->sector->special)
+  if (P_Subsector(player->mo->subsector)->sector->special)
     P_PlayerInSpecialSector (player);
 
   // Check for weapon change.

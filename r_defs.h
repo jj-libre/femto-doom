@@ -91,20 +91,20 @@ typedef struct
   fixed_t floorheight;
   fixed_t ceilingheight;
 
-  mobj_t __far* soundtarget;   // thing that made a sound (or null)
   degenmobj_t soundorg;  // origin for any sounds played by the sector
-  mobj_t __far* thinglist;     // list of mobjs in sector
-
 
   // thinker_t for reversable actions
   void __far* floordata;    // jff 2/22/98 make thinkers on
   void __far* ceilingdata;  // floors, ceilings, lighting,
 
+  const struct line_s __far*__far*lines;
+
+  zref_t soundtarget;   // mobj_t that made a sound (or null)
+  zref_t thinglist;     // list of mobjs in sector
+
   // list of mobjs that are at least partially in the sector
   // thinglist is a subset of touching_thinglist
-  struct msecnode_s __far* touching_thinglist;
-
-  const struct line_s __far*__far*lines;
+  zref_t touching_thinglist;    // msecnode_t
 
   uint16_t validcount;        // if == validcount, already checked
   int16_t linecount;
@@ -120,7 +120,7 @@ typedef struct
 
 } sector_t;
 
-typedef char assertSectorSize[sizeof(sector_t) == 56 ? 1 : -1];
+typedef char assertSectorSize[sizeof(sector_t) == 52 ? 1 : -1];
 
 
 typedef struct {
@@ -236,14 +236,26 @@ typedef char assertLineSize[sizeof(line_t) == 32 ? 1 : -1];
 
 typedef struct msecnode_s
 {
-  sector_t          __far* m_sector; // a sector containing this object
-  struct mobj_s __far* m_thing;  // this object
-  struct msecnode_s __far* m_tprev;  // prev msecnode_t for this thing
-  struct msecnode_s __far* m_tnext;  // next msecnode_t for this thing
-  struct msecnode_s __far* m_sprev;  // prev msecnode_t for this sector
-  struct msecnode_s __far* m_snext;  // next msecnode_t for this sector
-  boolean visited; // killough 4/4/98, 4/7/98: used in search algorithms
+  zref_t m_sector; // a sector_t containing this object
+  zref_t m_thing;  // this mobj_t
+  zref_t m_tprev;  // prev msecnode_t for this thing
+  zref_t m_tnext;  // next msecnode_t for this thing
+  zref_t m_sprev;  // prev msecnode_t for this sector
+  zref_t m_snext;  // next msecnode_t for this sector
+  uint8_t visited; // killough 4/4/98, 4/7/98: used in search algorithms
 } msecnode_t;
+
+typedef char assertMsecnodeSize[sizeof(msecnode_t) == 14 ? 1 : -1];
+
+static inline msecnode_t __far* P_Node(zref_t ref)
+{
+  return Z_Ptr(ref);
+}
+
+static inline sector_t __far* P_Sector(zref_t ref)
+{
+  return Z_Ptr(ref);
+}
 
 //
 // The LineSeg.
@@ -302,6 +314,11 @@ typedef struct subsector_s
 } subsector_t;
 
 typedef char assertSubsectorSize[sizeof(subsector_t) == 4 ? 1 : -1];
+
+static inline subsector_t __far* P_Subsector(zref_t ref)
+{
+  return Z_Ptr(ref);
+}
 
 
 typedef struct {

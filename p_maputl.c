@@ -290,10 +290,10 @@ void P_UnsetThingPosition(mobj_t __far* thing)
        * pointers, allows head node pointers to be treated like everything else
        */
 
-      mobj_t __far*__far* sprev = thing->sprev;
-      mobj_t __far* snext = thing->snext;
+      zref_t __far* sprev = Z_Ptr(thing->sprev);
+      zref_t snext = thing->snext;
       if ((*sprev = snext))  // unlink from sector list
-        snext->sprev = sprev;
+        P_Mobj(snext)->sprev = thing->sprev;
 
         // phares 3/14/98
         //
@@ -308,8 +308,8 @@ void P_UnsetThingPosition(mobj_t __far* thing)
         // If this Thing is being removed entirely, then the calling
         // routine will clear out the nodes in sector_list.
 
-      P_SetSeclist(thing->touching_sectorlist);
-      thing->touching_sectorlist = NULL; //to be restored by P_SetThingPosition
+      P_SetSeclist(P_Node(thing->touching_sectorlist));
+      thing->touching_sectorlist = 0; //to be restored by P_SetThingPosition
     }
 
   if (!(thing->flags & MF_NOBLOCKMAP))
@@ -325,10 +325,10 @@ void P_UnsetThingPosition(mobj_t __far* thing)
        * linking.
        */
 
-      mobj_t __far* bnext;
-      mobj_t __far*__far* bprev = thing->bprev;
+      zref_t bnext;
+      zref_t __far* bprev = Z_Ptr(thing->bprev);
       if (bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
-        bnext->bprev = bprev;
+        P_Mobj(bnext)->bprev = thing->bprev;
     }
 }
 
@@ -341,7 +341,8 @@ void P_UnsetThingPosition(mobj_t __far* thing)
 
 void P_SetThingPosition(mobj_t __far* thing)
 {                                                      // link into subsector
-  subsector_t __far* ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
+  subsector_t __far* ss = R_PointInSubsector(thing->x, thing->y);
+  thing->subsector = Z_Ref(ss);
   if (!(thing->flags & MF_NOSECTOR))
     {
       // invisible things don't go into the sector links
@@ -349,12 +350,12 @@ void P_SetThingPosition(mobj_t __far* thing)
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
 
-      mobj_t __far*__far* link = &ss->sector->thinglist;
-      mobj_t __far* snext = *link;
+      zref_t __far* link = &ss->sector->thinglist;
+      zref_t snext = *link;
       if ((thing->snext = snext))
-        snext->sprev = &thing->snext;
-      thing->sprev = link;
-      *link = thing;
+        P_Mobj(snext)->sprev = Z_Ref(&thing->snext);
+      thing->sprev = Z_Ref(link);
+      *link = Z_Ref(thing);
 
       // phares 3/16/98
       //
@@ -383,15 +384,15 @@ void P_SetThingPosition(mobj_t __far* thing)
         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
         // pointers, allows head nodes to be treated like everything else
 
-        mobj_t __far*__far* link = &_g_blocklinks[blocky*_g_bmapwidth+blockx];
-        mobj_t __far* bnext = *link;
+        zref_t __far* link = &_g_blocklinks[blocky*_g_bmapwidth+blockx];
+        zref_t bnext = *link;
         if ((thing->bnext = bnext))
-          bnext->bprev = &thing->bnext;
-        thing->bprev = link;
-        *link = thing;
+          P_Mobj(bnext)->bprev = Z_Ref(&thing->bnext);
+        thing->bprev = Z_Ref(link);
+        *link = Z_Ref(thing);
       }
       else        // thing is off the map
-        thing->bnext = NULL, thing->bprev = NULL;
+        thing->bnext = 0, thing->bprev = 0;
     }
 }
 
@@ -460,7 +461,7 @@ boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*))
 {
   mobj_t __far* mobj;
   if (0 <= x && x < _g_bmapwidth && 0 <= y && y < _g_bmapheight)
-    for (mobj = _g_blocklinks[y*_g_bmapwidth+x]; mobj; mobj = mobj->bnext)
+    for (mobj = P_Mobj(_g_blocklinks[y*_g_bmapwidth+x]); mobj; mobj = P_Mobj(mobj->bnext))
       if (!func(mobj))
         return false;
   return true;

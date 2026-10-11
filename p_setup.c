@@ -101,7 +101,7 @@ const int16_t      __far* _g_blockmaplump;
 
 fixed_t   _g_bmaporgx, _g_bmaporgy;     // origin of block map
 
-mobj_t    __far*__far* _g_blocklinks;           // for thing chains
+zref_t    __far* _g_blocklinks;           // for thing chains
 
 //
 // REJECT
@@ -210,8 +210,8 @@ static void P_LoadSectors (int16_t lump)
       ss->special    = ms->special;
       ss->oldspecial = ms->special;
 
-      ss->thinglist = NULL;
-      ss->touching_thinglist = NULL;
+      ss->thinglist = 0;
+      ss->touching_thinglist = 0;
     }
 }
 

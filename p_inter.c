@@ -636,7 +636,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
   if (player)
     {
       // end of game hell hack
-      if (target->subsector->sector->special == 11 && damage >= P_Ext(target)->health)
+      if (P_Subsector(target->subsector)->sector->special == 11 && damage >= P_Ext(target)->health)
         damage = P_Ext(target)->health - 1;
 
       // Below certain threshold,
@@ -680,7 +680,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
     }
 
       if (player)
-        P_Ext(target)->target = source;
+        P_Ext(target)->target = Z_Ref(source);
 
   if (P_Random () < mobjinfo[target->type].painchance)
   {
@@ -702,12 +702,12 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
        * killough 9/9/98: cleaned up, made more consistent:
        */
 
-      if (!P_Ext(target)->lastenemy || P_Ext(P_Ext(target)->lastenemy)->health <= 0 || P_Ext(target)->target != source) // remember last enemy - killough
+      if (!P_Ext(target)->lastenemy || P_Ext(P_Mobj(P_Ext(target)->lastenemy))->health <= 0 || P_Ext(target)->target != Z_Ref(source)) // remember last enemy - killough
        P_Ext(target)->lastenemy = P_Ext(target)->target;
 
-      P_Ext(target)->target    = source;
+      P_Ext(target)->target    = Z_Ref(source);
       P_Ext(target)->threshold = BASETHRESHOLD;
-      if (target->state == &states[mobjinfo[target->type].spawnstate]
+      if (target->state == mobjinfo[target->type].spawnstate
           && mobjinfo[target->type].seestate != S_NULL)
         P_SetMobjState (target, mobjinfo[target->type].seestate);
     }

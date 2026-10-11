@@ -66,13 +66,13 @@ boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state)
     {
         if (state == S_NULL)
         {
-            mobj->state = (state_t *) S_NULL;
+            mobj->state = S_NULL;
             P_RemoveMobj (mobj);
             return false;
         }
 
         st = &states[state];
-        mobj->state = st;
+        mobj->state = state;
         mobj->tics = st->tics;
         mobj->sprite = st->sprite;
         mobj->frame = st->frame;
@@ -485,7 +485,7 @@ static void P_XYMovement(mobj_t __far* mo)
     if ((mo->flags & MF_CORPSE) &&
             (P_Ext(mo)->momx > FRACUNIT/4 || P_Ext(mo)->momx < -FRACUNIT/4 ||
              P_Ext(mo)->momy > FRACUNIT/4 || P_Ext(mo)->momy < -FRACUNIT/4) &&
-            mo->floorz != mo->subsector->sector->floorheight)
+            mo->floorz != P_Subsector(mo->subsector)->sector->floorheight)
         return;  // do not stop sliding if halfway off a step with some momentum
 
     // killough 11/98:
@@ -502,7 +502,7 @@ static void P_XYMovement(mobj_t __far* mo)
         // killough 10/98:
         // Don't affect main player when voodoo dolls stop, except in old demos:
 
-        if (player && (uint16_t)(player->mo->state - states - S_PLAY_RUN1) < 4
+        if (player && (uint16_t)(player->mo->state - S_PLAY_RUN1) < 4
                 && (player->mo == mo))
             P_SetMobjState(player->mo, S_PLAY);
 
@@ -675,7 +675,7 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 
     mo = P_SpawnMobj (mobj->x,
                       mobj->y,
-                      mobj->subsector->sector->floorheight,
+                      P_Subsector(mobj->subsector)->sector->floorheight,
                       MT_TFOG);
 
     // initiate teleport sound
@@ -748,7 +748,7 @@ void P_MobjThinker (thinker_t __far* th)
         // you can cycle through multiple states in a tic
 
         if (!mobj->tics)
-            if (!P_SetMobjState (mobj, mobj->state->nextstate) )
+            if (!P_SetMobjState (mobj, states[mobj->state].nextstate) )
                 return;     // freed itself
     }
     else
@@ -792,7 +792,7 @@ static void P_CycleState(mobj_t __far* mobj)
         // you can cycle through multiple states in a tic
 
         if (!mobj->tics)
-            P_SetMobjState (mobj, mobj->state->nextstate);
+            P_SetMobjState (mobj, states[mobj->state].nextstate);
     }
 }
 
@@ -913,18 +913,18 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 
     st = &states[info->spawnstate];
 
-    mobj->state  = st;
+    mobj->state  = info->spawnstate;
     mobj->tics   = st->tics;
     mobj->sprite = st->sprite;
     mobj->frame  = st->frame;
-    mobj->touching_sectorlist = NULL; // NULL head of sector list // phares 3/13/98
+    mobj->touching_sectorlist = 0; // NULL head of sector list // phares 3/13/98
 
     // set subsector and/or block links
 
     P_SetThingPosition (mobj);
 
-    mobj->floorz   = mobj->subsector->sector->floorheight;
-    mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+    mobj->floorz   = P_Subsector(mobj->subsector)->sector->floorheight;
+    mobj->ceilingz = P_Subsector(mobj->subsector)->sector->ceilingheight;
 
     mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
                                   mobj->ceilingz - mobj->height : z;
@@ -933,7 +933,7 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
     {
         ext->dropoffz = mobj->floorz;   /* killough 11/98: for tracking dropoffs */
         ext->thinker.function = P_ThinkerFunctionForType(type, mobj);
-        ext->target = ext->lastenemy = NULL;
+        ext->target = ext->lastenemy = 0;
         P_AddThinker (&ext->thinker);
     }
     if (!((mobj->flags ^ MF_COUNTKILL) & MF_COUNTKILL))
@@ -969,8 +969,8 @@ void P_RemoveMobj(mobj_t __far* mobj)
   if (!_g_demoplayback && !(mobj->flags & MF_STATIC))
   {
     mobjext_t __far* ext = P_Ext(mobj);
-    ext->target    = NULL;
-    ext->lastenemy = NULL;
+    ext->target    = 0;
+    ext->lastenemy = 0;
   }
   // free block
 
@@ -1213,7 +1213,7 @@ mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_
   if (mobjinfo[th->type].seesound)
     S_StartSound (th, mobjinfo[th->type].seesound);
 
-  P_Ext(th)->target = source;    // where it came from
+  P_Ext(th)->target = Z_Ref(source);    // where it came from
   an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);
 
   // fuzzy player
@@ -1273,7 +1273,7 @@ void P_SpawnPlayerMissile(mobj_t __far* source)
 	if (mobjinfo[th->type].seesound)
 		S_StartSound(th, mobjinfo[th->type].seesound);
 
-	P_Ext(th)->target = source;
+	P_Ext(th)->target = Z_Ref(source);
 	th->angle  = an;
 	P_Ext(th)->momx   = FixedMulAngle(mobjinfo[th->type].speed,finecosine(an >> ANGLETOFINESHIFT));
 	P_Ext(th)->momy   = FixedMulAngle(mobjinfo[th->type].speed,finesine(  an >> ANGLETOFINESHIFT));

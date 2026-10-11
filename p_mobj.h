@@ -43,6 +43,8 @@
 // We need the thinker_t stuff.
 #include "d_think.h"
 
+#include "z_zone.h"
+
 // We need the WAD data structure for Map things,
 // from the THINGS lump.
 #include "doomdata.h"
@@ -207,19 +209,23 @@ typedef struct mobj_s
     fixed_t             y;
     fixed_t             z;
 
-    // More list: links in sector (if needed)
-    struct mobj_s __far*      snext;
-    struct mobj_s __far*__far*     sprev; // killough 8/10/98: change to ptr-to-ptr
-
     //More drawing info: to determine current sprite.
     angle_t             angle;  // orientation
 
+    // More list: links in sector (if needed)
+    zref_t              snext;  // mobj_t
+    zref_t              sprev;  // the zref_t that points here
+
     // Interaction info, by BLOCKMAP.
     // Links in blocks (if needed).
-    struct mobj_s __far*      bnext;
-    struct mobj_s __far*__far*     bprev; // killough 8/11/98: change to ptr-to-ptr
+    zref_t              bnext;  // mobj_t
+    zref_t              bprev;  // the zref_t that points here
 
-    struct subsector_s __far* subsector;
+    zref_t              subsector;
+
+                                       // phares 3/17/98
+    // a linked list of sectors where this object appears
+    zref_t              touching_sectorlist;    // msecnode_t
 
     // The closest interval over all contacted Sectors.
     fixed_t             floorz;
@@ -229,12 +235,9 @@ typedef struct mobj_s
     fixed_t             radius;
     fixed_t             height;
 
-    const state_t*      state;
     uint32_t            flags;
 
-                                       // phares 3/17/98
-    // a linked list of sectors where this object appears
-    struct msecnode_s __far* touching_sectorlist;
+    int16_t             state;  // index into states[]
 
     uint16_t            frame;  // might be ORed with FF_FULLBRIGHT
 
@@ -245,7 +248,7 @@ typedef struct mobj_s
     mobjtype_t          type;
 } mobj_t;
 
-typedef char assertMobjSize[sizeof(mobj_t) == 72 ? 1 : -1];
+typedef char assertMobjSize[sizeof(mobj_t) == 56 ? 1 : -1];
 
 // A thing of type MT_MISC0 or later lives in the static pool as a bare
 // mobj_t with MF_STATIC set. Every other thing is the mo of an mobjext_t:
@@ -266,10 +269,10 @@ typedef struct
 
     // Thing being chased/attacked (or NULL),
     // also the originator for missiles.
-    struct mobj_s __far*      target;
+    zref_t              target;     // mobj_t
 
     // new field: last known enemy -- killough 2/15/98
-    struct mobj_s __far*      lastenemy;
+    zref_t              lastenemy;  // mobj_t
 
     int16_t             health;
 
@@ -293,7 +296,12 @@ typedef struct
     mobj_t              mo;
 } mobjext_t;
 
-typedef char assertMobjExtSize[sizeof(mobjext_t) == 120 ? 1 : -1];
+typedef char assertMobjExtSize[sizeof(mobjext_t) == 100 ? 1 : -1];
+
+static inline mobj_t __far* P_Mobj(zref_t ref)
+{
+    return Z_Ptr(ref);
+}
 
 
 

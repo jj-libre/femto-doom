@@ -163,7 +163,7 @@ static boolean P_LookForPlayers(mobj_t __far* actor, boolean allaround)
     if (!P_IsVisible(actor, player->mo, allaround))
         return false;
 
-    P_Ext(actor)->target = player->mo;
+    P_Ext(actor)->target = Z_Ref(player->mo);
 
     /* killough 9/9/98: give monsters a threshold towards getting players
      * (we don't want it to be too easy for a player with dogs :)
@@ -193,7 +193,7 @@ static boolean P_LookForTargets(mobj_t __far* actor, boolean allaround)
 
 void A_Look(mobj_t __far* actor)
 {
-    mobj_t __far* targ = actor->subsector->sector->soundtarget;
+    mobj_t __far* targ = P_Mobj(P_Subsector(actor->subsector)->sector->soundtarget);
     P_Ext(actor)->threshold = 0; // any shot will wake up
     P_Ext(actor)->pursuecount = 0;
 
@@ -201,11 +201,11 @@ void A_Look(mobj_t __far* actor)
 
     if (targ && (targ->flags & MF_SHOOTABLE) )
     {
-        P_Ext(actor)->target = targ;
+        P_Ext(actor)->target = Z_Ref(targ);
 
         if ( actor->flags & MF_AMBUSH )
         {
-            if (P_CheckSight (actor, P_Ext(actor)->target))
+            if (P_CheckSight (actor, P_Mobj(P_Ext(actor)->target)))
                 seen = true;
         }
         else
@@ -259,7 +259,7 @@ void A_Chase(mobj_t __far* actor)
 
     if (P_Ext(actor)->threshold)
     { /* modify target threshold */
-        if (!P_Ext(actor)->target || P_Ext(P_Ext(actor)->target)->health <= 0)
+        if (!P_Ext(actor)->target || P_Ext(P_Mobj(P_Ext(actor)->target))->health <= 0)
             P_Ext(actor)->threshold = 0;
         else
             P_Ext(actor)->threshold--;
@@ -278,7 +278,7 @@ void A_Chase(mobj_t __far* actor)
             actor->angle += ANG90/2;
     }
 
-    if (!P_Ext(actor)->target || !(P_Ext(actor)->target->flags&MF_SHOOTABLE))
+    if (!P_Ext(actor)->target || !(P_Mobj(P_Ext(actor)->target)->flags&MF_SHOOTABLE))
     {
         if (!P_LookForTargets(actor,true)) // look for a new target
             P_SetMobjState(actor, mobjinfo[actor->type].spawnstate); // no new target
@@ -337,7 +337,7 @@ void A_Chase(mobj_t __far* actor)
            *         and we can see it)
            *  try to find a new one; return if sucessful */
 
-            if (!(P_Ext(actor)->target && P_Ext(P_Ext(actor)->target)->health > 0 && P_CheckSight(actor, P_Ext(actor)->target)) && P_LookForTargets(actor, true))
+            if (!(P_Ext(actor)->target && P_Ext(P_Mobj(P_Ext(actor)->target))->health > 0 && P_CheckSight(actor, P_Mobj(P_Ext(actor)->target))) && P_LookForTargets(actor, true))
                 return;
         }
     }

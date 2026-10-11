@@ -70,13 +70,13 @@ static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
 boolean P_CheckMeleeRange(mobj_t __far* actor)
 {
-  mobj_t __far* pl = P_Ext(actor)->target;
+  mobj_t __far* pl = P_Mobj(P_Ext(actor)->target);
 
   return
     pl &&
     (P_AproxDistance(pl->x-actor->x, pl->y-actor->y) <
      MELEERANGE - 20*FRACUNIT + mobjinfo[pl->type].radius) &&
-    P_CheckSight(actor, P_Ext(actor)->target);
+    P_CheckSight(actor, P_Mobj(P_Ext(actor)->target));
 }
 
 
@@ -87,7 +87,7 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
 {
   fixed_t dist;
 
-  if (!P_CheckSight(actor, P_Ext(actor)->target))
+  if (!P_CheckSight(actor, P_Mobj(P_Ext(actor)->target)))
     return false;
 
   if (actor->flags & MF_JUSTHIT)
@@ -101,8 +101,8 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
     return false;       // do not attack yet
 
   // OPTIMIZE: get this from a global checksight
-  dist = P_AproxDistance ( actor->x-P_Ext(actor)->target->x,
-                           actor->y-P_Ext(actor)->target->y) - 64*FRACUNIT;
+  dist = P_AproxDistance ( actor->x-P_Mobj(P_Ext(actor)->target)->x,
+                           actor->y-P_Mobj(P_Ext(actor)->target)->y) - 64*FRACUNIT;
 
   if (!mobjinfo[actor->type].meleestate)
     dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -263,7 +263,7 @@ static boolean P_AvoidDropoff(mobj_t __far* actor)
 
 void P_NewChaseDir(mobj_t __far* actor)
 {
-    mobj_t __far* target = P_Ext(actor)->target;
+    mobj_t __far* target = P_Mobj(P_Ext(actor)->target);
     fixed_t deltax = target->x - actor->x;
     fixed_t deltay = target->y - actor->y;
 
@@ -301,8 +301,8 @@ void A_FaceTarget(mobj_t __far* actor)
     return;
   actor->flags &= ~MF_AMBUSH;
   actor->angle = R_PointToAngle2(actor->x, actor->y,
-                                 P_Ext(actor)->target->x, P_Ext(actor)->target->y);
-  if (P_Ext(actor)->target->flags & MF_SHADOW)
+                                 P_Mobj(P_Ext(actor)->target)->x, P_Mobj(P_Ext(actor)->target)->y);
+  if (P_Mobj(P_Ext(actor)->target)->flags & MF_SHADOW)
     { // killough 5/5/98: remove dependence on order of evaluation:
       int32_t t = P_Random();
       actor->angle += (t-P_Random())<<21;
@@ -370,10 +370,10 @@ void A_TroopAttack(mobj_t __far* actor)
       int16_t damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random()%8+1)*3;
-      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
+      P_DamageMobj(P_Mobj(P_Ext(actor)->target), actor, actor, damage);
       return;
     }
-  P_SpawnMissile(actor, P_Ext(actor)->target, MT_TROOPSHOT);  // launch a missile
+  P_SpawnMissile(actor, P_Mobj(P_Ext(actor)->target), MT_TROOPSHOT);  // launch a missile
 }
 
 void A_SargAttack(mobj_t __far* actor)
@@ -384,7 +384,7 @@ void A_SargAttack(mobj_t __far* actor)
   if (P_CheckMeleeRange(actor))
     {
       int16_t damage = ((P_Random()%10)+1)*4;
-      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
+      P_DamageMobj(P_Mobj(P_Ext(actor)->target), actor, actor, damage);
     }
 }
 
@@ -398,10 +398,10 @@ void A_BruisAttack(mobj_t __far* actor)
       int16_t damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random()%8+1)*10;
-      P_DamageMobj(P_Ext(actor)->target, actor, actor, damage);
+      P_DamageMobj(P_Mobj(P_Ext(actor)->target), actor, actor, damage);
       return;
     }
-  P_SpawnMissile(actor, P_Ext(actor)->target, MT_BRUISERSHOT);  // launch a missile
+  P_SpawnMissile(actor, P_Mobj(P_Ext(actor)->target), MT_BRUISERSHOT);  // launch a missile
 }
 
 
@@ -455,7 +455,7 @@ void A_Fall(mobj_t __far* actor)
 //
 void A_Explode(mobj_t __far* thingy)
 {
-  P_RadiusAttack( thingy, P_Ext(thingy)->target, 128 );
+  P_RadiusAttack( thingy, P_Mobj(P_Ext(thingy)->target), 128 );
 }
 
 //

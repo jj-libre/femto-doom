@@ -378,7 +378,7 @@ static void P_RecursiveSound(sector_t __far* sec, int16_t soundblocks, mobj_t __
 
   sec->validcount     = validcount;
   sec->soundtraversed = soundblocks+1;
-  sec->soundtarget    = soundtarget;
+  sec->soundtarget    = Z_Ref(soundtarget);
 
   for (i=0; i<sec->linecount; i++)
     {
@@ -411,7 +411,7 @@ static void P_RecursiveSound(sector_t __far* sec, int16_t soundblocks, mobj_t __
 static void P_NoiseAlert(mobj_t __far* emitter)
 {
   validcount++;
-  P_RecursiveSound(emitter->subsector->sector, 0, emitter);
+  P_RecursiveSound(P_Subsector(emitter->subsector)->sector, 0, emitter);
 }
 
 
@@ -453,8 +453,8 @@ void P_DropWeapon(player_t *player)
 void A_WeaponReady(player_t *player, pspdef_t *psp)
 {
   // get out of attack state
-  if (player->mo->state == &states[S_PLAY_ATK1]
-      || player->mo->state == &states[S_PLAY_ATK2] )
+  if (player->mo->state == S_PLAY_ATK1
+      || player->mo->state == S_PLAY_ATK2 )
     P_SetMobjState(player->mo, S_PLAY);
 
   if (player->readyweapon == wp_chainsaw && psp->state == &states[S_SAW])

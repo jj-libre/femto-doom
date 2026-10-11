@@ -107,6 +107,22 @@ boolean Z_EqualNames(const char __far* farName, const char* nearName)
 }
 
 
+uint8_t __far* _g_zonebase;
+
+
+zref_t Z_Ref(const void __far* ptr)
+{
+	if (ptr == NULL)
+		return 0;
+
+	uint32_t offset = (const uint8_t __far*)ptr - _g_zonebase;
+	if (offset == 0 || offset > ZREF_SPAN || (offset & ((1 << ZREF_SHIFT) - 1)) != 0)
+		I_Error("Z_Ref: 0x%lx is not a zone address", offset);
+
+	return offset >> ZREF_SHIFT;
+}
+
+
 //
 // Z_Init
 //
@@ -115,6 +131,10 @@ void Z_Init (void)
 	// allocate all available conventional memory.
 	uint32_t heapSize;
 	static uint8_t __far* mainzone; mainzone = I_ZoneBase(&heapSize);
+
+	_g_zonebase = mainzone;
+	if (heapSize > ZREF_SPAN)
+		heapSize = ZREF_SPAN & ~(PARAGRAPH_SIZE - 1);
 
 	// align blocklist
 	uint_fast8_t i = 0;

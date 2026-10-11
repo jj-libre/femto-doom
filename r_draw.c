@@ -1526,7 +1526,7 @@ static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
 static void R_DrawPlayerSprites(void)
 {
 
-  int16_t i, lightlevel = _g_player.mo->subsector->sector->lightlevel;
+  int16_t i, lightlevel = P_Subsector(_g_player.mo->subsector)->sector->lightlevel;
   pspdef_t *psp;
 
   // clip to screen bounds
@@ -1820,7 +1820,7 @@ static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
 
   // Handle all things in sector.
 
-  for (thing = sec->thinglist; thing; thing = thing->snext)
+  for (thing = P_Mobj(sec->thinglist); thing; thing = P_Mobj(thing->snext))
     R_ProjectSprite(thing, lightlevel);
 }
 

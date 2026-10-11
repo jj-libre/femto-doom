@@ -27,6 +27,7 @@
 #define __Z_ZONE__
 
 #include <stddef.h>
+#include <stdint.h>
 #include "doomtype.h"
 
 void Z_Init(void);
@@ -40,5 +41,21 @@ void Z_FreeTags(void);
 void Z_CheckHeap(void);
 
 boolean Z_EqualNames(const char __far* farName, const char* nearName);
+
+// A zone address in units of 1 << ZREF_SHIFT bytes. 0 is NULL: the zone
+// starts with a block header, so no object lives at offset 0.
+typedef uint16_t zref_t;
+
+#define ZREF_SHIFT	1
+#define ZREF_SPAN	((uint32_t)UINT16_MAX << ZREF_SHIFT)
+
+extern uint8_t __far* _g_zonebase;
+
+zref_t Z_Ref(const void __far* ptr);
+
+static inline void __far* Z_Ptr(zref_t ref)
+{
+	return ref ? _g_zonebase + ((uint32_t)ref << ZREF_SHIFT) : NULL;
+}
 
 #endif
