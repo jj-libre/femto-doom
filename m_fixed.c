@@ -26,22 +26,29 @@
 #include "m_fixed.h"
 
 
+#if !defined NO_LOOKUP_TABLE
 #define USE_LOOKUP_TABLE
+#endif
+
+#if !defined RECIPROCAL_DIV
+#define RECIPROCAL_DIV(v) (0xffffffffu / (v))
+#endif
 
 
+#if defined USE_LOOKUP_TABLE
 static const uint32_t reciprocalTable[65536];
+#define RECIPROCAL16(v) reciprocalTable[v]
+#else
+#define RECIPROCAL16(v) ((v) ? RECIPROCAL_DIV(v) : 0)
+#endif
 
 
 fixed_t CONSTFUNC FixedReciprocal(fixed_t v)
 {
-#if defined USE_LOOKUP_TABLE
 	if (v <= 0xffffu)
 		return FixedReciprocalSmall(v);
 	else
 		return FixedReciprocalBig(v);
-#else
-	return 0xffffffffu / v;
-#endif
 }
 
 
@@ -61,25 +68,18 @@ static int __builtin_clzl(uint32_t v)
 
 uint16_t CONSTFUNC FixedReciprocalBig(fixed_t v)
 {
-#if defined USE_LOOKUP_TABLE
 	int s = 31 - __builtin_clzl(v) - 15;
-	return reciprocalTable[v >> s] >> s;
-#else
-	return 0xffffffffu / v;
-#endif
+	return RECIPROCAL16((uint32_t)v >> s) >> s;
 }
 
 
 fixed_t CONSTFUNC FixedReciprocalSmall(uint16_t v)
 {
-#if defined USE_LOOKUP_TABLE
-	return reciprocalTable[v];
-#else
-	return 0xffffffffu / v;
-#endif
+	return RECIPROCAL16(v);
 }
 
 
+#if defined USE_LOOKUP_TABLE
 static const uint32_t reciprocalTable[65536] = {
 0,
 4294967295,
@@ -65618,3 +65618,4 @@ static const uint32_t reciprocalTable[65536] = {
 65538,
 65537
 };
+#endif
