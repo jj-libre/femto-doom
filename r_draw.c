@@ -88,7 +88,8 @@ typedef struct drawseg_s
 } drawseg_t;
 
 
-#if VIEWWINDOWWIDTH * VIEWWINDOWHEIGHT <= 38 * 28
+#if defined MAXDRAWSEGS
+#elif VIEWWINDOWWIDTH * VIEWWINDOWHEIGHT <= 38 * 28
 #define MAXDRAWSEGS    64
 #else
 #define MAXDRAWSEGS   128
@@ -1858,7 +1859,9 @@ static void R_DrawColumnInCache(const column_t __far* patch, byte* cache, int16_
  * straight from const patch_t*.
 */
 
+#if !defined MAX_CACHE_ENTRIES
 #define MAX_CACHE_ENTRIES 32
+#endif
 #define MAX_CACHE_TRIES 4
 
 static uint16_t CACHE_ENTRY(int16_t column, int16_t texture)
