@@ -53,6 +53,11 @@ void V_DrawBackground(int16_t backgroundnum);
 void V_DrawRaw(int16_t num, uint16_t offset);
 void V_DrawRawFullScreen(int16_t num);
 
+#if defined ST_PARTIAL_REFRESH
+// V_DrawRawRect - Draws only the part of raw lump num, placed at offset, that lies in the rectangle
+void V_DrawRawRect(int16_t num, uint16_t offset, int16_t x, int16_t y, int16_t w, int16_t h);
+#endif
+
 // V_DrawNumPatchScaled - Draws the patch from lump num
 void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t __far* patch);
 void V_DrawNumPatchScaled(int16_t x, int16_t y, int16_t lump);

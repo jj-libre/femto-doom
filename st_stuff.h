@@ -61,6 +61,11 @@ void ST_doRefresh(void);
 
 boolean ST_NeedUpdate(void);
 
+#if defined ST_PARTIAL_REFRESH
+// Redraw the whole status bar next time, after something else drew over it.
+void ST_ForceRefresh(void);
+#endif
+
 // Called when the console player is spawned on each level.
 void ST_Start(void);
 

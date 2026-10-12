@@ -637,16 +637,205 @@ static void ST_drawWidgets(void)
 }
 
 
+static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
+
 static void ST_refreshBackground(void)
 {
-	static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
 	V_DrawRaw(statusbarnum, st_offset);
 }
+
+
+#if defined ST_PARTIAL_REFRESH
+// Widgets in the order ST_drawWidgets draws them:
+// ready, ammo and max ammo per type, health, armor, face, keys, arms.
+#define ST_FIRSTICON  (1 + 2 * NUMAMMO + 2)
+#define ST_NUMWIDGETS (ST_FIRSTICON + 1 + 3 + 6)
+
+typedef struct
+{
+	uint8_t x0, y0, x1, y1;
+} st_rect_t;
+
+// Everything a widget can ever cover, over all the patches it can show.
+static st_rect_t st_rects[ST_NUMWIDGETS];
+
+static boolean st_fullrefresh;
+
+
+static st_number_t* ST_number(int8_t i)
+{
+	if (i == 0)
+		return &w_ready;
+	else if (i <= 2 * NUMAMMO)
+		return (i & 1) ? &w_ammo[(i - 1) / 2] : &w_maxammo[(i - 1) / 2];
+	else
+		return i == 2 * NUMAMMO + 1 ? &st_health : &st_armor;
+}
+
+
+static st_multicon_t* ST_multicon(int8_t i)
+{
+	if (i == ST_FIRSTICON)
+		return &w_faces;
+	else if (i < ST_FIRSTICON + 4)
+		return &w_keyboxes[i - ST_FIRSTICON - 1];
+	else
+		return &w_arms[i - ST_FIRSTICON - 4];
+}
+
+
+static void ST_growRect(st_rect_t* r, int16_t x, int16_t y, int16_t lump)
+{
+	const patch_t __far* patch = W_GetLumpByNum(lump);
+
+	int16_t x0 = x - patch->leftoffset;
+	int16_t y0 = y - patch->topoffset;
+	int16_t x1 = x0 + patch->width;
+	int16_t y1 = y0 + patch->height;
+
+	if (x0 < 0)            x0 = 0;
+	if (y0 < ST_Y)         y0 = ST_Y;
+	if (x1 > SCREENWIDTH)  x1 = SCREENWIDTH;
+	if (y1 > SCREENHEIGHT) y1 = SCREENHEIGHT;
+
+	if (x0 >= x1 || y0 >= y1)
+		return;
+
+	if (r->x0 >= r->x1)
+	{
+		r->x0 = x0; r->y0 = y0; r->x1 = x1; r->y1 = y1;
+	}
+	else
+	{
+		if (x0 < r->x0) r->x0 = x0;
+		if (y0 < r->y0) r->y0 = y0;
+		if (x1 > r->x1) r->x1 = x1;
+		if (y1 > r->y1) r->y1 = y1;
+	}
+}
+
+
+static void ST_initRects(void)
+{
+	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
+	{
+		st_rect_t* r = &st_rects[i];
+		r->x0 = r->y0 = r->x1 = r->y1 = 0;
+
+		if (i < ST_FIRSTICON)
+		{
+			const st_number_t* n = ST_number(i);
+			const int16_t w = V_NumPatchWidth(n->p[0]);
+
+			for (int16_t k = 1; k <= n->width; k++)
+				for (int8_t d = 0; d < 10; d++)
+					ST_growRect(r, n->x - k * w, n->y, n->p[d]);
+		}
+		else
+		{
+			const st_multicon_t* mi = ST_multicon(i);
+			const int8_t count = i == ST_FIRSTICON ? ST_NUMFACES : i < ST_FIRSTICON + 4 ? NUMCARDS : 2;
+
+			for (int8_t j = 0; j < count; j++)
+				ST_growRect(r, mi->x, mi->y, mi->p[j]);
+		}
+	}
+
+	st_fullrefresh = true;
+}
+
+
+void ST_ForceRefresh(void)
+{
+	st_fullrefresh = true;
+}
+
+
+static boolean ST_changed(int8_t i)
+{
+	if (i < ST_FIRSTICON)
+	{
+		const st_number_t* n = ST_number(i);
+		return n->oldnum != *n->num;
+	}
+	else
+	{
+		const st_multicon_t* mi = ST_multicon(i);
+		return mi->oldinum != *mi->inum;
+	}
+}
+
+
+static boolean ST_overlap(const st_rect_t* a, const st_rect_t* b)
+{
+	return a->x0 < b->x1 && b->x0 < a->x1 && a->y0 < b->y1 && b->y0 < a->y1;
+}
+
+
+// Same pixels as a full refresh: outside the restored rectangles nothing changes,
+// and every widget that reaches into one is drawn again, in the original order.
+static void ST_doPartialRefresh(void)
+{
+	uint32_t dirty = 0;
+
+	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
+		if (ST_changed(i))
+			dirty |= 1UL << i;
+
+	boolean grown;
+	do
+	{
+		grown = false;
+		for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
+		{
+			if (dirty & (1UL << i))
+				continue;
+
+			for (int8_t j = 0; j < ST_NUMWIDGETS; j++)
+			{
+				if ((dirty & (1UL << j)) && ST_overlap(&st_rects[i], &st_rects[j]))
+				{
+					dirty |= 1UL << i;
+					grown = true;
+					break;
+				}
+			}
+		}
+	} while (grown);
+
+	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
+	{
+		const st_rect_t* r = &st_rects[i];
+		if ((dirty & (1UL << i)) && r->x0 < r->x1)
+			V_DrawRawRect(statusbarnum, st_offset, r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
+	}
+
+	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
+	{
+		if (!(dirty & (1UL << i)))
+			continue;
+
+		if (i < ST_FIRSTICON)
+			STlib_drawNum(ST_number(i));
+		else
+			STlib_updateMultIcon(ST_multicon(i));
+	}
+}
+#endif
 
 
 void ST_doRefresh(void)
 {
 #if !defined DISABLE_STATUS_BAR
+#if defined ST_PARTIAL_REFRESH
+  if (!st_fullrefresh)
+  {
+    ST_doPartialRefresh();
+    return;
+  }
+  st_fullrefresh = false;
+#endif
+
   // draw status bar background to off-screen buff
   ST_refreshBackground();
 
@@ -657,6 +846,11 @@ void ST_doRefresh(void)
 
 boolean ST_NeedUpdate(void)
 {
+#if defined ST_PARTIAL_REFRESH
+	if (st_fullrefresh)
+		return true;
+#endif
+
 	// ready weapon ammo
 	if(w_ready.oldnum != *w_ready.num)
         return true;
@@ -866,6 +1060,9 @@ void ST_Start(void)
     ST_Stop();
   ST_initData();
   ST_createWidgets();
+#if defined ST_PARTIAL_REFRESH
+  ST_initRects();
+#endif
   st_stopped = false;
 }
 
