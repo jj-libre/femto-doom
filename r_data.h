@@ -38,6 +38,10 @@
 #ifndef __R_DATA__
 #define __R_DATA__
 
+#if !defined TEXSHIFT
+#define TEXSHIFT 0
+#endif
+
 #include "r_defs.h"
 #include "d_player.h"
 

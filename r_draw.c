@@ -1086,7 +1086,7 @@ const uint8_t* R_LoadColorMap(int16_t lightlevel)
 
 typedef void (*R_DrawColumn_f)(const draw_column_vars_t *dcvars);
 
-static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvars, const column_t __far* column)
+static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvars, const column_t __far* column, int16_t shift)
 {
     const fixed_t basetexturemid = dcvars->texturemid;
 
@@ -1096,8 +1096,8 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
     while (column->topdelta != 0xff)
     {
         // calculate unclipped screen coordinates for post
-        const int32_t topscreen = sprtopscreen + spryscale*column->topdelta;
-        const int32_t bottomscreen = topscreen + spryscale*column->length;
+        const int32_t topscreen = sprtopscreen + spryscale*((int32_t)column->topdelta << shift);
+        const int32_t bottomscreen = topscreen + spryscale*((int32_t)column->length << shift);
 
         int16_t yh = (bottomscreen-1)>>FRACBITS;
         int16_t yl = (topscreen+FRACUNIT-1)>>FRACBITS;
@@ -1113,7 +1113,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
         {
             dcvars->source =  (const byte __far*)column + 3;
 
-            dcvars->texturemid = basetexturemid - (((int32_t)column->topdelta)<<FRACBITS);
+            dcvars->texturemid = basetexturemid - (((int32_t)column->topdelta << shift)<<FRACBITS);
 
             dcvars->yh = yh;
             dcvars->yl = yl;
@@ -1201,7 +1201,7 @@ static void R_DrawVisSprite(const vissprite_t *vis)
     while (dcvars.x < VIEWWINDOWWIDTH)
     {
         const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[frac >> FRACBITS]);
-        R_DrawMaskedColumn(colfunc, &dcvars, column);
+        R_DrawMaskedColumn(colfunc, &dcvars, column, 0);
 
         frac += vis->xiscale;
 
@@ -1217,7 +1217,7 @@ static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16
 {
 	const uint8_t patchcount = texture->patchcount;
 
-	const int16_t xc = texcolumn & texture->widthmask;
+	const int16_t xc = (texcolumn >> TEXSHIFT) & texture->widthmask;
 
 	if (patchcount == 1)
 	{
@@ -1303,7 +1303,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 
 		if (xc != DROPOFF_OVERFLOW) // dropoff overflow
 		{
-			xc &= widthmask;
+			xc = (xc >> TEXSHIFT) & widthmask;
 
 			sprtopscreen = CENTERY * FRACUNIT - FixedMul(dcvars.texturemid, spryscale);
 
@@ -1312,7 +1312,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 			// draw the texture
 			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[xc]);
 
-			R_DrawMaskedColumn(R_DrawColumnWall, &dcvars, column);
+			R_DrawMaskedColumn(R_DrawColumnWall, &dcvars, column, TEXSHIFT);
 			maskedtexturecol[dcvars.x] = DROPOFF_OVERFLOW; // dropoff overflow
 		}
 	}
@@ -1907,9 +1907,9 @@ static uint16_t FindColumnCacheItem(int16_t texture, int16_t column)
 static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t __far* tex, int16_t texcolumn)
 {
 #if defined HIGH_DETAIL
-    const int16_t xc = texcolumn & tex->widthmask;
+    const int16_t xc = (texcolumn >> TEXSHIFT) & tex->widthmask;
 #else
-    const int16_t xc = (texcolumn & 0xfffc) & tex->widthmask;
+    const int16_t xc = ((texcolumn & 0xfffc) >> TEXSHIFT) & tex->widthmask;
 #endif
 
     uint16_t cachekey = FindColumnCacheItem(texture, xc);
