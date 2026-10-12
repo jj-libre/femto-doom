@@ -42,6 +42,10 @@
 #define TEXSHIFT 0
 #endif
 
+#if !defined SPRSHIFT
+#define SPRSHIFT 0
+#endif
+
 #include "r_defs.h"
 #include "d_player.h"
 

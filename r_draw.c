@@ -1201,7 +1201,7 @@ static void R_DrawVisSprite(const vissprite_t *vis)
     while (dcvars.x < VIEWWINDOWWIDTH)
     {
         const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[frac >> FRACBITS]);
-        R_DrawMaskedColumn(colfunc, &dcvars, column, 0);
+        R_DrawMaskedColumn(colfunc, &dcvars, column, SPRSHIFT);
 
         frac += vis->xiscale;
 
@@ -1217,7 +1217,7 @@ static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16
 {
 	const uint8_t patchcount = texture->patchcount;
 
-	const int16_t xc = (texcolumn >> TEXSHIFT) & texture->widthmask;
+	const int16_t xc = texcolumn & texture->widthmask;
 
 	if (patchcount == 1)
 	{
@@ -1277,7 +1277,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	if (_g_maplines[curline->linenum].flags & ML_DONTPEGBOTTOM)
 	{
 		dcvars.texturemid = frontsector->floorheight > backsector->floorheight ? frontsector->floorheight : backsector->floorheight;
-		dcvars.texturemid = dcvars.texturemid + ((int32_t)textureheight[texnum] << FRACBITS) - viewz;
+		dcvars.texturemid = dcvars.texturemid + ((int32_t)(textureheight[texnum] << TEXSHIFT) << FRACBITS) - viewz;
 	}
 	else
 	{
@@ -1303,7 +1303,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 
 		if (xc != DROPOFF_OVERFLOW) // dropoff overflow
 		{
-			xc = (xc >> TEXSHIFT) & widthmask;
+			xc &= widthmask;
 
 			sprtopscreen = CENTERY * FRACUNIT - FixedMul(dcvars.texturemid, spryscale);
 
@@ -1907,9 +1907,9 @@ static uint16_t FindColumnCacheItem(int16_t texture, int16_t column)
 static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t __far* tex, int16_t texcolumn)
 {
 #if defined HIGH_DETAIL
-    const int16_t xc = (texcolumn >> TEXSHIFT) & tex->widthmask;
+    const int16_t xc = texcolumn & tex->widthmask;
 #else
-    const int16_t xc = ((texcolumn & 0xfffc) >> TEXSHIFT) & tex->widthmask;
+    const int16_t xc = (texcolumn & 0xfffc) & tex->widthmask;
 #endif
 
     uint16_t cachekey = FindColumnCacheItem(texture, xc);
@@ -2308,13 +2308,13 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
         if (maplinedef->flags & ML_DONTPEGBOTTOM)
         {         // bottom of texture at bottom
-            fixed_t vtop = frontsector->floorheight + ((int32_t)textureheight[sidedef->midtexture] << FRACBITS);
+            fixed_t vtop = frontsector->floorheight + ((int32_t)(textureheight[sidedef->midtexture] << TEXSHIFT) << FRACBITS);
             rw_midtexturemid = vtop - viewz;
         }
         else        // top of texture at top
             rw_midtexturemid = worldtop;
 
-        rw_midtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, textureheight[midtexture])) << FRACBITS;
+        rw_midtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[midtexture] << TEXSHIFT))) << FRACBITS;
 
         ds_p->silhouette = SIL_BOTH;
         ds_p->sprtopclip = screenheightarray;
@@ -2397,8 +2397,8 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
             toptexture = R_GetTextureTranslation(sidedef->toptexture);
             textoptexture = R_GetTexture(toptexture);
             rw_toptexturemid = maplinedef->flags & ML_DONTPEGTOP ? worldtop :
-                                                                        backsector->ceilingheight + ((int32_t)textureheight[sidedef->toptexture] << FRACBITS) - viewz;
-            rw_toptexturemid += ((int32_t)Mod(mapsidedef->rowoffset, textureheight[toptexture])) << FRACBITS;
+                                                                        backsector->ceilingheight + ((int32_t)(textureheight[sidedef->toptexture] << TEXSHIFT) << FRACBITS) - viewz;
+            rw_toptexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[toptexture] << TEXSHIFT))) << FRACBITS;
         }
 
         if (worldlow > worldbottom) // bottom texture
@@ -2407,7 +2407,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
             texbottomtexture = R_GetTexture(bottomtexture);
             rw_bottomtexturemid = maplinedef->flags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
 
-            rw_bottomtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, textureheight[bottomtexture])) << FRACBITS;
+            rw_bottomtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[bottomtexture] << TEXSHIFT))) << FRACBITS;
         }
 
         // allocate space for masked texture tables

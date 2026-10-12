@@ -70,7 +70,7 @@ void R_DrawSky(draw_column_vars_t *dcvars)
 
 	int16_t xc = viewangle >> FRACBITS;
 	xc += xtoviewangleTable[dcvars->x];
-	xc >>= ANGLETOSKYSHIFT - FRACBITS + TEXSHIFT;
+	xc >>= ANGLETOSKYSHIFT - FRACBITS;
 	xc &= skywidthmask;
 
 	const column_t __far* column = (const column_t __far*) ((const byte __far*)skypatch + skypatch->columnofs[xc]);
