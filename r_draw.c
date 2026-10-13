@@ -35,6 +35,7 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef HAVE_CONFIG_H
@@ -483,8 +484,9 @@ static angle16_t viewangle16;
 static byte solidcol[VIEWWINDOWWIDTH];
 
 static const seg_t     __far* curline;
+static seg_t curseg;
 static linedata_t    __far* linedef;
-static const line_t *maplinedef;
+static uint8_t maplineflags;
 static sector_t  __far* frontsector;
 static sector_t  __far* backsector;
 static drawseg_t *ds_p;
@@ -808,7 +810,11 @@ subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y)
 	}
 
 	while (!(nodenum & NF_SUBSECTOR))
-		nodenum = nodes[nodenum].children[R_PointOnSide(x, y, nodes+nodenum)];
+	{
+		mapnode_t node;
+		W_Fetch(&nodes[nodenum], &node, sizeof(node));
+		nodenum = node.children[R_PointOnSide(x, y, &node)];
+	}
 
 	prevr = &_g_subsectors[(int16_t)(nodenum & ~NF_SUBSECTOR)];
 	return prevr;
@@ -1057,9 +1063,9 @@ const uint8_t* R_LoadColorMap(int16_t lightlevel)
     {
         if (curline)
         {
-            if (curline->v1.y == curline->v2.y)
+            if (curseg.v1.y == curseg.v2.y)
                 lightlevel -= 1 << LIGHTSEGSHIFT;
-            else if (curline->v1.x == curline->v2.x)
+            else if (curseg.v1.x == curseg.v2.x)
                 lightlevel += 1 << LIGHTSEGSHIFT;
         }
 
@@ -1093,11 +1099,14 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
     const height_t fclip_x = mfloorclip[dcvars->x];
     const height_t cclip_x = mceilingclip[dcvars->x];
 
-    while (column->topdelta != 0xff)
+    post_t post;
+    W_Fetch(column, &post, sizeof(post));
+
+    while (post.topdelta != 0xff)
     {
         // calculate unclipped screen coordinates for post
-        const int32_t topscreen = sprtopscreen + spryscale*((int32_t)column->topdelta << shift);
-        const int32_t bottomscreen = topscreen + spryscale*((int32_t)column->length << shift);
+        const int32_t topscreen = sprtopscreen + spryscale*((int32_t)post.topdelta << shift);
+        const int32_t bottomscreen = topscreen + spryscale*((int32_t)post.length << shift);
 
         int16_t yh = (bottomscreen-1)>>FRACBITS;
         int16_t yl = (topscreen+FRACUNIT-1)>>FRACBITS;
@@ -1113,7 +1122,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
         {
             dcvars->source =  (const byte __far*)column + 3;
 
-            dcvars->texturemid = basetexturemid - (((int32_t)column->topdelta << shift)<<FRACBITS);
+            dcvars->texturemid = basetexturemid - (((int32_t)post.topdelta << shift)<<FRACBITS);
 
             dcvars->yh = yh;
             dcvars->yl = yl;
@@ -1122,7 +1131,8 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
             colfunc (dcvars);
         }
 
-        column = (const column_t __far*)((const byte __far*)column + column->length + 4);
+        column = (const column_t __far*)((const byte __far*)column + post.length + 4);
+        W_Fetch(column, &post, sizeof(post));
     }
 
     dcvars->texturemid = basetexturemid;
@@ -1195,17 +1205,18 @@ static void R_DrawVisSprite(const vissprite_t *vis)
 
 
     const patch_t __far* patch = W_GetLumpByNum(vis->lump_num);
+    const int16_t width = W_FetchInt16(&patch->width);
 
     dcvars.x = vis->x1;
 
     while (dcvars.x < VIEWWINDOWWIDTH)
     {
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[frac >> FRACBITS]);
+        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[frac >> FRACBITS]));
         R_DrawMaskedColumn(colfunc, &dcvars, column, SPRSHIFT);
 
         frac += vis->xiscale;
 
-        if(((frac >> FRACBITS) >= patch->width) || frac < 0)
+        if(((frac >> FRACBITS) >= width) || frac < 0)
             break;
 
         dcvars.x++;
@@ -1215,14 +1226,17 @@ static void R_DrawVisSprite(const vissprite_t *vis)
 
 static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16_t* patch_num, int16_t* x_c)
 {
-	const uint8_t patchcount = texture->patchcount;
+	texture_t tex;
+	W_Fetch(texture, &tex, sizeof(tex));
 
-	const int16_t xc = texcolumn & texture->widthmask;
+	const uint8_t patchcount = tex.patchcount;
+
+	const int16_t xc = texcolumn & tex.widthmask;
 
 	if (patchcount == 1)
 	{
 		//simple texture.
-		*patch_num = texture->patches[0].patch_num;
+		*patch_num = tex.patches[0].patch_num;
 		*x_c = xc;
 	}
 	else
@@ -1231,12 +1245,13 @@ static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16
 
 		do
 		{
-			const texpatch_t __far* patch = &texture->patches[i];
+			texpatch_t patch;
+			W_Fetch(&texture->patches[i], &patch, sizeof(patch));
 
-			int16_t x = xc - patch->originx;
-			if (0 <= x && x < patch->patch_width)
+			int16_t x = xc - patch.originx;
+			if (0 <= x && x < patch.patch_width)
 			{
-				*patch_num = patch->patch_num;
+				*patch_num = patch.patch_num;
 				*x_c = x;
 				break;
 			}
@@ -1258,11 +1273,12 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	//   for horizontal / vertical / diagonal. Diagonal?
 
 	curline = ds->curline;  // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
+	W_Fetch(curline, &curseg, sizeof(curseg));
 
-	frontsector = &_g_sectors[curline->frontsectornum];
-	backsector  = &_g_sectors[curline->backsectornum];
+	frontsector = &_g_sectors[curseg.frontsectornum];
+	backsector  = &_g_sectors[curseg.backsectornum];
 
-	int16_t texnum = R_GetTextureTranslation(_g_sides[curline->sidenum].midtexture);
+	int16_t texnum = R_GetTextureTranslation(_g_sides[curseg.sidenum].midtexture);
 
 	// killough 4/13/98: get correct lightlevel for 2s normal textures
 	rw_lightlevel = frontsector->lightlevel;
@@ -1274,10 +1290,10 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	mceilingclip     = ds->sprtopclip;
 
 	// find positioning
-	if (_g_maplines[curline->linenum].flags & ML_DONTPEGBOTTOM)
+	if (W_FetchUInt8(&_g_maplines[curseg.linenum].flags) & ML_DONTPEGBOTTOM)
 	{
 		dcvars.texturemid = frontsector->floorheight > backsector->floorheight ? frontsector->floorheight : backsector->floorheight;
-		dcvars.texturemid = dcvars.texturemid + ((int32_t)(textureheight[texnum] << TEXSHIFT) << FRACBITS) - viewz;
+		dcvars.texturemid = dcvars.texturemid + ((int32_t)(W_FetchInt16(&textureheight[texnum]) << TEXSHIFT) << FRACBITS) - viewz;
 	}
 	else
 	{
@@ -1285,17 +1301,18 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 		dcvars.texturemid = dcvars.texturemid - viewz;
 	}
 
-	dcvars.texturemid += (((int32_t)_g_mapsides[curline->sidenum].rowoffset) << FRACBITS);
+	dcvars.texturemid += (((int32_t)W_FetchUInt8(&_g_mapsides[curseg.sidenum].rowoffset)) << FRACBITS);
 
 	dcvars.colormap = R_LoadColorMap(rw_lightlevel);
 
-	const texture_t __far* texture = R_GetTexture(texnum);
+	texture_t texture;
+	W_Fetch(R_GetTexture(texnum), &texture, sizeof(texture));
 
-	const uint16_t widthmask = texture->widthmask;
+	const uint16_t widthmask = texture.widthmask;
 
 	// draw the columns
 	// simple texture == 1 patch
-	const patch_t __far* patch = W_GetLumpByNum(texture->patches[0].patch_num);
+	const patch_t __far* patch = W_GetLumpByNum(texture.patches[0].patch_num);
 
 	for (dcvars.x = x1 ; dcvars.x <= x2 ; dcvars.x++, spryscale += rw_scalestep)
 	{
@@ -1310,7 +1327,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 			dcvars.fracstep = FixedReciprocal((uint32_t)spryscale) >> COLEXTRABITS;
 
 			// draw the texture
-			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[xc]);
+			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[xc]));
 
 			R_DrawMaskedColumn(R_DrawColumnWall, &dcvars, column, TEXSHIFT);
 			maskedtexturecol[dcvars.x] = DROPOFF_OVERFLOW; // dropoff overflow
@@ -1321,12 +1338,15 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 }
 
 
-static PUREFUNC boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t __far* line)
+static boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t __far* line)
 {
-    const int16_t lx = line->v1.x;
-    const int16_t ly = line->v1.y;
-    const int16_t ldx = line->v2.x - lx;
-    const int16_t ldy = line->v2.y - ly;
+    vertex16_t v[2];
+    W_Fetch(line, v, sizeof(v));
+
+    const int16_t lx = v[0].x;
+    const int16_t ly = v[0].y;
+    const int16_t ldx = v[1].x - lx;
+    const int16_t ldy = v[1].y - ly;
 
     if (!ldx)
         return x <= (fixed_t)lx << FRACBITS ? ldy > 0 : ldy < 0;
@@ -1464,24 +1484,25 @@ static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
     int16_t           x1, x2;
     uint32_t hl;
     const spriteframe_t *sprdef;
-    const spriteframe_t __far* sprframe;
+    spriteframe_t sprframe;
     vissprite_t   *vis;
     vissprite_t   avis;
     fixed_t       topoffset;
 
     // decide which patch to use
     sprdef   = &sprites[psp->state->sprite * MAX_SPRITE_FRAMES];
-    sprframe = &sprdef[psp->state->frame & FF_FRAMEMASK];
+    W_Fetch(&sprdef[psp->state->frame & FF_FRAMEMASK], &sprframe, sizeof(sprframe));
 
-    const patch_t __far* patch = W_GetLumpByNum(sprframe->lump[0]);
+    patch_t patch;
+    W_Fetch(W_GetLumpByNum(sprframe.lump[0]), &patch, offsetof(patch_t, columnofs));
     // calculate edges of the shape
     int16_t tx = psp->sx - BASEXCENTER;
 
-    tx -= patch->leftoffset;
+    tx -= patch.leftoffset;
     hl = (uint32_t) tx * PSPRITESCALE;
     x1 = CENTERX + (hl >> FRACBITS);
 
-    tx += patch->width;
+    tx += patch.width;
     hl = (uint32_t) tx * PSPRITESCALE;
     x2 = CENTERX + (hl >> FRACBITS) - 1;
 
@@ -1491,7 +1512,7 @@ static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
         return;
     }
 
-    topoffset = ((int32_t)patch->topoffset) << FRACBITS;
+    topoffset = ((int32_t)patch.topoffset) << FRACBITS;
 
     // store information in a vissprite
     vis = &avis;
@@ -1510,7 +1531,7 @@ static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
     if (vis->x1 > x1)
         vis->startfrac = vis->xiscale*(vis->x1-x1);
 
-    vis->lump_num = sprframe->lump[0];
+    vis->lump_num = sprframe.lump[0];
 
     if (_g_player.powers[pw_invisibility] > 4*32 || _g_player.powers[pw_invisibility] & 8)
         vis->colormap = NULL;                    // shadow draw
@@ -1705,7 +1726,9 @@ static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
 
     // decide which patch to use for sprite relative to player
     const spriteframe_t       *sprdef   = &sprites[thing->sprite * MAX_SPRITE_FRAMES];
-    const spriteframe_t __far* sprframe = &sprdef[thing->frame & FF_FRAMEMASK];
+    spriteframe_t sprframecopy;
+    W_Fetch(&sprdef[thing->frame & FF_FRAMEMASK], &sprframecopy, sizeof(sprframecopy));
+    const spriteframe_t* sprframe = &sprframecopy;
 
     uint16_t rot = 0;
 
@@ -1717,7 +1740,9 @@ static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
     }
 
     const boolean flip = (boolean)SPR_FLIPPED(sprframe, rot);
-    const patch_t __far* patch = W_GetLumpByNum(sprframe->lump[rot]);
+    patch_t patchcopy;
+    W_Fetch(W_GetLumpByNum(sprframe->lump[rot]), &patchcopy, offsetof(patch_t, columnofs));
+    const patch_t* patch = &patchcopy;
 
     /* calculate edges of the shape
      * cph 2003/08/1 - fraggle points out that this offset must be flipped
@@ -1837,11 +1862,14 @@ static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
 #else
 static void R_DrawColumnInCache(const column_t __far* patch, byte* cache, int16_t originy, int16_t cacheheight)
 {
-    while (patch->topdelta != 0xff)
+    post_t post;
+    W_Fetch(patch, &post, sizeof(post));
+
+    while (post.topdelta != 0xff)
     {
         const byte __far* source = (const byte __far*)patch + 3;
-        int16_t count = patch->length;
-        int16_t position = originy + patch->topdelta;
+        int16_t count = post.length;
+        int16_t position = originy + post.topdelta;
 
         if (position < 0)
         {
@@ -1853,9 +1881,10 @@ static void R_DrawColumnInCache(const column_t __far* patch, byte* cache, int16_
             count = cacheheight - position;
 
         if (count > 0)
-            _fmemcpy(cache + position, source, count);
+            W_Fetch(source, cache + position, count);
 
-        patch = (const column_t __far*)((const byte __far*)patch + patch->length + 4);
+        patch = (const column_t __far*)((const byte __far*)patch + post.length + 4);
+        W_Fetch(patch, &post, sizeof(post));
     }
 }
 
@@ -1904,8 +1933,12 @@ static uint16_t FindColumnCacheItem(int16_t texture, int16_t column)
 }
 
 
-static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t __far* tex, int16_t texcolumn)
+static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t __far* texp, int16_t texcolumn)
 {
+    texture_t texcopy;
+    W_Fetch(texp, &texcopy, sizeof(texcopy));
+    const texture_t* tex = &texcopy;
+
 #if defined HIGH_DETAIL
     const int16_t xc = texcolumn & tex->widthmask;
 #else
@@ -1929,22 +1962,23 @@ static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t 
 
         do
         {
-            const texpatch_t __far* patch = &tex->patches[i];
+            texpatch_t patch;
+            W_Fetch(&texp->patches[i], &patch, sizeof(patch));
 
-            const int16_t x1 = patch->originx;
+            const int16_t x1 = patch.originx;
 
             if (xc < x1)
                 continue;
 
-            const patch_t __far* realpatch = W_GetLumpByNum(patch->patch_num);
+            const patch_t __far* realpatch = W_GetLumpByNum(patch.patch_num);
 
-            const int16_t x2 = x1 + realpatch->width;
+            const int16_t x2 = x1 + W_FetchInt16(&realpatch->width);
 
             if (xc < x2)
             {
-                const column_t __far* patchcol = (const column_t __far*)((const byte __far*)realpatch + realpatch->columnofs[xc - x1]);
+                const column_t __far* patchcol = (const column_t __far*)((const byte __far*)realpatch + W_FetchInt32(&realpatch->columnofs[xc - x1]));
 
-                R_DrawColumnInCache (patchcol, tmpCache, patch->originy, tex->height);
+                R_DrawColumnInCache (patchcol, tmpCache, patch.originy, tex->height);
             }
         } while(++i < patchcount);
 
@@ -1967,6 +2001,7 @@ typedef struct
     uint16_t widthmask;
     int16_t lo, hi, originx;
     boolean overlapped;
+    uint8_t patchcount;
 } wallpatch_t;
 
 static wallpatch_t wallpatches[2];
@@ -1985,14 +2020,18 @@ static const patch_t __far* R_GetWallPatch(const texture_t __far* tex, int16_t t
         wp = &wallpatches[wallpatchnext];
         wallpatchnext ^= 1;
 
+        texture_t t;
+        W_Fetch(tex, &t, sizeof(t));
+
         wp->tex        = tex;
-        wp->widthmask  = tex->widthmask;
-        wp->overlapped = tex->overlapped;
+        wp->widthmask  = t.widthmask;
+        wp->overlapped = t.overlapped;
+        wp->patchcount = t.patchcount;
         wp->lo = wp->hi = 0;
 
-        if (!wp->overlapped && tex->patchcount == 1)
+        if (!wp->overlapped && t.patchcount == 1)
         {
-            wp->patch   = W_GetLumpByNum(tex->patches[0].patch_num);
+            wp->patch   = W_GetLumpByNum(t.patches[0].patch_num);
             wp->lo      = INT16_MIN;
             wp->hi      = INT16_MAX;
             wp->originx = 0;
@@ -2006,19 +2045,20 @@ static const patch_t __far* R_GetWallPatch(const texture_t __far* tex, int16_t t
 
     if (xc < wp->lo || xc >= wp->hi)
     {
-        const uint8_t patchcount = tex->patchcount;
+        const uint8_t patchcount = wp->patchcount;
         int16_t lo = INT16_MIN, hi = INT16_MAX;
         uint8_t i = 0;
 
         do
         {
-            const texpatch_t __far* patch = &tex->patches[i];
-            const int16_t a = patch->originx;
-            const int16_t b = a + patch->patch_width;
+            texpatch_t patch;
+            W_Fetch(&tex->patches[i], &patch, sizeof(patch));
+            const int16_t a = patch.originx;
+            const int16_t b = a + patch.patch_width;
 
             if (a <= xc && xc < b)
             {
-                wp->patch   = W_GetLumpByNum(patch->patch_num);
+                wp->patch   = W_GetLumpByNum(patch.patch_num);
                 wp->lo      = a > lo ? a : lo;
                 wp->hi      = b < hi ? b : hi;
                 wp->originx = a;
@@ -2048,7 +2088,7 @@ static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, 
 
     if (patch)
     {
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[x_c]);
+        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[x_c]));
 
         dcvars->source = (const byte __far*)column + 3;
         R_DrawColumnWall(dcvars);
@@ -2056,7 +2096,7 @@ static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, 
     }
 #endif
 
-    if (!tex->overlapped)
+    if (!W_FetchUInt8(&tex->overlapped))
     {
         int16_t patch_num;
         int16_t x_c;
@@ -2064,7 +2104,7 @@ static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, 
 
         const patch_t __far* patch = W_GetLumpByNum(patch_num);
 
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[x_c]);
+        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[x_c]));
 
         dcvars->source = (const byte __far*)column + 3;
         R_DrawColumnWall(dcvars);
@@ -2338,16 +2378,15 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     }
 
 
-    side_t    __far* sidedef = &_g_sides[curline->sidenum];
-    const mapsidedef_t *mapsidedef = &_g_mapsides[curline->sidenum];	
-    linedef = &_g_lines[curline->linenum];
-    maplinedef = &_g_maplines[curline->linenum];
+    side_t    __far* sidedef = &_g_sides[curseg.sidenum];
+    const uint8_t rowoffset = W_FetchUInt8(&_g_mapsides[curseg.sidenum].rowoffset);
+    linedef = &_g_lines[curseg.linenum];
 
     // mark the segment as visible for auto map
     linedef->r_flags |= ML_MAPPED;
 
     // calculate rw_distance for scale calculation
-    rw_normalangle = curline->angle;
+    rw_normalangle = curseg.angle;
 
     angle16_t offsetangle = rw_normalangle - rw_angle1;
 
@@ -2359,7 +2398,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         offsetangle = ANG90_16;
 #endif
 
-    int16_t hyp = R_PointToDist(curline->v1.x, curline->v1.y);
+    int16_t hyp = R_PointToDist(curseg.v1.x, curseg.v1.y);
 
     rw_distance = (hyp * finecosineapprox(offsetangle >> ANGLETOFINESHIFT_16)) >> FRACBITS;
 
@@ -2403,15 +2442,15 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         // a single sided line is terminal, so it must mark ends
         markfloor = markceiling = true;
 
-        if (maplinedef->flags & ML_DONTPEGBOTTOM)
+        if (maplineflags & ML_DONTPEGBOTTOM)
         {         // bottom of texture at bottom
-            fixed_t vtop = frontsector->floorheight + ((int32_t)(textureheight[sidedef->midtexture] << TEXSHIFT) << FRACBITS);
+            fixed_t vtop = frontsector->floorheight + ((int32_t)(W_FetchInt16(&textureheight[sidedef->midtexture]) << TEXSHIFT) << FRACBITS);
             rw_midtexturemid = vtop - viewz;
         }
         else        // top of texture at top
             rw_midtexturemid = worldtop;
 
-        rw_midtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[midtexture] << TEXSHIFT))) << FRACBITS;
+        rw_midtexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[midtexture]) << TEXSHIFT))) << FRACBITS;
 
         ds_p->silhouette = SIL_BOTH;
         ds_p->sprtopclip = screenheightarray;
@@ -2493,18 +2532,18 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         {
             toptexture = R_GetTextureTranslation(sidedef->toptexture);
             textoptexture = R_GetTexture(toptexture);
-            rw_toptexturemid = maplinedef->flags & ML_DONTPEGTOP ? worldtop :
-                                                                        backsector->ceilingheight + ((int32_t)(textureheight[sidedef->toptexture] << TEXSHIFT) << FRACBITS) - viewz;
-            rw_toptexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[toptexture] << TEXSHIFT))) << FRACBITS;
+            rw_toptexturemid = maplineflags & ML_DONTPEGTOP ? worldtop :
+                                                                        backsector->ceilingheight + ((int32_t)(W_FetchInt16(&textureheight[sidedef->toptexture]) << TEXSHIFT) << FRACBITS) - viewz;
+            rw_toptexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[toptexture]) << TEXSHIFT))) << FRACBITS;
         }
 
         if (worldlow > worldbottom) // bottom texture
         {
             bottomtexture = R_GetTextureTranslation(sidedef->bottomtexture);
             texbottomtexture = R_GetTexture(bottomtexture);
-            rw_bottomtexturemid = maplinedef->flags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
+            rw_bottomtexturemid = maplineflags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
 
-            rw_bottomtexturemid += ((int32_t)Mod(mapsidedef->rowoffset, (textureheight[bottomtexture] << TEXSHIFT))) << FRACBITS;
+            rw_bottomtexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[bottomtexture]) << TEXSHIFT))) << FRACBITS;
         }
 
         // allocate space for masked texture tables
@@ -2523,7 +2562,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     {
         fixed_t rw_offset32 = hyp * -finesineapprox(offsetangle >> ANGLETOFINESHIFT_16);
         rw_offset = rw_offset32 >> FRACBITS;
-        rw_offset += sidedef->textureoffset + curline->offset;
+        rw_offset += sidedef->textureoffset + curseg.offset;
 
         rw_centerangle = ANG90_16 + viewangle16 - rw_normalangle;
 
@@ -2652,12 +2691,12 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
 static void R_RecalcLineFlags(void)
 {
-    const side_t __far* side = &_g_sides[curline->sidenum];
+    const side_t __far* side = &_g_sides[curseg.sidenum];
 
     linedef->r_validcount = _g_gametic;
 
     /* First decide if the line is closed, normal, or invisible */
-    if (!(maplinedef->flags & ML_TWOSIDED)
+    if (!(maplineflags & ML_TWOSIDED)
             || backsector->ceilingheight <= frontsector->floorheight
             || backsector->floorheight >= frontsector->ceilingheight
             || (
@@ -2750,9 +2789,10 @@ static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
 static void R_AddLine(const seg_t __far* line)
 {
     curline = line;
+    W_Fetch(line, &curseg, sizeof(curseg));
 
-    angle16_t angle1 = R_PointToAngle16(line->v1.x, line->v1.y);
-    angle16_t angle2 = R_PointToAngle16(line->v2.x, line->v2.y);
+    angle16_t angle1 = R_PointToAngle16(curseg.v1.x, curseg.v1.y);
+    angle16_t angle2 = R_PointToAngle16(curseg.v2.x, curseg.v2.y);
 
     // Clip to view edges.
     angle16_t span = angle1 - angle2;
@@ -2800,11 +2840,11 @@ static void R_AddLine(const seg_t __far* line)
     if (x1 >= x2)       // killough 1/31/98 -- change == to >= for robustness
         return;
 
-    backsector = line->backsectornum != NO_INDEX8 ? &_g_sectors[line->backsectornum] : NULL;
+    backsector = curseg.backsectornum != NO_INDEX8 ? &_g_sectors[curseg.backsectornum] : NULL;
 
     /* cph - roll up linedef properties in flags */
-    linedef = &_g_lines[curline->linenum];
-    maplinedef = &_g_maplines[curline->linenum];
+    linedef = &_g_lines[curseg.linenum];
+    maplineflags = W_FetchUInt8(&_g_maplines[curseg.linenum].flags);
 
     if (linedef->r_validcount != (uint16_t)_g_gametic)
         R_RecalcLineFlags();
@@ -2828,10 +2868,13 @@ static void R_Subsector(int16_t num)
     const seg_t       __far* line;
     subsector_t __far* sub;
 
+    mapsubsector_t mapsub;
+    W_Fetch(&_g_mapsubsectors[num], &mapsub, sizeof(mapsub));
+
     sub = &_g_subsectors[num];
     frontsector = sub->sector;
-    count = _g_mapsubsectors[num].numsegs;
-    line = &_g_segs[_g_mapsubsectors[num].firstseg];
+    count = mapsub.numsegs;
+    line = &_g_segs[mapsub.firstseg];
 
 #if defined FLAT_SPAN
     if (frontsector->floorheight < viewz)
@@ -2999,7 +3042,7 @@ static void R_RenderBSPNode(int16_t bspnum)
     static int8_t stack_side[MAX_BSP_DEPTH];
     int16_t sp = 0;
 
-    const mapnode_t __far* bsp;
+    mapnode_t bsp;
     int8_t side;
 
     while (true)
@@ -3010,14 +3053,14 @@ static void R_RenderBSPNode(int16_t bspnum)
             if (sp == MAX_BSP_DEPTH)
                 break;
 
-            bsp = &nodes[bspnum];
-            side = R_PointOnSide(viewx, viewy, bsp);
+            W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
+            side = R_PointOnSide(viewx, viewy, &bsp);
 
             stack_bsp[sp]  = bspnum;
             stack_side[sp] = side ^ 1;
             sp++;
 
-            bspnum = bsp->children[side];
+            bspnum = bsp.children[side];
         }
 
         if (sp == 0)
@@ -3030,12 +3073,12 @@ static void R_RenderBSPNode(int16_t bspnum)
         --sp;
         side   = stack_side[sp];
         bspnum = stack_bsp[sp];
-        bsp    = &nodes[bspnum];
+        W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
 
         // Possibly divide back space.
         //Walk back up the tree until we find
         //a node that has a visible backspace.
-        while (!R_CheckBBox(bsp->bbox[side]))
+        while (!R_CheckBBox(bsp.bbox[side]))
         {
             if (sp == 0)
             {
@@ -3048,29 +3091,41 @@ static void R_RenderBSPNode(int16_t bspnum)
             side   = stack_side[sp];
             bspnum = stack_bsp[sp];
 
-            bsp = &nodes[bspnum];
+            W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
         }
 
-        bspnum = bsp->children[side];
+        bspnum = bsp.children[side];
     }
 }
 #else
+static NOINLINE int16_t R_FetchBSPNode(int16_t bspnum, int16_t* back, int16_t* backbox)
+{
+	mapnode_t bsp;
+	W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
+
+//
+// decide which side the view point is on
+//
+	int16_t side = R_PointOnSide(viewx, viewy, &bsp);
+
+	*back = bsp.children[side ^ 1];
+	memcpy(backbox, bsp.bbox[side ^ 1], sizeof(bsp.bbox[0]));
+	return bsp.children[side];
+}
+
 static void R_RenderBSPNode(int16_t bspnum)
 {
 	if (R_RenderBspSubsector(bspnum))
 		return;
 
-	const mapnode_t __far* bsp = &nodes[bspnum];
+	int16_t back;
+	int16_t backbox[4];
+	int16_t front = R_FetchBSPNode(bspnum, &back, backbox);
 
-//
-// decide which side the view point is on
-//
-	int16_t side = R_PointOnSide(viewx, viewy, bsp);
+	R_RenderBSPNode(front); // recursively divide front space
 
-	R_RenderBSPNode(bsp->children[side]); // recursively divide front space
-
-	if (R_CheckBBox(bsp->bbox[side ^ 1]))	// possibly divide back space
-		R_RenderBSPNode(bsp->children[side ^ 1]);
+	if (R_CheckBBox(backbox))	// possibly divide back space
+		R_RenderBSPNode(back);
 }
 #endif
 

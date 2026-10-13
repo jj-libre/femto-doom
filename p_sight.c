@@ -38,6 +38,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "w_wad.h"
 
 #include "globdata.h"
 
@@ -102,18 +103,23 @@ static uint16_t PUREFUNC P_InterceptVector2(const divline_t *v2, const divline_t
 
 static boolean P_CrossSubsector(int16_t num)
 {
-    const seg_t __far* seg = _g_segs + _g_mapsubsectors[num].firstseg;
+    mapsubsector_t mapsub;
+    W_Fetch(&_g_mapsubsectors[num], &mapsub, sizeof(mapsub));
+
+    const seg_t __far* segp = _g_segs + mapsub.firstseg;
     int16_t count;
     fixed_t opentop = 0, openbottom = 0;
     const sector_t __far* front = NULL;
     const sector_t __far* back  = NULL;
 
-    for (count = _g_mapsubsectors[num].numsegs; --count >= 0; seg++)
+    for (count = mapsub.numsegs; --count >= 0; segp++)
     { // check lines
+        seg_t segcopy;
+        W_Fetch(segp, &segcopy, sizeof(segcopy));
+        const seg_t* seg = &segcopy;
         int16_t linenum = seg->linenum;
 
         linedata_t __far* line = &_g_lines[linenum];
-        const line_t *mapline = &_g_maplines[linenum];
         divline_t divl;
 
         // allready checked other side?
@@ -121,6 +127,10 @@ static boolean P_CrossSubsector(int16_t num)
             continue;
 
         line->validcount = validcount;
+
+        line_t maplinecopy;
+        W_Fetch(&_g_maplines[linenum], &maplinecopy, sizeof(maplinecopy));
+        const line_t* mapline = &maplinecopy;
 
         if ((fixed_t)mapline->bbox[BOXLEFT  ]<<FRACBITS > los.bbox[BOXRIGHT ] ||
             (fixed_t)mapline->bbox[BOXRIGHT ]<<FRACBITS < los.bbox[BOXLEFT  ] ||
@@ -203,29 +213,39 @@ static boolean P_CrossSubsector(int16_t num)
 }
 
 
+static NOINLINE boolean P_CrossBSPNodeSides(int16_t bspnum, int16_t* children)
+{
+    mapnode_t bsp;
+    W_Fetch(nodes + bspnum, &bsp, sizeof(bsp));
+
+    divline_t dl;
+    dl.x = ((fixed_t)bsp.x << FRACBITS);
+    dl.y = ((fixed_t)bsp.y << FRACBITS);
+    dl.dx = ((fixed_t)bsp.dx << FRACBITS);
+    dl.dy = ((fixed_t)bsp.dy << FRACBITS);
+
+    int8_t side,side2;
+    side = P_DivlineSide(los.strace.x,los.strace.y,&dl)&1;
+    side2= P_DivlineSide(los.t2x, los.t2y, &dl);
+
+    children[0] = bsp.children[side];
+    children[1] = bsp.children[side^1];
+    return side == side2;
+}
+
 static boolean P_CrossBSPNode(int16_t bspnum)
 {
     while (!(bspnum & NF_SUBSECTOR))
     {
-        const mapnode_t __far* bsp = nodes + bspnum;
+        int16_t children[2];
 
-        divline_t dl;
-        dl.x = ((fixed_t)bsp->x << FRACBITS);
-        dl.y = ((fixed_t)bsp->y << FRACBITS);
-        dl.dx = ((fixed_t)bsp->dx << FRACBITS);
-        dl.dy = ((fixed_t)bsp->dy << FRACBITS);
-
-        int8_t side,side2;
-        side = P_DivlineSide(los.strace.x,los.strace.y,&dl)&1;
-        side2= P_DivlineSide(los.t2x, los.t2y, &dl);
-
-        if (side == side2)
-            bspnum = bsp->children[side]; // doesn't touch the other side
+        if (P_CrossBSPNodeSides(bspnum, children))
+            bspnum = children[0]; // doesn't touch the other side
         else         // the partition plane is crossed here
-            if (!P_CrossBSPNode(bsp->children[side]))
+            if (!P_CrossBSPNode(children[0]))
                 return false;  // cross the starting side
             else
-                bspnum = bsp->children[side^1];  // cross the ending side
+                bspnum = children[1];  // cross the ending side
     }
     return P_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
 }
@@ -273,7 +293,7 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   //
   // Check in REJECT table.
 
-  if (_g_rejectmatrix[pnum>>3] & (1 << (pnum&7)))   // can't possibly be connected
+  if (W_FetchUInt8(&_g_rejectmatrix[pnum>>3]) & (1 << (pnum&7)))   // can't possibly be connected
   {
     prevr = false;
     return prevr;

@@ -73,6 +73,12 @@ typedef uint8_t byte;
 #define PUREFUNC
 #endif
 
+#if defined __GNUC__ || defined __clang__
+#define NOINLINE __attribute__((noinline))
+#else
+#define NOINLINE
+#endif
+
 /* CPhipps - use limits.h instead of depreciated values.h */
 #include <limits.h>
 

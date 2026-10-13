@@ -114,7 +114,7 @@ const texture_t __far* R_GetTexture(int16_t texture)
     texture = 46;
 #endif
 
-    return (texture_t*)((const byte*)texturep + texturep[texture]);
+    return (texture_t*)((const byte*)texturep + W_FetchUInt16(&texturep[texture]));
 }
 
 static int16_t R_GetTextureNumForName(const char* tex_name)

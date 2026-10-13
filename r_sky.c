@@ -73,7 +73,7 @@ void R_DrawSky(draw_column_vars_t *dcvars)
 	xc >>= ANGLETOSKYSHIFT - FRACBITS;
 	xc &= skywidthmask;
 
-	const column_t __far* column = (const column_t __far*) ((const byte __far*)skypatch + skypatch->columnofs[xc]);
+	const column_t __far* column = (const column_t __far*) ((const byte __far*)skypatch + W_FetchInt32(&skypatch->columnofs[xc]));
 
 	dcvars->source = (const byte __far*)column + 3;
 	R_DrawColumnWall(dcvars);
@@ -107,7 +107,7 @@ void R_DrawSky(visplane_t __far* pl)
 			xc >>= ANGLETOSKYSHIFT - FRACBITS;
 			xc &= skywidthmask;
 
-			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[xc]);
+			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[xc]));
 
 			dcvars.source = (const byte __far*)column + 3;
 			R_DrawColumn(&dcvars);
@@ -121,13 +121,14 @@ void R_DrawSky(visplane_t __far* pl)
 void R_InitSky(void)
 {
 	int16_t skytexture = R_CheckTextureNumForName("SKY1");
-	const texture_t __far* tex = R_GetTexture(skytexture);
-	skywidthmask = tex->widthmask;
+	texture_t tex;
+	W_Fetch(R_GetTexture(skytexture), &tex, sizeof(tex));
+	skywidthmask = tex.widthmask;
 
 #if defined FLAT_SPAN
-	skypatch = W_GetLumpByNum(tex->patches[0].patch_num);
+	skypatch = W_GetLumpByNum(tex.patches[0].patch_num);
 #else
-	skypatchnum  = tex->patches[0].patch_num;
+	skypatchnum  = tex.patches[0].patch_num;
 
 	// First thing, we have a dummy sky texture name,
 	//  a flat. The data is in the WAD only because

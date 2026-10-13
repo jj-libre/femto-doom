@@ -29,6 +29,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "i_video.h"
+#include "w_wad.h"
 
 #include "globdata.h"
 
@@ -72,7 +73,7 @@ byte R_GetPlaneColor(int16_t picnum, int16_t lightlevel)
 	if (picnum == -3)
 		picnum = nukage;
 
-	return colormap[picnum];
+	return W_FetchUInt8(&colormap[picnum]);
 }
 
 #else
