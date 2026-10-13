@@ -1172,7 +1172,7 @@ static int16_t M_StringWidth(const char __far* string)
 		if (HU_FONTSTART <= c && c <= HU_FONTEND)
 		{
 			const patch_t __far* patch = W_GetLumpByNum(c + font_lump_offset);
-			w += patch->width;
+			w += W_FetchInt16(&patch->width);
 		} else
 			w += HU_FONT_SPACE_WIDTH;
 	}
@@ -1218,7 +1218,7 @@ static void M_WriteText (int16_t x, int16_t y, const char __far* string)
 		{
 			const patch_t __far* patch = W_GetLumpByNum(c + font_lump_offset);
 			V_DrawPatchNotScaled(cx, cy, patch);
-			cx += patch->width;
+			cx += W_FetchInt16(&patch->width);
 		} else {
 			cx += HU_FONT_SPACE_WIDTH;
 		}

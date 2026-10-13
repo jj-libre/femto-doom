@@ -111,13 +111,13 @@ void WI_drawLF(int16_t map)
 	// draw <LevelName>
 	WI_levelNameLump(map, lname);
 	const patch_t __far* patch = W_GetLumpByName(lname);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - patch->width)/2, y, patch);
+	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 
-	y += (5 * patch->height) / 4;
+	y += (5 * W_FetchInt16(&patch->height)) / 4;
 
 	// draw "Finished!"
 	const patch_t __far* finishedpatch = W_GetLumpByName(finished);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - finishedpatch->width)/2, y, finishedpatch);
+	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&finishedpatch->width))/2, y, finishedpatch);
 }
 
 
@@ -137,11 +137,11 @@ void WI_drawEL(int16_t map)
 
 	// draw "Entering"
 	const patch_t __far* enteringpatch = W_GetLumpByName(entering);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - enteringpatch->width)/2, y, enteringpatch);
+	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&enteringpatch->width))/2, y, enteringpatch);
 
 	// draw level
-	y += (5 * patch->height) / 4;
-	V_DrawPatchScaled((SCREENWIDTH_VGA - patch->width)/2, y, patch);
+	y += (5 * W_FetchInt16(&patch->height)) / 4;
+	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 }
 
 
@@ -160,7 +160,7 @@ void WI_drawColon(int16_t x, int16_t y)
 void WI_drawSucks(int16_t x, int16_t y)
 {
 	const patch_t __far* patch = W_GetLumpByName(sucks);
-	V_DrawPatchScaled(x - patch->width, y, patch);
+	V_DrawPatchScaled(x - W_FetchInt16(&patch->width), y, patch);
 }
 
 

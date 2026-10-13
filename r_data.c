@@ -52,7 +52,7 @@
 int16_t V_NumPatchWidth(int16_t num)
 {
 	const patch_t __far* patch = W_GetLumpByNum(num);
-	int16_t width = patch->width;
+	int16_t width = W_FetchInt16(&patch->width);
 	return width;
 }
 
@@ -127,11 +127,13 @@ static int16_t R_GetTextureNumForName(const char* tex_name)
 
     for (int16_t i = 0; i < numtextures; i++)
     {
-        int32_t offset = *directory++;
+        int32_t offset = W_FetchInt32(directory++);
 
         const maptexture_t __far* mtexture = (const maptexture_t __far*) ( (const byte __far*)maptex + offset);
 
-        if (Z_EqualNames(mtexture->name, name8))
+        char name[8];
+        W_Fetch(mtexture->name, name, sizeof(name));
+        if (Z_EqualNames(name, name8))
         {
             return i;
         }
@@ -177,7 +179,7 @@ int16_t PUREFUNC R_CheckTextureNumForName (const char *tex_name)
 static void R_InitTextures()
 {
 	const int32_t __far* mtex1 = W_GetLumpByName("TEXTURE1");
-	numtextures = *mtex1;
+	numtextures = W_FetchInt32(mtex1);
 
 	texturep = W_GetLumpByName("TEXTUREP");
 

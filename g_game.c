@@ -927,7 +927,7 @@ static void G_ReadDemoTiccmd (void)
 {
     uint8_t at; // e6y: tasdoom stuff
 
-    if (*demo_p == DEMOMARKER)
+    if (W_FetchUInt8(demo_p) == DEMOMARKER)
         G_CheckDemoStatus();      // end of demo data stream
     else if (_g_demoplayback && demo_p + 4 > demobuffer + demolength)
     {
@@ -937,10 +937,13 @@ static void G_ReadDemoTiccmd (void)
     else
     {
         ticcmd_t* cmd = &_g_player.cmd;
-        cmd->forwardmove = ((int8_t)*demo_p++);
-        cmd->sidemove = ((int8_t)*demo_p++);
-        cmd->angleturn = ((uint8_t)(at = *demo_p++))<<8;
-        cmd->buttons = (uint8_t)*demo_p++;
+        byte b[4];
+        W_Fetch(demo_p, b, sizeof(b));
+        demo_p += sizeof(b);
+        cmd->forwardmove = ((int8_t)b[0]);
+        cmd->sidemove = ((int8_t)b[1]);
+        cmd->angleturn = ((uint8_t)(at = b[2]))<<8;
+        cmd->buttons = (uint8_t)b[3];
     }
 }
 
@@ -997,9 +1000,9 @@ static const byte __far* G_ReadDemoHeader(const byte __far* demo_p)
     //e6y: check for overrun
     CheckForOverrun(header_p, demo_p, 8);
 
-    skill = *demo_p++;
+    skill = W_FetchUInt8(demo_p++);
     demo_p++;
-    map = *demo_p++;
+    map = W_FetchUInt8(demo_p++);
 #if defined LOW_MEMORY
     map = 1;
 #endif

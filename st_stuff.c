@@ -34,6 +34,7 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "compiler.h"
@@ -686,12 +687,13 @@ static st_multicon_t* ST_multicon(int8_t i)
 
 static void ST_growRect(st_rect_t* r, int16_t x, int16_t y, int16_t lump)
 {
-	const patch_t __far* patch = W_GetLumpByNum(lump);
+	patch_t patch;
+	W_Fetch(W_GetLumpByNum(lump), &patch, offsetof(patch_t, columnofs));
 
-	int16_t x0 = x - patch->leftoffset;
-	int16_t y0 = y - patch->topoffset;
-	int16_t x1 = x0 + patch->width;
-	int16_t y1 = y0 + patch->height;
+	int16_t x0 = x - patch.leftoffset;
+	int16_t y0 = y - patch.topoffset;
+	int16_t x1 = x0 + patch.width;
+	int16_t y1 = y0 + patch.height;
 
 	if (x0 < 0)            x0 = 0;
 	if (y0 < ST_Y)         y0 = ST_Y;
