@@ -49,7 +49,7 @@
 static mobj_t __far* P_TeleportDestination(const line_t __far* line)
 {
   int16_t i;
-  for (i = -1; (i = P_FindSectorFromLineTag(line->tag, i)) >= 0;) {
+  for (i = -1; (i = P_FindSectorFromLineTag(LN_TAG(line), i)) >= 0;) {
     thinker_t __far* th = NULL;
     while ((th = P_NextThinker(th)) != NULL)
       if (th->function == P_MobjThinker) {

@@ -394,7 +394,7 @@ static void P_LoadReject(int16_t lump)
 // cph - convenient sub-function
 static void P_AddLineToSector(const line_t __far* li, sector_t __far* sector)
 {
-  sector->lines[sector->linecount++] = li;
+  sector->lines[sector->linecount++] = li - _g_maplines;
 }
 
 static void M_ClearBox (fixed_t *box)
@@ -451,7 +451,7 @@ static void P_GroupLines (void)
     }
 
     {  // allocate line tables for each sector
-        const line_t __far*__far*linebuffer = Z_MallocLevel(total*sizeof(line_t __far*), NULL);
+        int16_t __far* linebuffer = Z_MallocLevel(total*sizeof(int16_t), NULL);
 
         for (i=0, sector = _g_sectors; i<_g_numsectors; i++, sector++)
         {
@@ -476,8 +476,10 @@ static void P_GroupLines (void)
 
         for(int16_t l = 0; l < sector->linecount; l++)
         {
-            M_AddToBox (bbox, (fixed_t)sector->lines[l]->v1.x<<FRACBITS, (fixed_t)sector->lines[l]->v1.y<<FRACBITS);
-            M_AddToBox (bbox, (fixed_t)sector->lines[l]->v2.x<<FRACBITS, (fixed_t)sector->lines[l]->v2.y<<FRACBITS);
+            vertex16_t v[2];
+            W_Fetch(SEC_LINE(sector, l), v, sizeof(v));
+            M_AddToBox (bbox, (fixed_t)v[0].x<<FRACBITS, (fixed_t)v[0].y<<FRACBITS);
+            M_AddToBox (bbox, (fixed_t)v[1].x<<FRACBITS, (fixed_t)v[1].y<<FRACBITS);
         }
 
         sector->soundorg.x = bbox[BOXRIGHT]/2+bbox[BOXLEFT]/2;

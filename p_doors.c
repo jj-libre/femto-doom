@@ -66,14 +66,14 @@ static void EV_LightTurnOnPartway(const line_t __far* line, fixed_t level)
     level = FRACUNIT;
 
   // search all sectors for ones with same tag as activating line
-  for (i = -1; (i = P_FindSectorFromLineTag(line->tag,i)) >= 0;)
+  for (i = -1; (i = P_FindSectorFromLineTag(LN_TAG(line),i)) >= 0;)
     {
       sector_t __far* temp;
       sector_t __far* sector = _g_sectors+i;
       int16_t j, bright = 0, min = sector->lightlevel;
 
       for (j = 0; j < sector->linecount; j++)
-  if ((temp = getNextSector(sector->lines[j],sector)))
+  if ((temp = getNextSector(SEC_LINE(sector, j),sector)))
     {
       if (temp->lightlevel > bright)
         bright = temp->lightlevel;
@@ -241,7 +241,7 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
   rtn = false;
 
   // open all doors with the same tag as the activating line
-  while ((secnum = P_FindSectorFromLineTag(line->tag,secnum)) >= 0)
+  while ((secnum = P_FindSectorFromLineTag(LN_TAG(line),secnum)) >= 0)
   {
     sec = &_g_sectors[secnum];
     // if the ceiling already moving, don't start the door action

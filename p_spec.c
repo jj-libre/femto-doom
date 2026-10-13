@@ -127,7 +127,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t __far* sec)
 
   for (i=0 ;i < sec->linecount ; i++)
   {
-    check = sec->lines[i];
+    check = SEC_LINE(sec, i);
     other = getNextSector(check,sec);
 
     if (!other)
@@ -155,7 +155,7 @@ fixed_t P_FindHighestFloorSurrounding(sector_t __far* sec)
 
   for (i=0 ;i < sec->linecount ; i++)
   {
-    check = sec->lines[i];
+    check = SEC_LINE(sec, i);
     other = getNextSector(check,sec);
 
     if (!other)
@@ -183,7 +183,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t __far* sec)
 
   for (i=0 ;i < sec->linecount ; i++)
   {
-    check = sec->lines[i];
+    check = SEC_LINE(sec, i);
     other = getNextSector(check,sec);
 
     if (!other)
@@ -205,7 +205,7 @@ int16_t P_FindSectorFromLineTag(int16_t line_tag, int16_t start)
 
     for (i=start+1; i<_g_numsectors; i++)
     {
-        if (_g_mapsectors[i].tag == line_tag)
+        if (W_FetchInt16(&_g_mapsectors[i].tag) == line_tag)
             return i;
     }
 
@@ -229,7 +229,7 @@ boolean P_CheckTag(const line_t __far* line)
 {
   /* tag not zero, allowed, or
    * killough 11/98: compatibility option */
-  if (line->tag)
+  if (LN_TAG(line))
     return true;
 
   switch(LN_SPECIAL(line))
@@ -310,17 +310,17 @@ void P_UpdateSpecials (void)
                 switch(_g_buttonlist[i].where)
                 {
                     case top:
-                        _g_sides[_g_buttonlist[i].line->sidenum[0]].toptexture =
+                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].toptexture =
                                 _g_buttonlist[i].btexture;
                         break;
 
                     case middle:
-                        _g_sides[_g_buttonlist[i].line->sidenum[0]].midtexture =
+                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].midtexture =
                                 _g_buttonlist[i].btexture;
                         break;
 
                     case bottom:
-                        _g_sides[_g_buttonlist[i].line->sidenum[0]].bottomtexture =
+                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].bottomtexture =
                                 _g_buttonlist[i].btexture;
                         break;
                 }
@@ -462,7 +462,7 @@ static void P_SpawnScrollers(void)
 	for (int16_t i = 0; i < _g_numlines; i++)
 	{
 		if (LN_SPECIAL(line) == 48)
-			Add_Scroller(line->sidenum[0]);
+			Add_Scroller(LN_SIDENUM(line, 0));
 		line++;
 	}
 }

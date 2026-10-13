@@ -205,7 +205,7 @@ static int16_t P_FindMinSurroundingLight(sector_t __far* sector, int16_t max)
   min = max;
   for (i=0 ; i < sector->linecount ; i++)
   {
-    line = sector->lines[i];
+    line = SEC_LINE(sector, i);
     check = getNextSector(line,sector);
 
     if (!check)
@@ -335,7 +335,7 @@ void EV_LightTurnOn(const line_t __far* line, int16_t bright)
 
 	// search all sectors for ones with same tag as activating line
 
-	for (i = -1; (i = P_FindSectorFromLineTag(line->tag,i)) >= 0;)
+	for (i = -1; (i = P_FindSectorFromLineTag(LN_TAG(line),i)) >= 0;)
 	{
 		sector_t __far* temp;
 		sector_t __far* sector = _g_sectors+i;
@@ -345,7 +345,7 @@ void EV_LightTurnOn(const line_t __far* line, int16_t bright)
 
 		if (!bright)
 			for (j = 0;j < sector->linecount; j++)
-				if ((temp = getNextSector(sector->lines[j],sector)) && temp->lightlevel > tbright)
+				if ((temp = getNextSector(SEC_LINE(sector, j),sector)) && temp->lightlevel > tbright)
 					tbright = temp->lightlevel;
 
 		sector->lightlevel = tbright;

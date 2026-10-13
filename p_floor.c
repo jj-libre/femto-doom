@@ -438,12 +438,12 @@ fixed_t P_FindNextHighestFloor(sector_t __far* sec)
   int16_t i;
 
   for (i=0 ;i < sec->linecount ; i++)
-    if ((other = getNextSector(sec->lines[i],sec)) &&
+    if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
          other->floorheight > currentheight)
     {
       fixed_t height = other->floorheight;
       while (++i < sec->linecount)
-        if ((other = getNextSector(sec->lines[i],sec)) &&
+        if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
             other->floorheight < height &&
             other->floorheight > currentheight)
           height = other->floorheight;
@@ -575,7 +575,7 @@ static inline int16_t P_FindSectorFromLineTagWithLowerBound(const line_t __far* 
   /* Emulate original Doom's linear lower-bounded P_FindSectorFromLineTag
    * as needed */
   do {
-    start = P_FindSectorFromLineTag(l->tag,start);
+    start = P_FindSectorFromLineTag(LN_TAG(l),start);
   } while (0 <= start && start <= min);
   return start;
 }
@@ -634,9 +634,9 @@ boolean EV_BuildStairs(const line_t __far* line)
 
       for (i = 0;i < sec->linecount;i++)
       {          
-        sector_t __far* tsec = LN_FRONTSECTOR((sec->lines[i]));
+        sector_t __far* tsec = LN_FRONTSECTOR((SEC_LINE(sec, i)));
         int16_t newsecnum;
-        if ( !((sec->lines[i])->flags & ML_TWOSIDED) )
+        if ( !(LN_FLAGS(SEC_LINE(sec, i)) & ML_TWOSIDED) )
           continue;
 
         newsecnum = tsec-_g_sectors;
@@ -644,7 +644,7 @@ boolean EV_BuildStairs(const line_t __far* line)
         if (secnum != newsecnum)
           continue;
 
-        tsec = LN_BACKSECTOR((sec->lines[i]));
+        tsec = LN_BACKSECTOR((SEC_LINE(sec, i)));
         if (!tsec) continue;     //jff 5/7/98 if no backside, continue
         newsecnum = tsec - _g_sectors;
 
@@ -704,7 +704,7 @@ boolean EV_DoDonut(const line_t __far* line)
   secnum = -1;
   rtn = false;
   // do function on all sectors with same tag as linedef
-  while ((secnum = P_FindSectorFromLineTag(line->tag,secnum)) >= 0)
+  while ((secnum = P_FindSectorFromLineTag(LN_TAG(line),secnum)) >= 0)
   {
     s1 = &_g_sectors[secnum];                // s1 is pillar's sector
 
@@ -712,7 +712,7 @@ boolean EV_DoDonut(const line_t __far* line)
     if (s1->floordata != NULL)
       continue;
 
-    s2 = getNextSector(s1->lines[0],s1);  // s2 is pool's sector
+    s2 = getNextSector(SEC_LINE(s1, 0),s1);  // s2 is pool's sector
     if (!s2) continue;                    // note lowest numbered line around
                                           // pillar must be two-sided
 
@@ -726,12 +726,12 @@ boolean EV_DoDonut(const line_t __far* line)
     {
 
 
-        if (!LN_BACKSECTOR((s2->lines[i])) || LN_BACKSECTOR((s2->lines[i])) == s1)
+        if (!LN_BACKSECTOR((SEC_LINE(s2, i))) || LN_BACKSECTOR((SEC_LINE(s2, i))) == s1)
             continue;
 
       rtn = true; //jff 1/26/98 no donut action - no switch change on return
 
-      s3 = LN_BACKSECTOR((s2->lines[i]));      // s3 is model sector for changes
+      s3 = LN_BACKSECTOR((SEC_LINE(s2, i)));      // s3 is model sector for changes
 
       //  Spawn rising slime
       floor = Z_CallocLevSpec(sizeof(*floor));

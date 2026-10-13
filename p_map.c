@@ -244,10 +244,13 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
 
 static boolean PIT_CheckLine (const line_t __far* ld)
 {
-  if (_g_tmbbox[BOXRIGHT]  <= (fixed_t)ld->bbox[BOXLEFT]   << FRACBITS
-   || _g_tmbbox[BOXLEFT]   >= (fixed_t)ld->bbox[BOXRIGHT]  << FRACBITS
-   || _g_tmbbox[BOXTOP]    <= (fixed_t)ld->bbox[BOXBOTTOM] << FRACBITS
-   || _g_tmbbox[BOXBOTTOM] >= (fixed_t)ld->bbox[BOXTOP]    << FRACBITS)
+  int16_t bbox[4];
+  W_Fetch(ld->bbox, bbox, sizeof(bbox));
+
+  if (_g_tmbbox[BOXRIGHT]  <= (fixed_t)bbox[BOXLEFT]   << FRACBITS
+   || _g_tmbbox[BOXLEFT]   >= (fixed_t)bbox[BOXRIGHT]  << FRACBITS
+   || _g_tmbbox[BOXTOP]    <= (fixed_t)bbox[BOXBOTTOM] << FRACBITS
+   || _g_tmbbox[BOXBOTTOM] >= (fixed_t)bbox[BOXTOP]    << FRACBITS)
     return true; // didn't hit it
 
   if (P_BoxOnLineSide(_g_tmbbox, ld) != -1)
@@ -270,10 +273,10 @@ static boolean PIT_CheckLine (const line_t __far* ld)
 
   if (!(tmthing->flags & MF_MISSILE))
     {
-      if (ld->flags & ML_BLOCKING)           // explicitly blocking everything
+      if (LN_FLAGS(ld) & ML_BLOCKING)           // explicitly blocking everything
   return false;
 
-      if (!P_MobjIsPlayer(tmthing) && ld->flags & ML_BLOCKMONSTERS)
+      if (!P_MobjIsPlayer(tmthing) && LN_FLAGS(ld) & ML_BLOCKMONSTERS)
   return false; // block monsters only
     }
 
@@ -569,7 +572,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 
     case 5:
       // Raise Floor
-      if (EV_DoFloor(line->tag,raiseFloor))
+      if (EV_DoFloor(LN_TAG(line),raiseFloor))
         LN_SPECIAL(line) = 0;
       break;
 
@@ -599,7 +602,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 
     case 36:
       // Lower Floor (TURBO)
-      if (EV_DoFloor(line->tag,turboLower))
+      if (EV_DoFloor(LN_TAG(line),turboLower))
         LN_SPECIAL(line) = 0;
       break;
 
@@ -612,7 +615,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 
     case 82:
       // Lower Floor To Lowest
-      EV_DoFloor( line->tag, lowerFloorToLowest );
+      EV_DoFloor( LN_TAG(line), lowerFloorToLowest );
       break;
 
     case 86:
@@ -632,7 +635,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 
     case 91:
       // Raise Floor
-      EV_DoFloor(line->tag,raiseFloor);
+      EV_DoFloor(LN_TAG(line),raiseFloor);
       break;
 
     case 97:
@@ -642,7 +645,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 
     case 98:
       // Lower Floor (TURBO)
-      EV_DoFloor(line->tag,turboLower);
+      EV_DoFloor(LN_TAG(line),turboLower);
       break;
   }
 }
@@ -728,7 +731,7 @@ static boolean PTR_AimTraverse (intercept_t* in)
     {
         li = in->d.line;
 
-        if ( !(li->flags & ML_TWOSIDED) )
+        if ( !(LN_FLAGS(li) & ML_TWOSIDED) )
             return false;   // stop
 
         // Crosses a two sided line.
@@ -873,7 +876,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
     if (LN_SPECIAL(li))
       P_ShootSpecialLine (shootthing, li);
 
-    if (li->flags & ML_TWOSIDED)
+    if (LN_FLAGS(li) & ML_TWOSIDED)
     {  // crosses a two sided (really 2s) line
       P_LineOpening (li);
       fixed_t t = FixedMul3(aimslope, in->frac, attackrange) + shootz;
@@ -1064,7 +1067,7 @@ static boolean PTR_NoWayTraverse(intercept_t* in)
   const line_t __far* ld = in->d.line;
                                            // This linedef
   return LN_SPECIAL(ld) || !(                 // Ignore specials
-   ld->flags & ML_BLOCKING || (            // Always blocking
+   LN_FLAGS(ld) & ML_BLOCKING || (            // Always blocking
    P_LineOpening(ld),                      // Find openings
    _g_openrange <= 0 ||                       // No opening
    _g_openbottom > usething->z+24*FRACUNIT || // Too high it blocks
@@ -1332,10 +1335,13 @@ void P_SetSeclist(msecnode_t __far* sectorList)
 
 static boolean PIT_GetSectors(const line_t __far* ld)
   {
-  if (_g_tmbbox[BOXRIGHT]  <= (fixed_t)ld->bbox[BOXLEFT]   << FRACBITS ||
-      _g_tmbbox[BOXLEFT]   >= (fixed_t)ld->bbox[BOXRIGHT]  << FRACBITS ||
-      _g_tmbbox[BOXTOP]    <= (fixed_t)ld->bbox[BOXBOTTOM] << FRACBITS ||
-      _g_tmbbox[BOXBOTTOM] >= (fixed_t)ld->bbox[BOXTOP]    << FRACBITS)
+  int16_t bbox[4];
+  W_Fetch(ld->bbox, bbox, sizeof(bbox));
+
+  if (_g_tmbbox[BOXRIGHT]  <= (fixed_t)bbox[BOXLEFT]   << FRACBITS ||
+      _g_tmbbox[BOXLEFT]   >= (fixed_t)bbox[BOXRIGHT]  << FRACBITS ||
+      _g_tmbbox[BOXTOP]    <= (fixed_t)bbox[BOXBOTTOM] << FRACBITS ||
+      _g_tmbbox[BOXBOTTOM] >= (fixed_t)bbox[BOXTOP]    << FRACBITS)
     return true;
 
   if (P_BoxOnLineSide(_g_tmbbox, ld) != -1)

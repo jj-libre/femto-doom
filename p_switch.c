@@ -179,9 +179,9 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
     int16_t   *texture, ttop, tmid, tbot;
     bwhere_e position;
 
-    ttop = _g_sides[line->sidenum[0]].toptexture;
-    tmid = _g_sides[line->sidenum[0]].midtexture;
-    tbot = _g_sides[line->sidenum[0]].bottomtexture;
+    ttop = _g_sides[LN_SIDENUM(line, 0)].toptexture;
+    tmid = _g_sides[LN_SIDENUM(line, 0)].midtexture;
+    tbot = _g_sides[LN_SIDENUM(line, 0)].bottomtexture;
 
     /* don't zero line->special until after exit switch test */
     if (!useAgain)
@@ -221,15 +221,15 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
     switch(position)
     {
         case top:
-            _g_sides[line->sidenum[0]].toptexture = *texture;
+            _g_sides[LN_SIDENUM(line, 0)].toptexture = *texture;
             break;
 
         case middle:
-            _g_sides[line->sidenum[0]].midtexture = *texture;
+            _g_sides[LN_SIDENUM(line, 0)].midtexture = *texture;
             break;
 
         case bottom:
-            _g_sides[line->sidenum[0]].bottomtexture = *texture;
+            _g_sides[LN_SIDENUM(line, 0)].bottomtexture = *texture;
             break;
     }
 
@@ -299,14 +299,14 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   }
 
   // if the wrong side of door is pushed, give oof sound
-  if (line->sidenum[1]==NO_INDEX)                     // killough
+  if (LN_SIDENUM(line, 1)==NO_INDEX)                     // killough
   {
     S_StartSound(player->mo,sfx_oof);           // killough 3/20/98
     return;
   }
 
   // get the sector on the second side of activating linedef
-  sec = _g_sides[line->sidenum[1]].sector;
+  sec = _g_sides[LN_SIDENUM(line, 1)].sector;
 
   door = sec->ceilingdata;
 
@@ -351,7 +351,7 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   door->line = line; // jff 1/31/98 remember line that triggered us
 
   /* killough 10/98: use gradual lighting changes if nonzero tag given */
-  door->lighttag = line->tag != 0;
+  door->lighttag = LN_TAG(line) != 0;
 
   // set the type of door from the activating linedef type
   switch(LN_SPECIAL(line))
@@ -399,7 +399,7 @@ boolean P_UseSpecialLine(mobj_t __far* thing, const line_t __far* line)
   if (!P_MobjIsPlayer(thing))
   {
     // never open secret doors
-    if (line->flags & ML_SECRET)
+    if (LN_FLAGS(line) & ML_SECRET)
       return false;
 
     switch(LN_SPECIAL(line))
@@ -463,7 +463,7 @@ boolean P_UseSpecialLine(mobj_t __far* thing, const line_t __far* line)
 
     case 18:
       // Raise Floor to next highest floor
-      if (EV_DoFloor(line->tag, raiseFloorToNearest))
+      if (EV_DoFloor(LN_TAG(line), raiseFloorToNearest))
         P_ChangeSwitchTexture(line,false);
       break;
 
@@ -475,7 +475,7 @@ boolean P_UseSpecialLine(mobj_t __far* thing, const line_t __far* line)
 
     case 23:
       // Lower Floor to Lowest
-      if (EV_DoFloor(line->tag,lowerFloorToLowest))
+      if (EV_DoFloor(LN_TAG(line),lowerFloorToLowest))
         P_ChangeSwitchTexture(line,false);
       break;
 
@@ -515,7 +515,7 @@ boolean P_UseSpecialLine(mobj_t __far* thing, const line_t __far* line)
 
     case 70:
       // Turbo Lower Floor
-      if (EV_DoFloor(line->tag,turboLower))
+      if (EV_DoFloor(LN_TAG(line),turboLower))
         P_ChangeSwitchTexture(line,true);
       break;
   }

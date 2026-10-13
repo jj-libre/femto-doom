@@ -82,13 +82,20 @@ fixed_t CONSTFUNC P_AproxDistance(fixed_t dx, fixed_t dy)
 //
 // killough 5/3/98: reformatted, cleaned up
 
-int16_t PUREFUNC P_PointOnLineSide(fixed_t x, fixed_t y, const line_t __far* line)
+static int16_t PUREFUNC P_PointOnLineCopySide(fixed_t x, fixed_t y, const line_t* line)
 {
   return
     !line->dx ? x <= (fixed_t)line->v1.x<<FRACBITS ? line->dy > 0 : line->dy < 0 :
     !line->dy ? y <= (fixed_t)line->v1.y<<FRACBITS ? line->dx < 0 : line->dx > 0 :
     //FixedMul(y-((fixed_t)line->v1.y<<FRACBITS), line->dx>>FRACBITS) >= FixedMul(line->dy>>FRACBITS, x-((fixed_t)line->v1.x<<FRACBITS));
     ((y - ((fixed_t)line->v1.y<<FRACBITS) >> 8)) * line->dx >= line->dy * ((x - ((fixed_t)line->v1.x<<FRACBITS)) >> 8);
+}
+
+int16_t P_PointOnLineSide(fixed_t x, fixed_t y, const line_t __far* line)
+{
+  line_t l;
+  W_Fetch(line, &l, sizeof(l));
+  return P_PointOnLineCopySide(x, y, &l);
 }
 
 //
@@ -98,7 +105,7 @@ int16_t PUREFUNC P_PointOnLineSide(fixed_t x, fixed_t y, const line_t __far* lin
 //
 // killough 5/3/98: reformatted, cleaned up
 
-int16_t PUREFUNC P_BoxOnLineSide(const fixed_t *tmbox, const line_t __far* ld)
+static int16_t PUREFUNC P_BoxOnLineCopySide(const fixed_t *tmbox, const line_t* ld)
 {
     int16_t p;
     switch (ld->slopetype)
@@ -115,13 +122,20 @@ int16_t PUREFUNC P_BoxOnLineSide(const fixed_t *tmbox, const line_t __far* ld)
                     p ^ (ld->dy < 0) : -1;
     case ST_POSITIVE:
         return
-                P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld) ==
-                (p = P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXTOP], ld)) ? p : -1;
+                P_PointOnLineCopySide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld) ==
+                (p = P_PointOnLineCopySide(tmbox[BOXLEFT], tmbox[BOXTOP], ld)) ? p : -1;
     case ST_NEGATIVE:
         return
-                (P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
-                (p = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
+                (P_PointOnLineCopySide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
+                (p = P_PointOnLineCopySide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
     }
+}
+
+int16_t P_BoxOnLineSide(const fixed_t *tmbox, const line_t __far* ld)
+{
+    line_t l;
+    W_Fetch(ld, &l, sizeof(l));
+    return P_BoxOnLineCopySide(tmbox, &l);
 }
 
 //
@@ -144,7 +158,7 @@ static int16_t PUREFUNC P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline
 // P_MakeDivline
 //
 
-static void P_MakeDivline(const line_t __far* li, divline_t *dl)
+static void P_MakeDivline(const line_t* li, divline_t *dl)
 {
   dl->x = (fixed_t)li->v1.x<<FRACBITS;
   dl->y = (fixed_t)li->v1.y<<FRACBITS;
@@ -234,6 +248,12 @@ static fixed_t PUREFUNC P_InterceptVector3(const divline_t *v2, const divline_t 
 // OPTIMIZE: keep this precalculated
 //
 
+sector_t __far* LN_BackSector(const line_t __far* l)
+{
+    const uint16_t side = LN_SIDENUM(l, 1);
+    return side != NO_INDEX ? _g_sides[side].sector : NULL;
+}
+
 void P_LineOpening(const line_t __far* linedef)
 {
     // moved front and back outside P-LineOpening and changed
@@ -242,7 +262,7 @@ void P_LineOpening(const line_t __far* linedef)
     sector_t __far* openfrontsector;
     sector_t __far* openbacksector;
 
-    if (linedef->sidenum[1] == NO_INDEX)      // single sided line
+    if (LN_SIDENUM(linedef, 1) == NO_INDEX)      // single sided line
     {
         _g_openrange = 0;
         return;
@@ -422,7 +442,7 @@ boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __f
     if (!(0 <= x && x < _g_bmapwidth && 0 <= y && y <_g_bmapheight))
         return true;
 
-    const int16_t offset = _g_blockmap[y*_g_bmapwidth+x];
+    const int16_t offset = W_FetchInt16(&_g_blockmap[y*_g_bmapwidth+x]);
     const int16_t __far* list = _g_blockmaplump+offset;     // original was reading         // phares
 
 
@@ -436,10 +456,8 @@ boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __f
 
     const uint16_t vcount = validcount;
 
-    for ( ; *list != -1 ; list++)                                   // phares
+    for (int16_t lineno; (lineno = W_FetchInt16(list)) != -1 ; list++)  // phares
     {
-        const int16_t lineno = *list;
-
         linedata_t __far* ld = &_g_lines[lineno];
         const line_t *mld = &_g_maplines[lineno];
 
@@ -498,25 +516,27 @@ static boolean PIT_AddLineIntercepts(const line_t __far* ld)
   int16_t       s2;
   fixed_t   frac;
   divline_t dl;
+  line_t l;
+  W_Fetch(ld, &l, sizeof(l));
 
   // avoid precision problems with two routines
   if (_g_trace.dx >  FRACUNIT*16 || _g_trace.dy >  FRACUNIT*16 ||
       _g_trace.dx < -FRACUNIT*16 || _g_trace.dy < -FRACUNIT*16)
     {
-      s1 = P_PointOnDivlineSide ((fixed_t)ld->v1.x<<FRACBITS, (fixed_t)ld->v1.y<<FRACBITS, &_g_trace);
-      s2 = P_PointOnDivlineSide ((fixed_t)ld->v2.x<<FRACBITS, (fixed_t)ld->v2.y<<FRACBITS, &_g_trace);
+      s1 = P_PointOnDivlineSide ((fixed_t)l.v1.x<<FRACBITS, (fixed_t)l.v1.y<<FRACBITS, &_g_trace);
+      s2 = P_PointOnDivlineSide ((fixed_t)l.v2.x<<FRACBITS, (fixed_t)l.v2.y<<FRACBITS, &_g_trace);
     }
   else
     {
-      s1 = P_PointOnLineSide (_g_trace.x, _g_trace.y, ld);
-      s2 = P_PointOnLineSide (_g_trace.x+_g_trace.dx, _g_trace.y+_g_trace.dy, ld);
+      s1 = P_PointOnLineCopySide (_g_trace.x, _g_trace.y, &l);
+      s2 = P_PointOnLineCopySide (_g_trace.x+_g_trace.dx, _g_trace.y+_g_trace.dy, &l);
     }
 
   if (s1 == s2)
     return true;        // line isn't crossed
 
   // hit the line
-  P_MakeDivline(ld, &dl);
+  P_MakeDivline(&l, &dl);
   frac = P_InterceptVector3(&_g_trace, &dl);
 
   if (frac < 0)

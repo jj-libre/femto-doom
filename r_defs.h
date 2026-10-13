@@ -50,6 +50,8 @@
 // SECTORS do store MObjs anyway.
 #include "p_mobj.h"
 
+#include "w_wad.h"
+
 
 //
 // INTERNAL MAP TYPES
@@ -97,7 +99,7 @@ typedef struct
   void __far* floordata;    // jff 2/22/98 make thinkers on
   void __far* ceilingdata;  // floors, ceilings, lighting,
 
-  const struct line_s __far*__far*lines;
+  int16_t __far* lines;
 
   zref_t soundtarget;   // mobj_t that made a sound (or null)
   zref_t thinglist;     // list of mobjs in sector
@@ -212,10 +214,19 @@ typedef PACKEDATTR_PRE struct line_s
 typedef char assertLineSize[sizeof(line_t) == 32 ? 1 : -1];
 
 
-#define LN_FRONTSECTOR(l) (_g_sides[(l)->sidenum[0]].sector)
-#define LN_BACKSECTOR(l) ((l)->sidenum[1] != NO_INDEX ? _g_sides[(l)->sidenum[1]].sector : NULL)
+#define LN_FLAGS(l)      W_FetchUInt8(&(l)->flags)
+#define LN_TAG(l)        W_FetchInt16(&(l)->tag)
+#define LN_SIDENUM(l, s) W_FetchUInt16(&(l)->sidenum[s])
+#define LN_LINENO(l)     W_FetchUInt16(&(l)->lineno)
 
-#define LN_SPECIAL(l) (_g_lines[(l)->lineno].special)
+sector_t __far* LN_BackSector(const line_t __far* l);
+
+#define LN_FRONTSECTOR(l) (_g_sides[LN_SIDENUM(l, 0)].sector)
+#define LN_BACKSECTOR(l) LN_BackSector(l)
+
+#define LN_SPECIAL(l) (_g_lines[LN_LINENO(l)].special)
+
+#define SEC_LINE(s, i) (&_g_maplines[(s)->lines[i]])
 
 
 // phares 3/14/98

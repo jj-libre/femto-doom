@@ -151,13 +151,16 @@ static void P_HitSlideLine(const line_t __far* ld)
     /* killough 10/98: only bounce if hit hard (prevents wobbling)
    * cph - DEMOSYNC - should only affect players in Boom demos? */
 
-    if (ld->dy == 0)
+    line_t l;
+    W_Fetch(ld, &l, sizeof(l));
+
+    if (l.dy == 0)
     {
         tmymove = 0; // no more movement in the Y direction
         return;
     }
 
-    if (ld->dx == 0)
+    if (l.dx == 0)
     {                                                          // phares
         tmxmove = 0; // no more movement in the X direction
         return;
@@ -168,7 +171,7 @@ static void P_HitSlideLine(const line_t __far* ld)
 
     side = P_PointOnLineSide (slidemo->x, slidemo->y, ld);
 
-    lineangle = R_PointToAngle2 (0,0, (fixed_t)ld->dx<<FRACBITS, (fixed_t)ld->dy<<FRACBITS);
+    lineangle = R_PointToAngle2 (0,0, (fixed_t)l.dx<<FRACBITS, (fixed_t)l.dy<<FRACBITS);
     if (side == 1)
         lineangle += ANG180;
 
@@ -211,7 +214,7 @@ static boolean PTR_SlideTraverse (intercept_t* in)
 
   li = in->d.line;
 
-  if ( ! (li->flags & ML_TWOSIDED) )
+  if ( ! (LN_FLAGS(li) & ML_TWOSIDED) )
     {
     if (P_PointOnLineSide (slidemo->x, slidemo->y, li))
       return true; // don't hit the back side

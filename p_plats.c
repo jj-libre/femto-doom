@@ -180,7 +180,7 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
   rtn = false;
 
   // act on all sectors tagged the same as the activating linedef
-  while ((secnum = P_FindSectorFromLineTag(line->tag,secnum)) >= 0)
+  while ((secnum = P_FindSectorFromLineTag(LN_TAG(line),secnum)) >= 0)
   {
     sec = &_g_sectors[secnum];
 
@@ -197,7 +197,7 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
     plat->sector = sec;
     plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
     plat->thinker.function = T_PlatRaise;
-    plat->tag = line->tag;
+    plat->tag = LN_TAG(line);
 
     //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
     //going down forever -- default low to plat height when triggered
@@ -208,7 +208,7 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
     {
       case raiseToNearestAndChange:
         plat->speed = PLATSPEED/2;
-        sec->floorpic = _g_sides[line->sidenum[0]].sector->floorpic;
+        sec->floorpic = _g_sides[LN_SIDENUM(line, 0)].sector->floorpic;
         plat->high = P_FindNextHighestFloor(sec);
         plat->wait = 0;
         plat->status = up;
