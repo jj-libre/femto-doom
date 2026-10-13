@@ -165,7 +165,7 @@ static void P_LoadSubsectors (int16_t lump)
 
 // Sector definition, from editing.
 #if defined FLAT_SPAN
-#define R_FlatNumForFarName(p) (p)
+#define P_SectorFlatNum(p) (p)
 #else
 typedef struct {
   int16_t floorheight;
@@ -179,12 +179,7 @@ typedef struct {
 
 typedef char assertMapsectorSize[sizeof(mapsector_t) == 24 ? 1 : -1];
 
-static int16_t R_FlatNumForFarName(const char __far* far_name)
-{
-	char near_name[8];
-	W_Fetch(far_name, near_name, sizeof(near_name));
-	return R_FlatNumForName(near_name);
-}
+#define P_SectorFlatNum(p) R_FlatNumForName(p)
 #endif
 
 
@@ -199,16 +194,17 @@ static void P_LoadSectors (int16_t lump)
   for (i=0; i<_g_numsectors; i++)
     {
       sector_t __far* ss = _g_sectors + i;
-      const mapsector_t __far* ms = _g_mapsectors + i;
+      mapsector_t ms;
+      W_Fetch(_g_mapsectors + i, &ms, sizeof(ms));
 
-      ss->floorheight = ((int32_t)SHORT(ms->floorheight))<<FRACBITS;
-      ss->ceilingheight = ((int32_t)SHORT(ms->ceilingheight))<<FRACBITS;
-      ss->floorpic   = R_FlatNumForFarName(ms->floorpic);
-      ss->ceilingpic = R_FlatNumForFarName(ms->ceilingpic);
+      ss->floorheight = ((int32_t)SHORT(ms.floorheight))<<FRACBITS;
+      ss->ceilingheight = ((int32_t)SHORT(ms.ceilingheight))<<FRACBITS;
+      ss->floorpic   = P_SectorFlatNum(ms.floorpic);
+      ss->ceilingpic = P_SectorFlatNum(ms.ceilingpic);
 
-      ss->lightlevel = ms->lightlevel;
-      ss->special    = ms->special;
-      ss->oldspecial = ms->special;
+      ss->lightlevel = ms.lightlevel;
+      ss->special    = ms.special;
+      ss->oldspecial = ms.special;
 
       ss->thinglist = 0;
       ss->touching_thinglist = 0;
@@ -232,7 +228,7 @@ static void P_LoadNodes (int16_t lump)
  *
  */
 
-static boolean P_ThingLoads(const mapthing_t __far* mt, int16_t map)
+static boolean P_ThingLoads(const mapthing_t* mt, int16_t map)
 {
 #if defined LOW_MEMORY
 	if (map != 1 && map != 8
@@ -266,9 +262,11 @@ static void P_LoadThings(int16_t lump, int16_t map)
 	_g_staticPoolSize = 0;
 	for (int16_t i = 0; i < mapThingCount; i++)
 	{
-		if (!P_ThingLoads(&data[i], map))
+		mapthing_t mt;
+		W_Fetch(&data[i], &mt, sizeof(mt));
+		if (!P_ThingLoads(&mt, map))
 			continue;
-		if (P_MapThingIsStatic(&data[i]))
+		if (P_MapThingIsStatic(&mt))
 			_g_staticPoolSize++;
 		else
 			_g_thingPoolSize++;
@@ -290,8 +288,12 @@ static void P_LoadThings2(int16_t lump, int16_t map)
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
 	for (int16_t i = 0; i < mapThingCount; i++)
-		if (P_ThingLoads(&data[i], map))
-			P_SpawnMapThing(&data[i]);
+	{
+		mapthing_t mt;
+		W_Fetch(&data[i], &mt, sizeof(mt));
+		if (P_ThingLoads(&mt, map))
+			P_SpawnMapThing(&mt);
+	}
 }
 
 //
@@ -313,7 +315,7 @@ static void P_LoadLineDefs (int16_t lump)
 		_g_lines[i].validcount   = 0;
 		_g_lines[i].r_validcount = 0;
 		_g_lines[i].r_flags      = 0;
-		_g_lines[i].special      = _g_maplines[i].const_special;
+		_g_lines[i].special      = W_FetchInt16(&_g_maplines[i].const_special);
 	}
 }
 
@@ -330,14 +332,15 @@ static void P_LoadSideDefs (int16_t lump)
 
     for (int16_t i = 0; i < numsides; i++)
     {
-        const mapsidedef_t __far* msd = _g_mapsides + i;
+        mapsidedef_t msd;
+        W_Fetch(_g_mapsides + i, &msd, sizeof(msd));
         side_t __far* sd = _g_sides + i;
 
-        sd->textureoffset = msd->textureoffset;
-        sd->sector        = &_g_sectors[msd->sector];
-        sd->midtexture    = msd->midtexture;
-        sd->toptexture    = msd->toptexture;
-        sd->bottomtexture = msd->bottomtexture;
+        sd->textureoffset = msd.textureoffset;
+        sd->sector        = &_g_sectors[msd.sector];
+        sd->midtexture    = msd.midtexture;
+        sd->toptexture    = msd.toptexture;
+        sd->bottomtexture = msd.bottomtexture;
 
         P_LoadTexture(sd->midtexture);
         P_LoadTexture(sd->toptexture);
@@ -360,10 +363,13 @@ static void P_LoadBlockMap (int16_t lump)
 {
     _g_blockmaplump = W_GetMapLumpByNum(lump);
 
-    _g_bmaporgx = ((int32_t)_g_blockmaplump[0])<<FRACBITS;
-    _g_bmaporgy = ((int32_t)_g_blockmaplump[1])<<FRACBITS;
-    _g_bmapwidth  = _g_blockmaplump[2];
-    _g_bmapheight = _g_blockmaplump[3];
+    int16_t header[4];
+    W_Fetch(_g_blockmaplump, header, sizeof(header));
+
+    _g_bmaporgx = ((int32_t)header[0])<<FRACBITS;
+    _g_bmaporgy = ((int32_t)header[1])<<FRACBITS;
+    _g_bmapwidth  = header[2];
+    _g_bmapheight = header[3];
 
 
     // clear out mobj chains - CPhipps - use calloc
@@ -426,13 +432,17 @@ static void P_GroupLines (void)
     // figgi
     for (i=0 ; i<numsubsectors ; i++)
     {
-        const seg_t __far* seg = &_g_segs[_g_mapsubsectors[i].firstseg];
+        mapsubsector_t mapsub;
+        W_Fetch(&_g_mapsubsectors[i], &mapsub, sizeof(mapsub));
+
+        const seg_t __far* seg = &_g_segs[mapsub.firstseg];
         _g_subsectors[i].sector = NULL;
-        for(j=0; j<_g_mapsubsectors[i].numsegs; j++)
+        for(j=0; j<mapsub.numsegs; j++)
         {
-            if(seg->sidenum != NO_INDEX)
+            const uint16_t sidenum = W_FetchUInt16(&seg->sidenum);
+            if(sidenum != NO_INDEX)
             {
-                _g_subsectors[i].sector = _g_sides[seg->sidenum].sector;
+                _g_subsectors[i].sector = _g_sides[sidenum].sector;
                 break;
             }
             seg++;

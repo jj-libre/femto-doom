@@ -1061,7 +1061,7 @@ static void P_SpawnPlayer(int16_t playerx, int16_t playery, int8_t playerangle)
 // Deaf monsters/do not react to sound.
 #define MTF_AMBUSH              8
 
-boolean P_MapThingSpawns(const mapthing_t __far* mthing)
+boolean P_MapThingSpawns(const mapthing_t* mthing)
 {
     if (mthing->type == 1)
         return true;
@@ -1075,13 +1075,13 @@ boolean P_MapThingSpawns(const mapthing_t __far* mthing)
 }
 
 
-boolean P_MapThingIsStatic(const mapthing_t __far* mthing)
+boolean P_MapThingIsStatic(const mapthing_t* mthing)
 {
     return mthing->type != 1 && P_FindDoomedNum(mthing->type) >= MT_MISC0;
 }
 
 
-void P_SpawnMapThing(const mapthing_t __far* mthing)
+void P_SpawnMapThing(const mapthing_t* mthing)
 {
     int16_t     i;
     mobj_t __far* mobj;
