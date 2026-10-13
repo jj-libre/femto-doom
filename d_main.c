@@ -458,12 +458,12 @@ static void D_DoomMainSetup(void)
 
     I_InitSound();
 
-    printf("Z_Init: Init zone memory allocation daemon.\n");
+    I_Printf("Z_Init: Init zone memory allocation daemon.\n");
     Z_Init();
 
     G_ReloadDefaults();    // killough 3/4/98: set defaults just loaded.
 
-    printf("W_Init: Init WADfiles.\n");
+    I_Printf("W_Init: Init WADfiles.\n");
     W_Init(); // CPhipps - handling of wadfiles init changed
 
     I_InitSound2();
@@ -472,21 +472,21 @@ static void D_DoomMainSetup(void)
     F_Init();
     WI_Init();
 
-    printf("M_Init: Init miscellaneous info.\n");
+    I_Printf("M_Init: Init miscellaneous info.\n");
     M_Init();
 
-    printf("R_Init: DOOM refresh daemon - [...................]\n");
+    I_Printf("R_Init: DOOM refresh daemon - [...................]\n");
     R_Init();
 
-    printf("P_Init: Init Playloop state.\n");
+    I_Printf("P_Init: Init Playloop state.\n");
     P_Init();
 
     S_Init(snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
 
-    printf("HU_Init: Setting up heads up display.\n");
+    I_Printf("HU_Init: Setting up heads up display.\n");
     HU_Init();
 
-    printf("ST_Init: Init status bar.\n");
+    I_Printf("ST_Init: Init status bar.\n");
     ST_Init();
 
     G_LoadSettings();

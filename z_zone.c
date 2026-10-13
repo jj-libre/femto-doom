@@ -167,7 +167,7 @@ void Z_Init (void)
 	block->id   = ZONEID;
 #endif
 
-	printf("%ld bytes allocated for zone\n", heapSize);
+	I_Printf("%ld bytes allocated for zone\n", heapSize);
 }
 
 
@@ -194,7 +194,7 @@ static void Z_FreeBlock(memblock_t __far* block)
 
 #if defined INSTRUMENTED
     running_count -= block->size;
-    printf("Free: %ld\n", running_count);
+    I_Printf("Free: %ld\n", running_count);
 #endif
 
     memblock_t __far* other = segmentToPointer(block->prev);
@@ -373,7 +373,7 @@ static void __far* Z_TryMalloc(uint16_t size, int8_t tag, void __far*__far* user
 
 #if defined INSTRUMENTED
     running_count += base->size;
-    printf("Alloc: %ld (%ld)\n", base->size, running_count);
+    I_Printf("Alloc: %ld (%ld)\n", base->size, running_count);
 #endif
 
 #if defined _M_I86

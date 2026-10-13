@@ -637,7 +637,7 @@ static void G_DoCompleted (void)
     // print "FINISHED: <mapname>" when the player exits the current map
     if (nodrawers && (_g_demoplayback || _g_timingdemo))
     {
-        printf("FINISHED: E1M%d\n", _g_gamemap);
+        I_Printf("FINISHED: E1M%d\n", _g_gamemap);
     }
 
     WI_Start (&_g_wminfo);
@@ -931,7 +931,7 @@ static void G_ReadDemoTiccmd (void)
         G_CheckDemoStatus();      // end of demo data stream
     else if (_g_demoplayback && demo_p + 4 > demobuffer + demolength)
     {
-        printf("G_ReadDemoTiccmd: missing DEMOMARKER\n");
+        I_Printf("G_ReadDemoTiccmd: missing DEMOMARKER\n");
         G_CheckDemoStatus();
     }
     else
@@ -1099,7 +1099,7 @@ void G_CheckDemoStatus (void)
     if (_g_demoplayback)
     {
         if (_g_singledemo)
-            exit(0);  // killough
+            I_Quit();  // killough
 
         G_ReloadDefaults();    // killough 3/1/98
         D_AdvanceDemo ();

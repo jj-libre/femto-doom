@@ -96,7 +96,7 @@ void I_InitSound(void)
 	DMX_Init();
 
 	// Finished initialization.
-	printf("I_InitSound: sound ready\n");
+	I_Printf("I_InitSound: sound ready\n");
 }
 
 

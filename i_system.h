@@ -53,6 +53,13 @@ int32_t I_GetTime(void);
 _Noreturn void I_Quit(void);
 _Noreturn void I_Error(const char *error, ...);
 
+#if defined I_Printf
+void I_Printf(const char *format, ...);
+#else
+#include <stdio.h>
+#define I_Printf printf
+#endif
+
 void I_InitKeyboard(void);
 
 void I_InitGraphics(void);
