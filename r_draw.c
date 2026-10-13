@@ -1957,8 +1957,105 @@ static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t 
     return colcache;
 }
 
+#if defined WALL_PATCH_CACHE
+// The patch R_GetColumn found last, for the two textures a column can draw (top and
+// bottom, or mid), with the range of texture columns for which it is the first match.
+typedef struct
+{
+    const texture_t __far* tex;
+    const patch_t __far* patch;
+    uint16_t widthmask;
+    int16_t lo, hi, originx;
+    boolean overlapped;
+} wallpatch_t;
+
+static wallpatch_t wallpatches[2];
+static uint8_t wallpatchnext;
+
+static const patch_t __far* R_GetWallPatch(const texture_t __far* tex, int16_t texcolumn, int16_t* x_c)
+{
+    wallpatch_t* wp;
+
+    if (wallpatches[0].tex == tex)
+        wp = &wallpatches[0];
+    else if (wallpatches[1].tex == tex)
+        wp = &wallpatches[1];
+    else
+    {
+        wp = &wallpatches[wallpatchnext];
+        wallpatchnext ^= 1;
+
+        wp->tex        = tex;
+        wp->widthmask  = tex->widthmask;
+        wp->overlapped = tex->overlapped;
+        wp->lo = wp->hi = 0;
+
+        if (!wp->overlapped && tex->patchcount == 1)
+        {
+            wp->patch   = W_GetLumpByNum(tex->patches[0].patch_num);
+            wp->lo      = INT16_MIN;
+            wp->hi      = INT16_MAX;
+            wp->originx = 0;
+        }
+    }
+
+    if (wp->overlapped)
+        return NULL;
+
+    const int16_t xc = texcolumn & wp->widthmask;
+
+    if (xc < wp->lo || xc >= wp->hi)
+    {
+        const uint8_t patchcount = tex->patchcount;
+        int16_t lo = INT16_MIN, hi = INT16_MAX;
+        uint8_t i = 0;
+
+        do
+        {
+            const texpatch_t __far* patch = &tex->patches[i];
+            const int16_t a = patch->originx;
+            const int16_t b = a + patch->patch_width;
+
+            if (a <= xc && xc < b)
+            {
+                wp->patch   = W_GetLumpByNum(patch->patch_num);
+                wp->lo      = a > lo ? a : lo;
+                wp->hi      = b < hi ? b : hi;
+                wp->originx = a;
+                break;
+            }
+
+            if (b <= xc && b > lo)
+                lo = b;
+            else if (a > xc && a < hi)
+                hi = a;
+        } while (++i < patchcount);
+
+        if (i == patchcount)
+            return NULL;
+    }
+
+    *x_c = xc - wp->originx;
+    return wp->patch;
+}
+#endif
+
 static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, int16_t texcolumn, draw_column_vars_t* dcvars)
 {
+#if defined WALL_PATCH_CACHE
+    int16_t x_c;
+    const patch_t __far* patch = R_GetWallPatch(tex, texcolumn, &x_c);
+
+    if (patch)
+    {
+        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + patch->columnofs[x_c]);
+
+        dcvars->source = (const byte __far*)column + 3;
+        R_DrawColumnWall(dcvars);
+        return;
+    }
+#endif
+
     if (!tex->overlapped)
     {
         int16_t patch_num;
