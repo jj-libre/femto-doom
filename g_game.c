@@ -835,7 +835,7 @@ void G_SaveSettings()
 
 void G_LoadSettings()
 {
-    gba_save_settings_t settings;
+    gba_save_settings_t settings = {0};
 
     LoadSRAM((byte __far*)&settings, sizeof(settings), settings_sram_offset);
 
