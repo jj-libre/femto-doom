@@ -98,6 +98,8 @@
 // Indicate a leaf.
 #define NF_SUBSECTOR    0x8000
 
+#define MAX_BSP_DEPTH 24
+
 // Thing definition, position, orientation and type,
 // plus skill/visibility flags and attributes.
 typedef struct {

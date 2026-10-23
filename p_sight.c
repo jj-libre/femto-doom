@@ -39,6 +39,7 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "w_wad.h"
+#include "i_system.h"
 
 #include "globdata.h"
 
@@ -235,19 +236,29 @@ static NOINLINE boolean P_CrossBSPNodeSides(int16_t bspnum, int16_t* children)
 
 static boolean P_CrossBSPNode(int16_t bspnum)
 {
-    while (!(bspnum & NF_SUBSECTOR))
-    {
-        int16_t children[2];
+    int16_t ending[MAX_BSP_DEPTH];
+    int16_t sp = 0;
 
-        if (P_CrossBSPNodeSides(bspnum, children))
-            bspnum = children[0]; // doesn't touch the other side
-        else         // the partition plane is crossed here
-            if (!P_CrossBSPNode(children[0]))
-                return false;  // cross the starting side
-            else
-                bspnum = children[1];  // cross the ending side
+    while (true)
+    {
+        while (!(bspnum & NF_SUBSECTOR))
+        {
+            int16_t children[2];
+
+            if (!P_CrossBSPNodeSides(bspnum, children))
+            {
+                if (sp == MAX_BSP_DEPTH)
+                    I_Error("P_CrossBSPNode: deeper than %i", MAX_BSP_DEPTH);
+                ending[sp++] = children[1];
+            }
+            bspnum = children[0];
+        }
+        if (!P_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR))
+            return false;
+        if (sp == 0)
+            return true;
+        bspnum = ending[--sp];
     }
-    return P_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
 }
 
 
