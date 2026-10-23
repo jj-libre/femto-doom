@@ -3027,77 +3027,9 @@ static boolean R_RenderBspSubsector(int16_t bspnum)
 
 // RenderBSPNode
 // Renders all subsectors below a given node,
-//  traversing subtree recursively.
+//  walking the tree with a stack of back sides.
 // Just call with BSP root.
 
-#if defined PROFILING
-//Non recursive version.
-//constant stack space used and easier to
-//performance profile.
-#define MAX_BSP_DEPTH 64
-
-static void R_RenderBSPNode(int16_t bspnum)
-{
-    static int16_t stack_bsp[MAX_BSP_DEPTH];
-    static int8_t stack_side[MAX_BSP_DEPTH];
-    int16_t sp = 0;
-
-    mapnode_t bsp;
-    int8_t side;
-
-    while (true)
-    {
-        //Front sides.
-        while (!R_RenderBspSubsector(bspnum))
-        {
-            if (sp == MAX_BSP_DEPTH)
-                break;
-
-            W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
-            side = R_PointOnSide(viewx, viewy, &bsp);
-
-            stack_bsp[sp]  = bspnum;
-            stack_side[sp] = side ^ 1;
-            sp++;
-
-            bspnum = bsp.children[side];
-        }
-
-        if (sp == 0)
-        {
-            //back at root node and not visible. All done!
-            return;
-        }
-
-        //Back sides.
-        --sp;
-        side   = stack_side[sp];
-        bspnum = stack_bsp[sp];
-        W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
-
-        // Possibly divide back space.
-        //Walk back up the tree until we find
-        //a node that has a visible backspace.
-        while (!R_CheckBBox(bsp.bbox[side]))
-        {
-            if (sp == 0)
-            {
-                //back at root node and not visible. All done!
-                return;
-            }
-
-            //Back side next.
-            --sp;
-            side   = stack_side[sp];
-            bspnum = stack_bsp[sp];
-
-            W_Fetch(&nodes[bspnum], &bsp, sizeof(bsp));
-        }
-
-        bspnum = bsp.children[side];
-    }
-}
-#else
 static NOINLINE int16_t R_FetchBSPNode(int16_t bspnum, int16_t* back, int16_t* backbox)
 {
 	mapnode_t bsp;
@@ -3115,19 +3047,28 @@ static NOINLINE int16_t R_FetchBSPNode(int16_t bspnum, int16_t* back, int16_t* b
 
 static void R_RenderBSPNode(int16_t bspnum)
 {
-	if (R_RenderBspSubsector(bspnum))
-		return;
+	int16_t back[MAX_BSP_DEPTH];
+	int16_t backbox[MAX_BSP_DEPTH][4];
+	int16_t sp = 0;
 
-	int16_t back;
-	int16_t backbox[4];
-	int16_t front = R_FetchBSPNode(bspnum, &back, backbox);
-
-	R_RenderBSPNode(front); // recursively divide front space
-
-	if (R_CheckBBox(backbox))	// possibly divide back space
-		R_RenderBSPNode(back);
+	while (true)
+	{
+		while (!R_RenderBspSubsector(bspnum))
+		{
+			if (sp == MAX_BSP_DEPTH)
+				I_Error("R_RenderBSPNode: deeper than %i", MAX_BSP_DEPTH);
+			bspnum = R_FetchBSPNode(bspnum, &back[sp], backbox[sp]);
+			sp++;
+		}
+		do
+		{
+			if (sp == 0)
+				return;
+			sp--;
+		} while (!R_CheckBBox(backbox[sp]));
+		bspnum = back[sp];
+	}
 }
-#endif
 
 
 static void R_ClearDrawSegs(void)
