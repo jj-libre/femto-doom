@@ -81,7 +81,7 @@ static void P_SetPsprite(player_t *player, psprnum_t position, statenum_t stnum)
       // Modified handling.
       if (state->action)
         {
-          state->action(player, psp);
+          stateactions[state->action](player, psp);
           if (!psp->state)
             break;
         }

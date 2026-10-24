@@ -131,11 +131,11 @@ def engine_info(root):
     source = (root / "info.c").read_text("latin-1")
     info = {}
     for block in re.finditer(r"\{\s*//\s*(MT_\w+)\s*\n(.*?)\n\s*\}", source, re.S):
-        fields = [line.split("//")[0].strip().rstrip(",") for line in block[2].splitlines() if "//" in line]
-        doomednum = int(fields[0])
-        radius = eval(fields[16].replace("FRACUNIT", "65536"))
+        fields = {line.split("//")[1].strip(): line.split("//")[0].strip().rstrip(",") for line in block[2].splitlines() if "//" in line}
+        doomednum = int(fields["doomednum"])
+        radius = eval(fields["radius"].replace("FRACUNIT", "65536"))
         flag = 0
-        for name in fields[21].split("|"):
+        for name in fields["flags"].split("|"):
             name = name.strip()
             flag |= flags[name] if name in flags else int(name or 0)
         info[types.index(block[1])] = (doomednum, radius, flag)

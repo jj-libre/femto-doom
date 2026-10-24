@@ -44,12 +44,12 @@
 /* Weapon info: sprite frames, ammunition use. */
 typedef struct
 {
-  ammotype_t  ammo;
-  statenum_t         upstate;
-  statenum_t         downstate;
-  statenum_t         readystate;
-  statenum_t         atkstate;
-  statenum_t         flashstate;
+  uint8_t     ammo;
+  uint16_t           upstate;
+  uint16_t           downstate;
+  uint16_t           readystate;
+  uint16_t           atkstate;
+  uint16_t           flashstate;
 
 } weaponinfo_t;
 

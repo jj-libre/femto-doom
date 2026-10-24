@@ -436,13 +436,52 @@ typedef enum
  * Definition of the state (frames) structure                       *
  ********************************************************************/
 
+enum {
+  AC_NULL,
+  AC_Light0,
+  AC_WeaponReady,
+  AC_Lower,
+  AC_Raise,
+  AC_Punch,
+  AC_ReFire,
+  AC_FirePistol,
+  AC_Light1,
+  AC_FireShotgun,
+  AC_Light2,
+  AC_FireCGun,
+  AC_GunFlash,
+  AC_FireMissile,
+  AC_Saw,
+  AC_Explode,
+  AC_Pain,
+  AC_PlayerScream,
+  AC_Fall,
+  AC_XScream,
+  AC_Look,
+  AC_Chase,
+  AC_FaceTarget,
+  AC_PosAttack,
+  AC_Scream,
+  AC_SPosAttack,
+  AC_TroopAttack,
+  AC_SargAttack,
+  AC_BruisAttack,
+  AC_BossDeath,
+  NUMACTIONS
+};
+
+extern const actionf_t stateactions[NUMACTIONS];
+
+#define FF_FULLBRIGHT   0x80  /* flag in thing->frame */
+#define FF_FRAMEMASK    0x7f
+
 typedef struct
 {
   spritenum_t sprite;       /* sprite number to show                       */
-  uint16_t    frame;        /* which frame/subframe of the sprite is shown */
-  int16_t     tics;         /* number of gametics this frame should last   */
-  actionf_t   action;       /* code pointer to function for action if any  */
-  statenum_t  nextstate;    /* linked list pointer to next state or zero   */
+  uint8_t     frame;        /* which frame/subframe of the sprite is shown */
+  int8_t      tics;         /* number of gametics this frame should last   */
+  uint8_t     action;       /* index into stateactions, AC_NULL if none    */
+  uint16_t    nextstate;    /* linked list pointer to next state or zero   */
 } state_t;
 
 /* these are in info.c */
@@ -522,48 +561,48 @@ typedef int8_t mobjtype_t;
 
 typedef struct
 {
+  int32_t speed;        /* How fast it moves.  Too fast and it can miss
+           collision logic. */
+  int32_t radius;       /* An often incorrect radius */
+  int32_t height;       /* An often incorrect height, used only to see
+           if a monster can enter a sector */
+  uint32_t flags;  /* Bit masks for lots of things.  See p_mobj.h */
   int16_t doomednum;
   /* Thing number used in id's editor, and now
        probably by every other editor too */
-  statenum_t spawnstate;
-  /* The state (frame) index when this Thing is
-           first created */
   int16_t spawnhealth;  /* The initial hit points for this Thing */
-  statenum_t seestate;     /* The state when it sees you or wakes up */
-  sfxenum_t seesound;     /* The sound it makes when waking */
   int16_t reactiontime; /* How many tics it waits after it wakes up
            before it will start to attack, in normal
            skills (halved for nightmare) */
-  sfxenum_t attacksound;  /* The sound it makes when it attacks */
-  statenum_t painstate;    /* The state to indicate pain */
+  int16_t mass;         /* How much an impact will move it.  Cacodemons
+           seem to retreat when shot because they have
+           very little mass and are moved by impact */
+  int16_t damage;       /* If this is a missile, how much does it hurt? */
+  uint16_t spawnstate;
+  /* The state (frame) index when this Thing is
+           first created */
+  uint16_t seestate;     /* The state when it sees you or wakes up */
+  uint16_t painstate;    /* The state to indicate pain */
+  uint16_t meleestate;   /* Melee==close attack */
+  uint16_t missilestate; /* What states to use when it's in the air, if
+           in fact it is ever used as a missile */
+  uint16_t deathstate;   /* What state begins the death sequence */
+  uint16_t xdeathstate;  /* What state begins the horrible death sequence
+           like when a rocket takes out a trooper */
   uint8_t painchance;   /* A number that is checked against a random
            number 0-255 to see if the Thing is supposed
            to go to its painstate or not.  Note this
            has absolutely nothing to do with the chance
            it will get hurt, just the chance of it
            reacting visibly. */
-  sfxenum_t painsound;    /* The sound it emits when it feels pain */
-  statenum_t meleestate;   /* Melee==close attack */
-  statenum_t missilestate; /* What states to use when it's in the air, if
-           in fact it is ever used as a missile */
-  statenum_t deathstate;   /* What state begins the death sequence */
-  statenum_t xdeathstate;  /* What state begins the horrible death sequence
-           like when a rocket takes out a trooper */
-  sfxenum_t deathsound;   /* The death sound.  See also A_Scream() in
+  uint8_t seesound;     /* The sound it makes when waking */
+  uint8_t attacksound;  /* The sound it makes when it attacks */
+  uint8_t painsound;    /* The sound it emits when it feels pain */
+  uint8_t deathsound;   /* The death sound.  See also A_Scream() in
            p_enemy.c for some tweaking that goes on
            for certain monsters */
-  int32_t speed;        /* How fast it moves.  Too fast and it can miss
-           collision logic. */
-  int32_t radius;       /* An often incorrect radius */
-  int32_t height;       /* An often incorrect height, used only to see
-           if a monster can enter a sector */
-  int16_t mass;         /* How much an impact will move it.  Cacodemons
-           seem to retreat when shot because they have
-           very little mass and are moved by impact */
-  int16_t damage;       /* If this is a missile, how much does it hurt? */
-  sfxenum_t activesound;  /* What sound it makes wandering around, once
+  uint8_t activesound;  /* What sound it makes wandering around, once
            in a while.  Chance is 3/256 it will. */
-  uint32_t flags;  /* Bit masks for lots of things.  See p_mobj.h */
 } mobjinfo_t;
 
 /* See p_mobj_h for addition more technical info */
