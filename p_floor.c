@@ -205,16 +205,16 @@ static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t o
 
 static boolean P_SetFloor(sector_t __far* sector, fixed_t height)
 {
-  const fixed_t old = sector->floorheight;
-  sector->floorheight = height;
-  return P_CheckSector(sector, old, sector->ceilingheight);
+  const fixed_t old = SEC_FLOORHEIGHT(sector);
+  sector->floorheight = P_PlaneHeight(height);
+  return P_CheckSector(sector, old, SEC_CEILINGHEIGHT(sector));
 }
 
 static boolean P_SetCeiling(sector_t __far* sector, fixed_t height)
 {
-  const fixed_t old = sector->ceilingheight;
-  sector->ceilingheight = height;
-  return P_CheckSector(sector, sector->floorheight, old);
+  const fixed_t old = SEC_CEILINGHEIGHT(sector);
+  sector->ceilingheight = P_PlaneHeight(height);
+  return P_CheckSector(sector, SEC_FLOORHEIGHT(sector), old);
 }
 
 
@@ -251,9 +251,9 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
       {
         case -1:
           // Moving a floor down
-          if (sector->floorheight - speed < dest)
+          if (SEC_FLOORHEIGHT(sector) - speed < dest)
           {
-            lastpos = sector->floorheight;
+            lastpos = SEC_FLOORHEIGHT(sector);
             flag = P_SetFloor(sector, dest);
             if (flag == true)
             {
@@ -263,8 +263,8 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           }
           else
           {
-            lastpos = sector->floorheight;
-            flag = P_SetFloor(sector, sector->floorheight - speed);
+            lastpos = SEC_FLOORHEIGHT(sector);
+            flag = P_SetFloor(sector, SEC_FLOORHEIGHT(sector) - speed);
       /* cph - make more compatible with original Doom, by
        *  reintroducing this code. This means floors can't lower
        *  if objects are stuck in the ceiling */
@@ -275,11 +275,11 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           // Moving a floor up
           // jff 02/04/98 keep floor from moving thru ceilings
           // jff 2/22/98 weaken check to demo_compatibility
-          destheight = (dest<sector->ceilingheight)?
-                          dest : sector->ceilingheight;
-          if (sector->floorheight + speed > destheight)
+          destheight = (dest<SEC_CEILINGHEIGHT(sector))?
+                          dest : SEC_CEILINGHEIGHT(sector);
+          if (SEC_FLOORHEIGHT(sector) + speed > destheight)
           {
-            lastpos = sector->floorheight;
+            lastpos = SEC_FLOORHEIGHT(sector);
             flag = P_SetFloor(sector, destheight);
             if (flag == true)
             {
@@ -290,8 +290,8 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           else
           {
             // crushing is possible
-            lastpos = sector->floorheight;
-            flag = P_SetFloor(sector, sector->floorheight + speed);
+            lastpos = SEC_FLOORHEIGHT(sector);
+            flag = P_SetFloor(sector, SEC_FLOORHEIGHT(sector) + speed);
             if (flag == true)
             {
 
@@ -319,11 +319,11 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           // moving a ceiling down
           // jff 02/04/98 keep ceiling from moving thru floors
           // jff 2/22/98 weaken check to demo_compatibility
-          destheight = (dest>sector->floorheight)?
-                          dest : sector->floorheight;
-          if (sector->ceilingheight - speed < destheight)
+          destheight = (dest>SEC_FLOORHEIGHT(sector))?
+                          dest : SEC_FLOORHEIGHT(sector);
+          if (SEC_CEILINGHEIGHT(sector) - speed < destheight)
           {
-            lastpos = sector->ceilingheight;
+            lastpos = SEC_CEILINGHEIGHT(sector);
             flag = P_SetCeiling(sector, destheight);
 
             if (flag == true)
@@ -335,8 +335,8 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           else
           {
             // crushing is possible
-            lastpos = sector->ceilingheight;
-            flag = P_SetCeiling(sector, sector->ceilingheight - speed);
+            lastpos = SEC_CEILINGHEIGHT(sector);
+            flag = P_SetCeiling(sector, SEC_CEILINGHEIGHT(sector) - speed);
 
             if (flag == true)
             {
@@ -348,9 +348,9 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
 
         case 1:
           // moving a ceiling up
-          if (sector->ceilingheight + speed > dest)
+          if (SEC_CEILINGHEIGHT(sector) + speed > dest)
           {
-            lastpos = sector->ceilingheight;
+            lastpos = SEC_CEILINGHEIGHT(sector);
             flag = P_SetCeiling(sector, dest);
             if (flag == true)
             {
@@ -360,8 +360,8 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           }
           else
           {
-            lastpos = sector->ceilingheight;
-            flag = P_SetCeiling(sector, sector->ceilingheight + speed);
+            lastpos = SEC_CEILINGHEIGHT(sector);
+            flag = P_SetCeiling(sector, SEC_CEILINGHEIGHT(sector) + speed);
           }
           break;
       }
@@ -422,7 +422,7 @@ static void T_MoveFloor(floormove_t __far* floor)
       }
     }
 
-    floor->sector->floordata = Z_Ref(0); //jff 2/22/98
+    P_Mover(floor->sector)->floordata = Z_Ref(0); //jff 2/22/98
     P_RemoveThinker(&floor->thinker);//remove this floor from list of movers
 
     // make floor stop sound
@@ -443,20 +443,20 @@ static void T_MoveFloor(floormove_t __far* floor)
 //
 fixed_t P_FindNextHighestFloor(sector_t __far* sec)
 {
-  fixed_t currentheight = sec->floorheight;
+  fixed_t currentheight = SEC_FLOORHEIGHT(sec);
   sector_t __far* other;
   int16_t i;
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
     if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
-         other->floorheight > currentheight)
+         SEC_FLOORHEIGHT(other) > currentheight)
     {
-      fixed_t height = other->floorheight;
+      fixed_t height = SEC_FLOORHEIGHT(other);
       while (++i < SEC_LINECOUNT(sec))
         if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
-            other->floorheight < height &&
-            other->floorheight > currentheight)
-          height = other->floorheight;
+            SEC_FLOORHEIGHT(other) < height &&
+            SEC_FLOORHEIGHT(other) > currentheight)
+          height = SEC_FLOORHEIGHT(other);
       return height;
     }
   /* cph - my guess at doom v1.2 - 1.4beta compatibility here.
@@ -496,14 +496,14 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
     sec = &_g_sectors[secnum];
 
     // Don't start a second thinker on the same floor
-    if (sec->floordata != 0)
+    if (SEC_FLOORDATA(sec) != 0)
       continue;
 
     // new floor thinker
     rtn = true;
     floor = Z_CallocLevSpec(sizeof(*floor));
     P_AddThinker (&floor->thinker);
-    sec->floordata = Z_Ref(floor); //jff 2/22/98
+    P_Mover(sec)->floordata = Z_Ref(floor); //jff 2/22/98
     floor->thinker.function = T_MoveFloor;
     floor->type = floortype;
 
@@ -529,7 +529,7 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
         floor->sector = sec;
         floor->speed = FLOORSPEED * 4;
         floor->floordestheight = P_FindHighestFloorSurrounding(sec);
-        if (floor->floordestheight != sec->floorheight)
+        if (floor->floordestheight != SEC_FLOORHEIGHT(sec))
           floor->floordestheight += 8*FRACUNIT;
         break;
 
@@ -538,8 +538,8 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
         floor->sector = sec;
         floor->speed = FLOORSPEED;
         floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-        if (floor->floordestheight > sec->ceilingheight)
-          floor->floordestheight = sec->ceilingheight;
+        if (floor->floordestheight > SEC_CEILINGHEIGHT(sec))
+          floor->floordestheight = SEC_CEILINGHEIGHT(sec);
         break;
 
       case raiseFloorToNearest:
@@ -606,7 +606,7 @@ boolean EV_BuildStairs(const line_t __far* line)
    sector_t __far*     sec = &_g_sectors[secnum];
 
     // don't start a stair if the first step's floor is already moving
-   if (sec->floordata == 0) {
+   if (SEC_FLOORDATA(sec) == 0) {
     floormove_t __far*  floor;
     int16_t       texture;
     fixed_t       height;
@@ -618,7 +618,7 @@ boolean EV_BuildStairs(const line_t __far* line)
     rtn = true;
     floor = Z_CallocLevSpec(sizeof(*floor));
     P_AddThinker (&floor->thinker);
-    sec->floordata = Z_Ref(floor);
+    P_Mover(sec)->floordata = Z_Ref(floor);
     floor->thinker.function = T_MoveFloor;
     floor->direction = 1;
     floor->sector = sec;
@@ -628,7 +628,7 @@ boolean EV_BuildStairs(const line_t __far* line)
     speed = FLOORSPEED/4;
     stairsize = 8*FRACUNIT;
     floor->speed = speed;
-    height = sec->floorheight + stairsize;
+    height = SEC_FLOORHEIGHT(sec) + stairsize;
     floor->floordestheight = height;
 
     texture = sec->floorpic;
@@ -663,7 +663,7 @@ boolean EV_BuildStairs(const line_t __far* line)
           continue;
 
         // if sector's floor already moving, look for another
-        if (tsec->floordata != 0)
+        if (SEC_FLOORDATA(tsec) != 0)
           continue;
 
         height += stairsize;
@@ -675,7 +675,7 @@ boolean EV_BuildStairs(const line_t __far* line)
         floor = Z_CallocLevSpec(sizeof(*floor));
         P_AddThinker (&floor->thinker);
 
-        sec->floordata = Z_Ref(floor); //jff 2/22/98
+        P_Mover(sec)->floordata = Z_Ref(floor); //jff 2/22/98
         floor->thinker.function = T_MoveFloor;
         floor->direction = 1;
         floor->sector = sec;
@@ -719,7 +719,7 @@ boolean EV_DoDonut(const line_t __far* line)
     s1 = &_g_sectors[secnum];                // s1 is pillar's sector
 
     // do not start the donut if the pillar is already moving
-    if (s1->floordata != 0)
+    if (SEC_FLOORDATA(s1) != 0)
       continue;
 
     s2 = getNextSector(SEC_LINE(s1, 0),s1);  // s2 is pool's sector
@@ -728,7 +728,7 @@ boolean EV_DoDonut(const line_t __far* line)
 
     /* do not start the donut if the pool is already moving
      * cph - DEMOSYNC - was !compatibility */
-    if (s2->floordata != 0)
+    if (SEC_FLOORDATA(s2) != 0)
       continue;                           //jff 5/7/98
 
     // find a two sided line around the pool whose other side isn't the pillar
@@ -746,25 +746,25 @@ boolean EV_DoDonut(const line_t __far* line)
       //  Spawn rising slime
       floor = Z_CallocLevSpec(sizeof(*floor));
       P_AddThinker (&floor->thinker);
-      s2->floordata = Z_Ref(floor); //jff 2/22/98
+      P_Mover(s2)->floordata = Z_Ref(floor); //jff 2/22/98
       floor->thinker.function = T_MoveFloor;
       floor->type = donutRaise;
       floor->direction = 1;
       floor->sector = s2;
       floor->speed = FLOORSPEED / 2;
       floor->texture = s3->floorpic;
-      floor->floordestheight = s3->floorheight;
+      floor->floordestheight = SEC_FLOORHEIGHT(s3);
 
       //  Spawn lowering donut-hole pillar
       floor = Z_CallocLevSpec(sizeof(*floor));
       P_AddThinker (&floor->thinker);
-      s1->floordata = Z_Ref(floor); //jff 2/22/98
+      P_Mover(s1)->floordata = Z_Ref(floor); //jff 2/22/98
       floor->thinker.function = T_MoveFloor;
       floor->type = lowerFloor;
       floor->direction = -1;
       floor->sector = s1;
       floor->speed = FLOORSPEED / 2;
-      floor->floordestheight = s3->floorheight;
+      floor->floordestheight = SEC_FLOORHEIGHT(s3);
       break;
     }
   }

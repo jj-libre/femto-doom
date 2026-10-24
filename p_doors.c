@@ -132,18 +132,18 @@ void T_VerticalDoor(vldoor_t __far* door)
 
     case -1:
       // Door is moving down
-      res = T_MovePlaneCeiling(door->sector, door->speed, door->sector->floorheight, door->direction);
+      res = T_MovePlaneCeiling(door->sector, door->speed, SEC_FLOORHEIGHT(door->sector), door->direction);
 
       /* killough 10/98: implement gradual lighting effects */
       // e6y: "Tagged doors don't trigger special lighting" handled wrong
       // http://sourceforge.net/tracker/index.php?func=detail&aid=1411400&group_id=148658&atid=772943
       // Old code: if (door->lighttag && door->topheight - door->sector->floorheight)
-      if (door->lighttag && door->topheight - door->sector->floorheight)
+      if (door->lighttag && door->topheight - SEC_FLOORHEIGHT(door->sector))
         EV_LightTurnOnPartway(door->line,
-                              FixedApproxDiv(door->sector->ceilingheight -
-                                       door->sector->floorheight,
+                              FixedApproxDiv(SEC_CEILINGHEIGHT(door->sector) -
+                                       SEC_FLOORHEIGHT(door->sector),
                                        door->topheight -
-                                       door->sector->floorheight));
+                                       SEC_FLOORHEIGHT(door->sector)));
 
       // handle door reaching bottom
       if (res == pastdest)
@@ -152,7 +152,7 @@ void T_VerticalDoor(vldoor_t __far* door)
         {
           // regular open and close doors are all done, remove them
           case normal:
-            door->sector->ceilingdata = Z_Ref(0); //jff 2/22/98
+            P_Mover(door->sector)->ceilingdata = Z_Ref(0); //jff 2/22/98
             P_RemoveThinker (&door->thinker);  // unlink and free
             break;
 
@@ -185,12 +185,12 @@ void T_VerticalDoor(vldoor_t __far* door)
       // e6y: "Tagged doors don't trigger special lighting" handled wrong
       // http://sourceforge.net/tracker/index.php?func=detail&aid=1411400&group_id=148658&atid=772943
       // Old code: if (door->lighttag && door->topheight - door->sector->floorheight)
-      if (door->lighttag && door->topheight - door->sector->floorheight)
+      if (door->lighttag && door->topheight - SEC_FLOORHEIGHT(door->sector))
         EV_LightTurnOnPartway(door->line,
-                              FixedApproxDiv(door->sector->ceilingheight -
-                                       door->sector->floorheight,
+                              FixedApproxDiv(SEC_CEILINGHEIGHT(door->sector) -
+                                       SEC_FLOORHEIGHT(door->sector),
                                        door->topheight -
-                                       door->sector->floorheight));
+                                       SEC_FLOORHEIGHT(door->sector)));
 
       // handle door reaching the top
       if (res == pastdest)
@@ -204,7 +204,7 @@ void T_VerticalDoor(vldoor_t __far* door)
 
           case close30ThenOpen:  // close and close/open doors are done
           case dopen:
-            door->sector->ceilingdata = Z_Ref(0); //jff 2/22/98
+            P_Mover(door->sector)->ceilingdata = Z_Ref(0); //jff 2/22/98
             P_RemoveThinker (&door->thinker); // unlink and free
             break;
 
@@ -245,14 +245,14 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
   {
     sec = &_g_sectors[secnum];
     // if the ceiling already moving, don't start the door action
-    if (sec->ceilingdata != 0)
+    if (SEC_CEILINGDATA(sec) != 0)
         continue;
 
     // new door thinker
     rtn = true;
     door = Z_CallocLevSpec(sizeof(*door));
     P_AddThinker (&door->thinker);
-    sec->ceilingdata = Z_Ref(door); //jff 2/22/98
+    P_Mover(sec)->ceilingdata = Z_Ref(door); //jff 2/22/98
 
     door->thinker.function = T_VerticalDoor;
     door->sector = sec;
@@ -265,7 +265,7 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
     switch(type)
     {
       case close30ThenOpen:
-        door->topheight = sec->ceilingheight;
+        door->topheight = SEC_CEILINGHEIGHT(sec);
         door->direction = -1;
         S_StartSound2(door->sector,sfx_dorcls);
         break;
@@ -275,7 +275,7 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
         door->direction = 1;
         door->topheight = P_FindLowestCeilingSurrounding(sec);
         door->topheight -= 4*FRACUNIT;
-        if (door->topheight != sec->ceilingheight)
+        if (door->topheight != SEC_CEILINGHEIGHT(sec))
           S_StartSound2(door->sector,sfx_doropn);
         break;
 

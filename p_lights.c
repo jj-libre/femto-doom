@@ -163,28 +163,30 @@ typedef char assertGlowSize[sizeof(glow_t) == 24 ? 1 : -1];
 
 static void T_Glow(glow_t __far* g)
 {
+  int16_t lightlevel = g->sector->lightlevel;
   switch(g->direction)
   {
     case -1:
       // light dims
-      g->sector->lightlevel -= GLOWSPEED;
-      if (g->sector->lightlevel <= g->minlight)
+      lightlevel -= GLOWSPEED;
+      if (lightlevel <= g->minlight)
       {
-        g->sector->lightlevel += GLOWSPEED;
+        lightlevel += GLOWSPEED;
         g->direction = 1;
       }
       break;
 
     case 1:
       // light brightens
-      g->sector->lightlevel += GLOWSPEED;
-      if (g->sector->lightlevel >= g->maxlight)
+      lightlevel += GLOWSPEED;
+      if (lightlevel >= g->maxlight)
       {
-        g->sector->lightlevel -= GLOWSPEED;
+        lightlevel -= GLOWSPEED;
         g->direction = -1;
       }
       break;
   }
+  g->sector->lightlevel = lightlevel;
 }
 
 

@@ -91,12 +91,8 @@ typedef char assertDegenmobjSize[sizeof(degenmobj_t) == 8 ? 1 : -1];
 // Its lines are in the map WAD's E1MxGL; P_SectorSoundOrg finds its sound origin.
 typedef struct
 {
-  fixed_t floorheight;
-  fixed_t ceilingheight;
-
-  // thinker_t for reversable actions
-  zref_t floordata;    // jff 2/22/98 make thinkers on
-  zref_t ceilingdata;  // floors, ceilings, lighting,
+  int16_t floorheight;    // in quarter map units, SEC_FLOORHEIGHT
+  int16_t ceilingheight;
 
   zref_t soundtarget;   // mobj_t that made a sound (or null)
   zref_t thinglist;     // list of mobjs in sector
@@ -105,20 +101,51 @@ typedef struct
   // thinglist is a subset of touching_thinglist
   zref_t touching_thinglist;    // msecnode_t
 
-  uint16_t validcount;        // if == validcount, already checked
-
   int16_t floorpic;
   int16_t ceilingpic;
 
-  int16_t lightlevel;
+  uint8_t lightlevel;
   int8_t special;
-  int8_t oldspecial;      //jff 2/16/98 remembers if sector WAS secret (automap)
-
-  uint8_t soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
-
 } sector_t;
 
-typedef char assertSectorSize[sizeof(sector_t) == 32 ? 1 : -1];
+// Planes move by quarter units between heights that are whole or quarter units, so a
+// quarter unit is exact. P_PlaneHeight refuses any other height.
+#define SEC_FLOORHEIGHT(s)   ((fixed_t)(s)->floorheight << (FRACBITS - 2))
+#define SEC_CEILINGHEIGHT(s) ((fixed_t)(s)->ceilingheight << (FRACBITS - 2))
+int16_t P_PlaneHeight(fixed_t height);
+
+// A sector gets a mover_t when a floor or ceiling thinker first acts on it.
+typedef struct
+{
+  int16_t sector;
+
+  // thinker_t for reversable actions
+  zref_t floordata;    // jff 2/22/98 make thinkers on
+  zref_t ceilingdata;  // floors, ceilings, lighting,
+} mover_t;
+
+extern mover_t __far* _g_movers;
+
+mover_t __far* P_Mover(sector_t __far* sector);
+zref_t SEC_FLOORDATA(const sector_t __far* s);
+zref_t SEC_CEILINGDATA(const sector_t __far* s);
+
+// A bit per sector in each plane of _g_secbits.
+enum
+{
+  SB_CHECKED,  // since validcount last stepped
+  SB_SECRET,   // jff 2/16/98 remembers if sector WAS secret (automap)
+  SB_SOUND2,   // the sound that flooded it last crossed a sound-blocking line
+  SB_PLANES
+};
+
+extern uint8_t __far* _g_secbits;
+extern int16_t _g_secbytes;
+#define SEC_BIT(p, i)    (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] & (1 << ((i) & 7)))
+#define SEC_SETBIT(p, i) (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] |= (1 << ((i) & 7)))
+#define SEC_CLRBIT(p, i) (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] &= ~(1 << ((i) & 7)))
+
+typedef char assertSectorSize[sizeof(sector_t) == 16 ? 1 : -1];
 
 
 typedef struct {

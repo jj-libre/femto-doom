@@ -309,7 +309,7 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   // get the sector on the second side of activating linedef
   sec = SIDE_SECTOR(LN_SIDENUM(line, 1));
 
-  door = Z_Ptr(sec->ceilingdata);
+  door = Z_Ptr(SEC_CEILINGDATA(sec));
 
   /* If this is a repeatable line, and the door is already moving, then we can just reverse the current action. Note that in prboom 2.3.0 I erroneously removed the if-this-is-repeatable check, hence the prboom_4_compatibility clause below (foolishly assumed that already moving implies repeatable - but it could be moving due to another switch, e.g. lv19-509) */
   if (door &&
@@ -344,7 +344,7 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   // new door thinker
   door = Z_CallocLevSpec(sizeof(*door));
   P_AddThinker (&door->thinker);
-  sec->ceilingdata = Z_Ref(door); //jff 2/22/98
+  P_Mover(sec)->ceilingdata = Z_Ref(door); //jff 2/22/98
   door->thinker.function = T_VerticalDoor;
   door->sector = sec;
   door->direction = 1;

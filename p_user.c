@@ -293,7 +293,7 @@ static void P_PlayerInSpecialSector (player_t* player)
 
   // Falling, not all the way down yet?
   // Sector specials don't apply in mid-air
-  if (player->mo->z != sector->floorheight)
+  if (player->mo->z != SEC_FLOORHEIGHT(sector))
     return;
 
   // Has hit ground.

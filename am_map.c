@@ -883,7 +883,7 @@ static int16_t AM_DoorColor(int16_t type)
 //
 static boolean PUREFUNC P_WasSecret(const sector_t __far* sec)
 {
-  return sec->oldspecial == 9;
+  return SEC_BIT(SB_SECRET, sec - _g_sectors) != 0;
 }
 
 
@@ -983,8 +983,8 @@ static void AM_drawWalls(void)
                 else if
                         (
                          !(ml.flags & ML_SECRET) &&    // non-secret closed door
-                         ((backsector->floorheight==backsector->ceilingheight) ||
-                          (frontsector->floorheight==frontsector->ceilingheight))
+                         ((SEC_FLOORHEIGHT(backsector)==SEC_CEILINGHEIGHT(backsector)) ||
+                          (SEC_FLOORHEIGHT(frontsector)==SEC_CEILINGHEIGHT(frontsector)))
                          )
                 {
                     AM_drawMline(&l, mapcolor_clsd);      // non-secret closed door
@@ -993,13 +993,13 @@ static void AM_drawWalls(void)
                 {
                     AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
                 } //jff 1/6/98 end secret sector line change
-                else if (backsector->floorheight !=
-                         frontsector->floorheight)
+                else if (SEC_FLOORHEIGHT(backsector) !=
+                         SEC_FLOORHEIGHT(frontsector))
                 {
                     AM_drawMline(&l, mapcolor_fchg); // floor level change
                 }
-                else if (backsector->ceilingheight !=
-                         frontsector->ceilingheight)
+                else if (SEC_CEILINGHEIGHT(backsector) !=
+                         SEC_CEILINGHEIGHT(frontsector))
                 {
                     AM_drawMline(&l, mapcolor_cchg); // ceiling level change
                 }

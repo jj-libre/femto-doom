@@ -373,11 +373,15 @@ static void P_RecursiveSound(sector_t __far* sec, int16_t soundblocks, mobj_t __
   int16_t i;
 
   // wake up all monsters in this sector
-  if (sec->validcount == validcount && sec->soundtraversed <= soundblocks+1)
+  const int16_t s = sec - _g_sectors;
+  if (SEC_BIT(SB_CHECKED, s) && (SEC_BIT(SB_SOUND2, s) ? 2 : 1) <= soundblocks+1)
     return;             // already flooded
 
-  sec->validcount     = validcount;
-  sec->soundtraversed = soundblocks+1;
+  SEC_SETBIT(SB_CHECKED, s);
+  if (soundblocks)
+    SEC_SETBIT(SB_SOUND2, s);
+  else
+    SEC_CLRBIT(SB_SOUND2, s);
   sec->soundtarget    = Z_Ref(soundtarget);
 
   for (i=0; i<SEC_LINECOUNT(sec); i++)

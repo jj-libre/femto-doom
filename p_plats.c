@@ -145,7 +145,7 @@ void T_PlatRaise(plat_t __far* plat)
     case waiting: // plat is waiting
       if (!--plat->count)  // downcount and check for delay elapsed
       {
-        if (plat->sector->floorheight == plat->low)
+        if (SEC_FLOORHEIGHT(plat->sector) == plat->low)
           plat->status = up;     // if at bottom, start up
         else
           plat->status = down;   // if at top, start down
@@ -185,7 +185,7 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
     sec = &_g_sectors[secnum];
 
     // don't start a second floor function if already moving
-    if (sec->floordata != 0) // multiple thinkers
+    if (SEC_FLOORDATA(sec) != 0) // multiple thinkers
       continue;
 
     // Create a thinker
@@ -195,13 +195,13 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
 
     plat->type = type;
     plat->sector = sec;
-    plat->sector->floordata = Z_Ref(plat); //jff 2/23/98 multiple thinkers
+    P_Mover(plat->sector)->floordata = Z_Ref(plat); //jff 2/23/98 multiple thinkers
     plat->thinker.function = T_PlatRaise;
     plat->tag = LN_TAG(line);
 
     //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
     //going down forever -- default low to plat height when triggered
-    plat->low = sec->floorheight;
+    plat->low = SEC_FLOORHEIGHT(sec);
 
     // set up plat according to type
     switch(type)
@@ -214,7 +214,7 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
         plat->status = up;
         sec->special = 0;
         //jff 3/14/98 clear old field as well
-        sec->oldspecial = 0;
+        SEC_CLRBIT(SB_SECRET, sec - _g_sectors);
 
         S_StartSound2(sec,sfx_stnmov);
         break;
@@ -223,10 +223,10 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
         plat->speed = PLATSPEED * 4;
         plat->low = P_FindLowestFloorSurrounding(sec);
 
-        if (plat->low > sec->floorheight)
-          plat->low = sec->floorheight;
+        if (plat->low > SEC_FLOORHEIGHT(sec))
+          plat->low = SEC_FLOORHEIGHT(sec);
 
-        plat->high = sec->floorheight;
+        plat->high = SEC_FLOORHEIGHT(sec);
         plat->wait = 35*PLATWAIT;
         plat->status = down;
         S_StartSound2(sec,sfx_pstart);
@@ -280,7 +280,7 @@ static void P_AddActivePlat(plat_t __far* plat)
 static void P_RemoveActivePlat(plat_t __far* plat)
 {
   platlist_t __far* list = plat->list;
-  plat->sector->floordata = Z_Ref(0); //jff 2/23/98 multiple thinkers
+  P_Mover(plat->sector)->floordata = Z_Ref(0); //jff 2/23/98 multiple thinkers
 
   P_RemoveThinker(&plat->thinker);
 

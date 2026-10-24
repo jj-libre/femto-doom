@@ -276,20 +276,20 @@ void P_LineOpening(const line_t __far* linedef)
     openfrontsector = LN_FRONTSECTOR(linedef);
     openbacksector  = LN_BACKSECTOR(linedef);
 
-    if (openfrontsector->ceilingheight < openbacksector->ceilingheight)
-        _g_opentop = openfrontsector->ceilingheight;
+    if (SEC_CEILINGHEIGHT(openfrontsector) < SEC_CEILINGHEIGHT(openbacksector))
+        _g_opentop = SEC_CEILINGHEIGHT(openfrontsector);
     else
-        _g_opentop = openbacksector->ceilingheight;
+        _g_opentop = SEC_CEILINGHEIGHT(openbacksector);
 
-    if (openfrontsector->floorheight > openbacksector->floorheight)
+    if (SEC_FLOORHEIGHT(openfrontsector) > SEC_FLOORHEIGHT(openbacksector))
     {
-        _g_openbottom = openfrontsector->floorheight;
-        _g_lowfloor = openbacksector->floorheight;
+        _g_openbottom = SEC_FLOORHEIGHT(openfrontsector);
+        _g_lowfloor = SEC_FLOORHEIGHT(openbacksector);
     }
     else
     {
-        _g_openbottom = openbacksector->floorheight;
-        _g_lowfloor = openfrontsector->floorheight;
+        _g_openbottom = SEC_FLOORHEIGHT(openbacksector);
+        _g_lowfloor = SEC_FLOORHEIGHT(openfrontsector);
     }
     _g_openrange = _g_opentop - _g_openbottom;
 }
@@ -595,9 +595,9 @@ static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t 
   else
   {
     const sector_t __far* sector = P_SubsectorSector(lt->subsector);
-    mobj->z        = sector->floorheight;
-    mobj->floorz   = sector->floorheight;
-    mobj->ceilingz = sector->ceilingheight;
+    mobj->z        = SEC_FLOORHEIGHT(sector);
+    mobj->floorz   = SEC_FLOORHEIGHT(sector);
+    mobj->ceilingz = SEC_CEILINGHEIGHT(sector);
   }
   mobj->radius    = info->radius;
   mobj->height    = info->height;
@@ -620,8 +620,8 @@ static void P_KeepStaticZ(int16_t slot, const mobj_t __far* mobj, const fixed_t*
       return;
 
     const sector_t __far* sector = P_SubsectorSector(mobj->subsector);
-    if (mobj->z == sector->floorheight && mobj->floorz == sector->floorheight
-        && mobj->ceilingz == sector->ceilingheight)
+    if (mobj->z == SEC_FLOORHEIGHT(sector) && mobj->floorz == SEC_FLOORHEIGHT(sector)
+        && mobj->ceilingz == SEC_CEILINGHEIGHT(sector))
       return;
 
     i = numstaticz % STATICZCHUNK;

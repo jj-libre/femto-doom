@@ -145,17 +145,17 @@ static boolean P_CrossSubsector(int16_t num)
             // no wall to block sight with?
             front = &_g_sectors[seg->frontsectornum];
             back  = &_g_sectors[seg->backsectornum];
-            if (front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
+            if (SEC_FLOORHEIGHT(front) == SEC_FLOORHEIGHT(back) && SEC_CEILINGHEIGHT(front) == SEC_CEILINGHEIGHT(back))
                 continue;
 
             // possible occluder
             // because of ceiling height differences
-            opentop = front->ceilingheight < back->ceilingheight ?
-                        front->ceilingheight : back->ceilingheight ;
+            opentop = SEC_CEILINGHEIGHT(front) < SEC_CEILINGHEIGHT(back) ?
+                        SEC_CEILINGHEIGHT(front) : SEC_CEILINGHEIGHT(back) ;
 
             // because of floor height differences
-            openbottom = front->floorheight > back->floorheight ?
-                        front->floorheight : back->floorheight ;
+            openbottom = SEC_FLOORHEIGHT(front) > SEC_FLOORHEIGHT(back) ?
+                        SEC_FLOORHEIGHT(front) : SEC_FLOORHEIGHT(back) ;
 
             // cph - reject if does not intrude in the z-space of the possible LOS
             if ((opentop >= los.maxz) && (openbottom <= los.minz))
@@ -190,14 +190,14 @@ static boolean P_CrossSubsector(int16_t num)
         // crosses a two sided line
         uint16_t frac = P_InterceptVector2(&los.strace, &divl);
 
-        if (front->floorheight != back->floorheight)
+        if (SEC_FLOORHEIGHT(front) != SEC_FLOORHEIGHT(back))
         {
             fixed_t slope = frac != 0 ? ((openbottom - los.sightzstart) >> FRACBITS) * FixedReciprocalSmall(frac) : INT32_MAX;
             if (slope > los.bottomslope)
                 los.bottomslope = slope;
         }
 
-        if (front->ceilingheight != back->ceilingheight)
+        if (SEC_CEILINGHEIGHT(front) != SEC_CEILINGHEIGHT(back))
         {
             fixed_t slope = frac != 0 ? ((opentop - los.sightzstart) >> FRACBITS) * FixedReciprocalSmall(frac) : INT32_MAX;
             if (slope < los.topslope)

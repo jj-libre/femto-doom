@@ -208,8 +208,8 @@ static boolean PIT_AvoidDropoff(const line_t __far* line)
       _g_tmbbox[BOXBOTTOM] < (fixed_t)l.bbox[BOXTOP]    << FRACBITS &&
       P_BoxOnLineSide(_g_tmbbox, line) == -1)
     {
-      fixed_t front = LN_FRONTSECTOR(line)->floorheight;
-      fixed_t back  = LN_BACKSECTOR(line)->floorheight;
+      fixed_t front = SEC_FLOORHEIGHT(LN_FRONTSECTOR(line));
+      fixed_t back  = SEC_FLOORHEIGHT(LN_BACKSECTOR(line));
       angle_t angle;
 
       // The monster must contact one of the two floors,

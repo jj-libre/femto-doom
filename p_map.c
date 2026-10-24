@@ -192,8 +192,8 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
   // Any contacted lines the step closer together
   // will adjust them.
 
-  _g_tmfloorz = _g_tmdropoffz = P_SubsectorSector(newsubsec)->floorheight;
-  _g_tmceilingz = P_SubsectorSector(newsubsec)->ceilingheight;
+  _g_tmfloorz = _g_tmdropoffz = SEC_FLOORHEIGHT(P_SubsectorSector(newsubsec));
+  _g_tmceilingz = SEC_CEILINGHEIGHT(P_SubsectorSector(newsubsec));
 
   P_NextValidCount();
   _g_numspechit = 0;
@@ -468,8 +468,8 @@ boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y)
   // Any contacted lines the step closer together
   // will adjust them.
 
-  _g_tmfloorz = _g_tmdropoffz = P_SubsectorSector(newsubsec)->floorheight;
-  _g_tmceilingz = P_SubsectorSector(newsubsec)->ceilingheight;
+  _g_tmfloorz = _g_tmdropoffz = SEC_FLOORHEIGHT(P_SubsectorSector(newsubsec));
+  _g_tmceilingz = SEC_CEILINGHEIGHT(P_SubsectorSector(newsubsec));
   P_NextValidCount();
   _g_numspechit = 0;
 
@@ -746,14 +746,14 @@ static boolean PTR_AimTraverse (intercept_t* in)
 
         dist = FixedMul(attackrange, in->frac);
 
-        if (LN_FRONTSECTOR(li)->floorheight != LN_BACKSECTOR(li)->floorheight)
+        if (SEC_FLOORHEIGHT(LN_FRONTSECTOR(li)) != SEC_FLOORHEIGHT(LN_BACKSECTOR(li)))
         {
             slope = dist != 0 ? FixedApproxDiv(_g_openbottom - shootz, dist) : INT32_MAX;
             if (slope > bottomslope)
                 bottomslope = slope;
         }
 
-        if (LN_FRONTSECTOR(li)->ceilingheight != LN_BACKSECTOR(li)->ceilingheight)
+        if (SEC_CEILINGHEIGHT(LN_FRONTSECTOR(li)) != SEC_CEILINGHEIGHT(LN_BACKSECTOR(li)))
         {
             slope = dist != 0 ? FixedApproxDiv(_g_opentop - shootz, dist) : INT32_MAX;
             if (slope < topslope)
@@ -882,8 +882,8 @@ static boolean PTR_ShootTraverse (intercept_t* in)
       P_LineOpening (li);
       fixed_t t = FixedMul3(aimslope, in->frac, attackrange) + shootz;
 
-      if ((LN_FRONTSECTOR(li)->floorheight   == LN_BACKSECTOR(li)->floorheight   || _g_openbottom <= t) &&
-          (LN_FRONTSECTOR(li)->ceilingheight == LN_BACKSECTOR(li)->ceilingheight || _g_opentop    >= t))
+      if ((SEC_FLOORHEIGHT(LN_FRONTSECTOR(li))   == SEC_FLOORHEIGHT(LN_BACKSECTOR(li))   || _g_openbottom <= t) &&
+          (SEC_CEILINGHEIGHT(LN_FRONTSECTOR(li)) == SEC_CEILINGHEIGHT(LN_BACKSECTOR(li)) || _g_opentop    >= t))
         return true;      // shot continues
     }
 
@@ -899,7 +899,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
     {
       // don't shoot the sky!
 
-      if (z > LN_FRONTSECTOR(li)->ceilingheight)
+      if (z > SEC_CEILINGHEIGHT(LN_FRONTSECTOR(li)))
         return false;
 
       // it's a sky hack wall
@@ -909,7 +909,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
         // fix bullet-eaters -- killough:
         // WARNING: Almost all demos will lose sync without this
         // demo_compatibility flag check!!! killough 1/18/98
-        if (LN_BACKSECTOR(li)->ceilingheight < z)
+        if (SEC_CEILINGHEIGHT(LN_BACKSECTOR(li)) < z)
           return false;
     }
 

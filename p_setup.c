@@ -83,6 +83,10 @@ const line_t *_g_maplines;
 
 static int16_t      numsides;
 side_t   __far* _g_sides;
+mover_t  __far* _g_movers;
+uint8_t  __far* _g_secbits;
+int16_t         _g_secbytes;
+static int16_t nummovers;
 const mapsidedef_t *_g_mapsides;
 
 
@@ -193,6 +197,10 @@ static void P_LoadSectors (int16_t lump)
   _g_numsectors = W_MapLumpLength (lump) / sizeof(mapsector_t);
   _g_mapsectors = W_GetMapLumpByNum(lump);
   _g_sectors = Z_CallocLevel(_g_numsectors * sizeof(sector_t));
+  _g_secbytes = (_g_numsectors + 7) / 8;
+  _g_secbits = Z_CallocLevel(SB_PLANES * _g_secbytes);
+  _g_movers = NULL;
+  nummovers = 0;
 
   for (i=0; i<_g_numsectors; i++)
     {
@@ -200,14 +208,15 @@ static void P_LoadSectors (int16_t lump)
       mapsector_t ms;
       W_Fetch(_g_mapsectors + i, &ms, sizeof(ms));
 
-      ss->floorheight = ((int32_t)SHORT(ms.floorheight))<<FRACBITS;
-      ss->ceilingheight = ((int32_t)SHORT(ms.ceilingheight))<<FRACBITS;
+      ss->floorheight   = P_PlaneHeight((fixed_t)SHORT(ms.floorheight) << FRACBITS);
+      ss->ceilingheight = P_PlaneHeight((fixed_t)SHORT(ms.ceilingheight) << FRACBITS);
       ss->floorpic   = P_SectorFlatNum(ms.floorpic);
       ss->ceilingpic = P_SectorFlatNum(ms.ceilingpic);
 
       ss->lightlevel = ms.lightlevel;
       ss->special    = ms.special;
-      ss->oldspecial = ms.special;
+      if (ms.special == 9)
+        SEC_SETBIT(SB_SECRET, i);
 
       ss->thinglist = 0;
       ss->touching_thinglist = 0;
@@ -357,6 +366,55 @@ static void P_LoadSideDefs (int16_t lump)
         P_LoadTexture(msd.toptexture);
         P_LoadTexture(msd.bottomtexture);
     }
+}
+
+static mover_t __far* P_FindMover(const sector_t __far* sector)
+{
+  const int16_t s = sector - _g_sectors;
+  for (int16_t i = 0; i < nummovers; i++)
+    if (_g_movers[i].sector == s)
+      return &_g_movers[i];
+  return NULL;
+}
+
+mover_t __far* P_Mover(sector_t __far* sector)
+{
+  mover_t __far* m = P_FindMover(sector);
+  if (m)
+    return m;
+
+  if (nummovers % 4 == 0)
+  {
+    mover_t __far* movers = Z_CallocLevel((nummovers + 4) * sizeof(mover_t));
+    if (nummovers)
+    {
+      _fmemcpy(movers, _g_movers, nummovers * sizeof(mover_t));
+      Z_Free(_g_movers);
+    }
+    _g_movers = movers;
+  }
+  m = &_g_movers[nummovers++];
+  m->sector = sector - _g_sectors;
+  return m;
+}
+
+zref_t SEC_FLOORDATA(const sector_t __far* s)
+{
+  const mover_t __far* m = P_FindMover(s);
+  return m ? m->floordata : 0;
+}
+
+zref_t SEC_CEILINGDATA(const sector_t __far* s)
+{
+  const mover_t __far* m = P_FindMover(s);
+  return m ? m->ceilingdata : 0;
+}
+
+int16_t P_PlaneHeight(fixed_t height)
+{
+  if ((height & ((FRACUNIT >> 2) - 1)) || height < -(8192 << FRACBITS) || height >= (8192 << FRACBITS))
+    I_Error("P_PlaneHeight: %li", (long)height);
+  return height >> (FRACBITS - 2);
 }
 
 uint8_t P_GetSide(int16_t n, side_t* side)

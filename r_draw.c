@@ -567,6 +567,7 @@ void P_NextValidCount(void)
 {
   ++validcount;
   _fmemset(&_g_linebits[LB_CHECKED * _g_linebytes], 0, _g_linebytes);
+  _fmemset(_g_secbits, 0, _g_secbytes);
 }
 
 //*****************************************
@@ -1264,12 +1265,12 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	// find positioning
 	if (W_FetchUInt8(&_g_maplines[curseg.linenum].flags) & ML_DONTPEGBOTTOM)
 	{
-		dcvars.texturemid = frontsector->floorheight > backsector->floorheight ? frontsector->floorheight : backsector->floorheight;
+		dcvars.texturemid = SEC_FLOORHEIGHT(frontsector) > SEC_FLOORHEIGHT(backsector) ? SEC_FLOORHEIGHT(frontsector) : SEC_FLOORHEIGHT(backsector);
 		dcvars.texturemid = dcvars.texturemid + ((int32_t)(W_FetchInt16(&textureheight[texnum]) << TEXSHIFT) << FRACBITS) - viewz;
 	}
 	else
 	{
-		dcvars.texturemid =frontsector->ceilingheight<backsector->ceilingheight ? frontsector->ceilingheight : backsector->ceilingheight;
+		dcvars.texturemid =SEC_CEILINGHEIGHT(frontsector)<SEC_CEILINGHEIGHT(backsector) ? SEC_CEILINGHEIGHT(frontsector) : SEC_CEILINGHEIGHT(backsector);
 		dcvars.texturemid = dcvars.texturemid - viewz;
 	}
 
@@ -1822,11 +1823,11 @@ static void R_AddSprites(int16_t subsec, int16_t lightlevel)
   //  subsectors during BSP building.
   // Thus we check whether its already added.
 
-  if (sec->validcount == validcount)
+  if (SEC_BIT(SB_CHECKED, sec - _g_sectors))
     return;
 
   // Well, now it will be done.
-  sec->validcount = validcount;
+  SEC_SETBIT(SB_CHECKED, sec - _g_sectors);
 
   // Handle all things in sector.
 
@@ -2156,8 +2157,8 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     // calculate texture boundaries
     //  and decide if floor / ceiling marks are needed
 
-    worldtop = frontsector->ceilingheight - viewz;
-    worldbottom = frontsector->floorheight - viewz;
+    worldtop = SEC_CEILINGHEIGHT(frontsector) - viewz;
+    worldbottom = SEC_FLOORHEIGHT(frontsector) - viewz;
 
     midtexture = toptexture = bottomtexture = maskedtexture = 0;
     ds_p->maskedtexturecol = NULL;
@@ -2175,7 +2176,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
         if (maplineflags & ML_DONTPEGBOTTOM)
         {         // bottom of texture at bottom
-            fixed_t vtop = frontsector->floorheight + ((int32_t)(W_FetchInt16(&textureheight[sidedef->midtexture]) << TEXSHIFT) << FRACBITS);
+            fixed_t vtop = SEC_FLOORHEIGHT(frontsector) + ((int32_t)(W_FetchInt16(&textureheight[sidedef->midtexture]) << TEXSHIFT) << FRACBITS);
             rw_midtexturemid = vtop - viewz;
         }
         else        // top of texture at top
@@ -2214,33 +2215,33 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         else
         { /* not solid - old code */
 
-            if (frontsector->floorheight > backsector->floorheight)
+            if (SEC_FLOORHEIGHT(frontsector) > SEC_FLOORHEIGHT(backsector))
             {
                 ds_p->silhouette = SIL_BOTTOM;
-                ds_p->bsilheight = frontsector->floorheight;
+                ds_p->bsilheight = SEC_FLOORHEIGHT(frontsector);
             }
             else
-                if (backsector->floorheight > viewz)
+                if (SEC_FLOORHEIGHT(backsector) > viewz)
                 {
                     ds_p->silhouette = SIL_BOTTOM;
                     ds_p->bsilheight = INT32_MAX;
                 }
 
-            if (frontsector->ceilingheight < backsector->ceilingheight)
+            if (SEC_CEILINGHEIGHT(frontsector) < SEC_CEILINGHEIGHT(backsector))
             {
                 ds_p->silhouette |= SIL_TOP;
-                ds_p->tsilheight = frontsector->ceilingheight;
+                ds_p->tsilheight = SEC_CEILINGHEIGHT(frontsector);
             }
             else
-                if (backsector->ceilingheight < viewz)
+                if (SEC_CEILINGHEIGHT(backsector) < viewz)
                 {
                     ds_p->silhouette |= SIL_TOP;
                     ds_p->tsilheight = INT32_MIN;
                 }
         }
 
-        worldhigh = backsector->ceilingheight - viewz;
-        worldlow = backsector->floorheight - viewz;
+        worldhigh = SEC_CEILINGHEIGHT(backsector) - viewz;
+        worldlow = SEC_FLOORHEIGHT(backsector) - viewz;
 
         // hack to allow height changes in outdoor areas
         if (frontsector->ceilingpic == skyflatnum && backsector->ceilingpic == skyflatnum)
@@ -2256,7 +2257,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
                 || backsector->lightlevel != frontsector->lightlevel
                 ;
 
-        if (backsector->ceilingheight <= frontsector->floorheight || backsector->floorheight >= frontsector->ceilingheight)
+        if (SEC_CEILINGHEIGHT(backsector) <= SEC_FLOORHEIGHT(frontsector) || SEC_FLOORHEIGHT(backsector) >= SEC_CEILINGHEIGHT(frontsector))
             markceiling = markfloor = true;   // closed door
 
         if (worldhigh < worldtop)   // top texture
@@ -2264,7 +2265,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
             toptexture = R_GetTextureTranslation(sidedef->toptexture);
             textoptexture = R_GetTexCols(toptexture);
             rw_toptexturemid = maplineflags & ML_DONTPEGTOP ? worldtop :
-                                                                        backsector->ceilingheight + ((int32_t)(W_FetchInt16(&textureheight[sidedef->toptexture]) << TEXSHIFT) << FRACBITS) - viewz;
+                                                                        SEC_CEILINGHEIGHT(backsector) + ((int32_t)(W_FetchInt16(&textureheight[sidedef->toptexture]) << TEXSHIFT) << FRACBITS) - viewz;
             rw_toptexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[toptexture]) << TEXSHIFT))) << FRACBITS;
         }
 
@@ -2302,9 +2303,9 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     // if a floor / ceiling plane is on the wrong side of the view
     // plane, it is definitely invisible and doesn't need to be marked.
-    if (frontsector->floorheight >= viewz)       // above view plane
+    if (SEC_FLOORHEIGHT(frontsector) >= viewz)       // above view plane
         markfloor = false;
-    if (frontsector->ceilingheight <= viewz &&
+    if (SEC_CEILINGHEIGHT(frontsector) <= viewz &&
             frontsector->ceilingpic != skyflatnum)   // below view plane
         markceiling = false;
 
@@ -2374,12 +2375,12 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         if (!(ds_p->silhouette & SIL_BOTTOM))
         {
             ds_p->silhouette |= SIL_BOTTOM;
-            ds_p->bsilheight = backsector->floorheight;
+            ds_p->bsilheight = SEC_FLOORHEIGHT(backsector);
         }
         if (!(ds_p->silhouette & SIL_TOP))
         {
             ds_p->silhouette |= SIL_TOP;
-            ds_p->tsilheight = backsector->ceilingheight;
+            ds_p->tsilheight = SEC_CEILINGHEIGHT(backsector);
         }
     }
 
@@ -2432,17 +2433,17 @@ static void R_RecalcLineFlags(int16_t n)
 
     /* First decide if the line is closed, normal, or invisible */
     if (!(maplineflags & ML_TWOSIDED)
-            || backsector->ceilingheight <= frontsector->floorheight
-            || backsector->floorheight >= frontsector->ceilingheight
+            || SEC_CEILINGHEIGHT(backsector) <= SEC_FLOORHEIGHT(frontsector)
+            || SEC_FLOORHEIGHT(backsector) >= SEC_CEILINGHEIGHT(frontsector)
             || (
                 // if door is closed because back is shut:
-                backsector->ceilingheight <= backsector->floorheight
+                SEC_CEILINGHEIGHT(backsector) <= SEC_FLOORHEIGHT(backsector)
 
                 // preserve a kind of transparent door/lift special effect:
-                && (backsector->ceilingheight >= frontsector->ceilingheight ||
+                && (SEC_CEILINGHEIGHT(backsector) >= SEC_CEILINGHEIGHT(frontsector) ||
                     side->toptexture)
 
-                && (backsector->floorheight <= frontsector->floorheight ||
+                && (SEC_FLOORHEIGHT(backsector) <= SEC_FLOORHEIGHT(frontsector) ||
                     side->bottomtexture)
 
                 // properly render skies (consider door "open" if both ceilings are sky):
@@ -2459,8 +2460,8 @@ static void R_RecalcLineFlags(int16_t n)
         // identical light levels on both sides,
         // and no middle texture.
         // CPhipps - recode for speed, not certain if this is portable though
-        if (backsector->ceilingheight != frontsector->ceilingheight
-                || backsector->floorheight != frontsector->floorheight
+        if (SEC_CEILINGHEIGHT(backsector) != SEC_CEILINGHEIGHT(frontsector)
+                || SEC_FLOORHEIGHT(backsector) != SEC_FLOORHEIGHT(frontsector)
                 || side->midtexture
                 || backsector->ceilingpic != frontsector->ceilingpic
                 || backsector->floorpic != frontsector->floorpic
@@ -2613,14 +2614,14 @@ static void R_Subsector(int16_t num)
     line = &_g_segs[mapsub.firstseg];
 
 #if defined FLAT_SPAN
-    if (frontsector->floorheight < viewz)
+    if (SEC_FLOORHEIGHT(frontsector) < viewz)
         floorplane_color = R_GetPlaneColor(frontsector->floorpic, frontsector->lightlevel);
     else
         floorplane_color = -1;
 #else
-    if(frontsector->floorheight < viewz)
+    if(SEC_FLOORHEIGHT(frontsector) < viewz)
     {
-        floorplane = R_FindPlane(frontsector->floorheight,
+        floorplane = R_FindPlane(SEC_FLOORHEIGHT(frontsector),
                                      frontsector->floorpic,
                                      frontsector->lightlevel                // killough 3/16/98
                                      );
@@ -2636,14 +2637,14 @@ static void R_Subsector(int16_t num)
     if (frontsector->ceilingpic == skyflatnum) {
         ceilingplane_color = -2;
         R_LoadSkyPatch();
-    } else if (frontsector->ceilingheight > viewz)
+    } else if (SEC_CEILINGHEIGHT(frontsector) > viewz)
         ceilingplane_color = R_GetPlaneColor(frontsector->ceilingpic, frontsector->lightlevel);
     else
         ceilingplane_color = -1;
 #else
-    if(frontsector->ceilingheight > viewz || (frontsector->ceilingpic == skyflatnum))
+    if(SEC_CEILINGHEIGHT(frontsector) > viewz || (frontsector->ceilingpic == skyflatnum))
     {
-        ceilingplane = R_FindPlane(frontsector->ceilingheight,     // killough 3/8/98
+        ceilingplane = R_FindPlane(SEC_CEILINGHEIGHT(frontsector),     // killough 3/8/98
                                        frontsector->ceilingpic,
                                        frontsector->lightlevel
                                        );

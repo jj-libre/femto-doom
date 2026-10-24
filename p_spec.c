@@ -123,7 +123,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t __far* sec)
   int16_t                 i;
   const line_t __far*             check;
   sector_t __far*           other;
-  fixed_t             floor = sec->floorheight;
+  fixed_t             floor = SEC_FLOORHEIGHT(sec);
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
   {
@@ -133,8 +133,8 @@ fixed_t P_FindLowestFloorSurrounding(sector_t __far* sec)
     if (!other)
       continue;
 
-    if (other->floorheight < floor)
-      floor = other->floorheight;
+    if (SEC_FLOORHEIGHT(other) < floor)
+      floor = SEC_FLOORHEIGHT(other);
   }
   return floor;
 }
@@ -161,8 +161,8 @@ fixed_t P_FindHighestFloorSurrounding(sector_t __far* sec)
     if (!other)
       continue;
 
-    if (other->floorheight > floor)
-      floor = other->floorheight;
+    if (SEC_FLOORHEIGHT(other) > floor)
+      floor = SEC_FLOORHEIGHT(other);
   }
   return floor;
 }
@@ -189,8 +189,8 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t __far* sec)
     if (!other)
       continue;
 
-    if (other->ceilingheight < height)
-      height = other->ceilingheight;
+    if (SEC_CEILINGHEIGHT(other) < height)
+      height = SEC_CEILINGHEIGHT(other);
   }
   return height;
 }

@@ -453,7 +453,7 @@ static void P_XYMovement(mobj_t __far* mo)
 
                         if(ceilingBackSector && ceilingBackSector->ceilingpic == skyflatnum)
                         {
-                            if (mo->z > ceilingBackSector->ceilingheight)
+                            if (mo->z > SEC_CEILINGHEIGHT(ceilingBackSector))
                             {
                                 // Hack to prevent missiles exploding
                                 // against the sky.
@@ -488,7 +488,7 @@ static void P_XYMovement(mobj_t __far* mo)
     if ((mo->flags & MF_CORPSE) &&
             (P_Ext(mo)->momx > FRACUNIT/4 || P_Ext(mo)->momx < -FRACUNIT/4 ||
              P_Ext(mo)->momy > FRACUNIT/4 || P_Ext(mo)->momy < -FRACUNIT/4) &&
-            mo->floorz != P_SubsectorSector(mo->subsector)->floorheight)
+            mo->floorz != SEC_FLOORHEIGHT(P_SubsectorSector(mo->subsector)))
         return;  // do not stop sliding if halfway off a step with some momentum
 
     // killough 11/98:
@@ -678,7 +678,7 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 
     mo = P_SpawnMobj (mobj->x,
                       mobj->y,
-                      P_SubsectorSector(mobj->subsector)->floorheight,
+                      SEC_FLOORHEIGHT(P_SubsectorSector(mobj->subsector)),
                       MT_TFOG);
 
     // initiate teleport sound
@@ -689,7 +689,7 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 
     ss = R_PointInSubsector (x,y);
 
-    mo = P_SpawnMobj (x, y, P_SubsectorSector(ss)->floorheight , MT_TFOG);
+    mo = P_SpawnMobj (x, y, SEC_FLOORHEIGHT(P_SubsectorSector(ss)) , MT_TFOG);
 
     S_StartSound (mo, sfx_telept);
 
@@ -928,8 +928,8 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 
     P_SetThingPosition (mobj);
 
-    mobj->floorz   = P_SubsectorSector(mobj->subsector)->floorheight;
-    mobj->ceilingz = P_SubsectorSector(mobj->subsector)->ceilingheight;
+    mobj->floorz   = SEC_FLOORHEIGHT(P_SubsectorSector(mobj->subsector));
+    mobj->ceilingz = SEC_CEILINGHEIGHT(P_SubsectorSector(mobj->subsector));
 
     mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
                                   mobj->ceilingz - mobj->height : z;
