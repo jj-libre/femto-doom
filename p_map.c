@@ -338,9 +338,10 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
   // This test has less information content (it's almost always false), so it
   // should not be moved up to first, as it adds more overhead than it removes.
 
-  // don't clip against self
+  // don't clip against self, of which a map static gets a copy
 
-  if (thing == tmthing)
+  if (thing == tmthing || ((thing->flags & tmthing->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE)
+                           && thing->sprev == tmthing->sprev))
     return true;
 
   // missiles can hit other things

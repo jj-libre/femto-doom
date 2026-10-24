@@ -161,7 +161,7 @@ static void PIT_ChangeSector(mobj_t __far* thing)
 // sector. Both more accurate and faster.
 //
 
-static boolean P_CheckSector(sector_t __far* sector)
+static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t oldceiling)
   {
   msecnode_t __far* n;
 
@@ -179,7 +179,7 @@ static boolean P_CheckSector(sector_t __far* sector)
 
   for (n=P_Node(sector->touching_thinglist); n; n=P_Node(n->m_snext))
     n->visited = false;
-  P_ClearLoadNodesVisited(sector - _g_sectors);
+  P_BeginLoadNodeChange(sector - _g_sectors, oldfloor, oldceiling);
 
   boolean found;
   do
@@ -199,8 +199,23 @@ static boolean P_CheckSector(sector_t __far* sector)
     }
   while (found);  // repeat from scratch until all things left are marked valid
 
+  P_EndLoadNodeChange();
   return nofit;
   }
+
+static boolean P_SetFloor(sector_t __far* sector, fixed_t height)
+{
+  const fixed_t old = sector->floorheight;
+  sector->floorheight = height;
+  return P_CheckSector(sector, old, sector->ceilingheight);
+}
+
+static boolean P_SetCeiling(sector_t __far* sector, fixed_t height)
+{
+  const fixed_t old = sector->ceilingheight;
+  sector->ceilingheight = height;
+  return P_CheckSector(sector, sector->floorheight, old);
+}
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -239,20 +254,17 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           if (sector->floorheight - speed < dest)
           {
             lastpos = sector->floorheight;
-            sector->floorheight = dest;
-            flag = P_CheckSector(sector);
+            flag = P_SetFloor(sector, dest);
             if (flag == true)
             {
-              sector->floorheight =lastpos;
-              P_CheckSector(sector);
+              P_SetFloor(sector, lastpos);
             }
             return pastdest;
           }
           else
           {
             lastpos = sector->floorheight;
-            sector->floorheight -= speed;
-            flag = P_CheckSector(sector);
+            flag = P_SetFloor(sector, sector->floorheight - speed);
       /* cph - make more compatible with original Doom, by
        *  reintroducing this code. This means floors can't lower
        *  if objects are stuck in the ceiling */
@@ -268,12 +280,10 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           if (sector->floorheight + speed > destheight)
           {
             lastpos = sector->floorheight;
-            sector->floorheight = destheight;
-            flag = P_CheckSector(sector);
+            flag = P_SetFloor(sector, destheight);
             if (flag == true)
             {
-              sector->floorheight = lastpos;
-              P_CheckSector(sector);
+              P_SetFloor(sector, lastpos);
             }
             return pastdest;
           }
@@ -281,13 +291,11 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
           {
             // crushing is possible
             lastpos = sector->floorheight;
-            sector->floorheight += speed;
-            flag = P_CheckSector(sector);
+            flag = P_SetFloor(sector, sector->floorheight + speed);
             if (flag == true)
             {
 
-              sector->floorheight = lastpos;
-              P_CheckSector(sector);
+              P_SetFloor(sector, lastpos);
               return crushed;
             }
           }
@@ -316,13 +324,11 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           if (sector->ceilingheight - speed < destheight)
           {
             lastpos = sector->ceilingheight;
-            sector->ceilingheight = destheight;
-            flag = P_CheckSector(sector);
+            flag = P_SetCeiling(sector, destheight);
 
             if (flag == true)
             {
-              sector->ceilingheight = lastpos;
-              P_CheckSector(sector);
+              P_SetCeiling(sector, lastpos);
             }
             return pastdest;
           }
@@ -330,13 +336,11 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           {
             // crushing is possible
             lastpos = sector->ceilingheight;
-            sector->ceilingheight -= speed;
-            flag = P_CheckSector(sector);
+            flag = P_SetCeiling(sector, sector->ceilingheight - speed);
 
             if (flag == true)
             {
-              sector->ceilingheight = lastpos;
-              P_CheckSector(sector);
+              P_SetCeiling(sector, lastpos);
               return crushed;
             }
           }
@@ -347,20 +351,17 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
           if (sector->ceilingheight + speed > dest)
           {
             lastpos = sector->ceilingheight;
-            sector->ceilingheight = dest;
-            flag = P_CheckSector(sector);
+            flag = P_SetCeiling(sector, dest);
             if (flag == true)
             {
-              sector->ceilingheight = lastpos;
-              P_CheckSector(sector);
+              P_SetCeiling(sector, lastpos);
             }
             return pastdest;
           }
           else
           {
             lastpos = sector->ceilingheight;
-            sector->ceilingheight += speed;
-            flag = P_CheckSector(sector);
+            flag = P_SetCeiling(sector, sector->ceilingheight + speed);
           }
           break;
       }

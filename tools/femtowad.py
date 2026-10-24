@@ -4,7 +4,7 @@ In the graphics WAD, TEXCOLS holds every wall texture as columns at a fixed stri
 R_DrawColumnWall samples, so a wall column costs no patch, directory or column offset lookup.
 
 In the map WAD, E1MxTL holds per map what spawning the map's things leaves behind, so it
-needs no memory: each thing's spawn data and slot per skill, and, in reverse load order, the
+needs no memory: each thing's spawn data, subsector and slot per skill, and, in reverse load order, the
 things in each sector and block and the sectors each thing touches. E1MxGL holds what
 P_GroupLines would build: the lines of each sector and the sector of each subsector.
 
@@ -14,7 +14,7 @@ import struct
 import sys
 from pathlib import Path
 
-VERSION = 1
+VERSION = 2
 
 
 def lumps(wad):
@@ -198,14 +198,17 @@ class Map:
             return int((ndy ^ ix) < 0)
         return int(i32((y >> 8) * ndx) >= i32((x >> 8) * ndy))
 
-    def point_sector(self, x, y):
+    def point_subsector(self, x, y):
         if not self.nodes:
-            return self.subsector_sector[0]
+            return 0
         n = len(self.nodes) - 1
         while not n & 0x8000:
             node = self.nodes[n]
             n = node[12 + self.point_on_side(x, y, node)]
-        return self.subsector_sector[n & 0x7FFF]
+        return n & 0x7FFF
+
+    def point_sector(self, x, y):
+        return self.subsector_sector[self.point_subsector(x, y)]
 
     def block(self, x, y):
         bx = i16(i32(x - (self.orgx << 16)) >> 23)
@@ -286,6 +289,7 @@ def thing_lists(mp, info, misc0, flags):
         mt = 0 if doomednum == 1 else by_doomednum.get(doomednum)
         slots = [-1, -1, -1]
         sector = block = None
+        subsector = -1
         touched = []
         if mt is not None:
             static = mt >= misc0
@@ -294,12 +298,13 @@ def thing_lists(mp, info, misc0, flags):
                     slots[g] = counts[g][static]
                     counts[g][static] += 1
             _, radius, f = info[mt]
+            subsector = mp.point_subsector(x << 16, y << 16)
             if not f & flags["MF_NOSECTOR"]:
-                sector = mp.point_sector(x << 16, y << 16)
+                sector = mp.subsector_sector[subsector]
                 touched = sorted(mp.touched_sectors(x << 16, y << 16, radius))
             if not f & flags["MF_NOBLOCKMAP"]:
                 block = mp.block(x << 16, y << 16)
-        entries.append(struct.pack("<hhBB3h", x, y, 0xFF if mt is None else mt, (angle & 0x7F) | (0x80 if options & 8 else 0), *slots))
+        entries.append(struct.pack("<hhBB3hh", x, y, 0xFF if mt is None else mt, (angle & 0x7F) | (0x80 if options & 8 else 0), *slots, subsector))
         sectors.append(sector)
         blocks.append(block)
         nodes.append(touched)

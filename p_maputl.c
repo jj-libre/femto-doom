@@ -303,8 +303,9 @@ void P_LineOpening(const line_t __far* linedef)
 // then hold only what was linked since. The map WAD's E1MxTL lists, per sector and block,
 // the map things in reverse load order, as the chains would have them after their later
 // links, and the sectors each thing touched after loading. Memory keeps a bit per thing and
-// per touch, and for each map static, which never moves and is never shot, only what play
-// changes; the mobj_t code sees is rebuilt whenever it is visited.
+// per touch. A map static never moves and is never shot, so its state follows from its first
+// tics and the time since loading, and its heights are its sector's until a moving sector
+// changes them; the mobj_t code sees is rebuilt whenever it is visited.
 //
 
 typedef struct
@@ -313,9 +314,10 @@ typedef struct
   uint8_t type;
   uint8_t angle;  // in 45 degree steps, | 0x80 for MF_AMBUSH
   int16_t slot[3];  // per skill group, -1 if it does not spawn
+  int16_t subsector;
 } loadthing_t;
 
-typedef char assertLoadthingSize[sizeof(loadthing_t) == 12 ? 1 : -1];
+typedef char assertLoadthingSize[sizeof(loadthing_t) == 14 ? 1 : -1];
 
 typedef struct
 {
@@ -324,13 +326,14 @@ typedef struct
   uint32_t things, sectorfirst, blockfirst, list, nodefirst, nodesector, nodething, secnodefirst, secnodes;
 } loadheader_t;
 
+#define STATICZCHUNK 4
+
 typedef struct
 {
-  int16_t thing;
-  int16_t state, tics;
-  int16_t subsector;
-  fixed_t z, floorz, ceilingz;
-} loadstatic_t;
+  zref_t next;
+  int16_t slot[STATICZCHUNK];
+  fixed_t z[STATICZCHUNK], floorz[STATICZCHUNK], ceilingz[STATICZCHUNK];
+} staticz_t;
 
 static const byte __far* tl;
 static const loadthing_t __far* tlthings;
@@ -349,7 +352,13 @@ static int16_t skillgroup;
 static int16_t numloadthings, numloadnodes, numloadstatics;
 static uint16_t numloadsectors, numloadblocks;
 static zref_t __far* loadrefs;
-static loadstatic_t __far* loadstatics;
+static uint8_t __far* statictics;
+static uint8_t __far* staticmoved;
+static zref_t staticz;
+static int16_t numstaticz;
+static uint32_t staticclock;
+static int16_t changesector = -1;
+static fixed_t changefloor, changeceiling;
 static uint8_t __far* inplace;
 static uint8_t __far* nodealive;
 static uint8_t __far* nodevisited;
@@ -368,7 +377,7 @@ void P_BeginLoadThings(int16_t map)
 
   loadheader_t h;
   W_Fetch(tl, &h, sizeof(h));
-  if (h.version != 1)
+  if (h.version != 2)
     I_Error("P_BeginLoadThings: %s version %i", name, h.version);
 
   tlthings       = (const loadthing_t __far*)(tl + h.things);
@@ -394,7 +403,11 @@ void P_BeginLoadThings(int16_t map)
   numloadblocks  = h.numblocks;
   numloadstatics = h.numstatics[skillgroup];
   loadrefs    = Z_CallocLevel(h.numthinking[skillgroup] * sizeof(*loadrefs));
-  loadstatics = Z_CallocLevel(numloadstatics * sizeof(*loadstatics));
+  statictics  = Z_CallocLevel((numloadstatics + 1) / 2);
+  staticmoved = Z_CallocLevel((numloadstatics + 7) / 8);
+  staticz     = 0;
+  numstaticz  = 0;
+  staticclock = 0;
   inplace     = Z_CallocLevel((numloadthings + 7) / 8);
   nodealive   = Z_CallocLevel((numloadnodes + 7) / 8);
   nodevisited = Z_CallocLevel((numloadnodes + 7) / 8);
@@ -466,43 +479,169 @@ boolean P_SpawnLoadStatic(fixed_t x, fixed_t y, mobjtype_t type)
   mobj.tics  = states[info->spawnstate].tics;
 
   P_SetThingPosition(&mobj);
+  if (mobj.subsector != W_FetchInt16(&tlthings[loadingthing].subsector))
+    I_Error("P_SpawnLoadStatic: map thing %i in another subsector", loadingthing);
 
-  const sector_t __far* sector = P_SubsectorSector(mobj.subsector);
-  loadstatic_t __far* s = &loadstatics[P_LoadSlot(loadingthing)];
-  s->thing     = loadingthing;
-  s->state     = mobj.state;
-  s->tics      = mobj.tics > 0 ? 1 + (P_Random() % mobj.tics) : mobj.tics;
-  s->subsector = mobj.subsector;
-  s->floorz    = sector->floorheight;
-  s->ceilingz  = sector->ceilingheight;
-  s->z         = s->floorz;
+  if (mobj.tics > 0)
+  {
+    const int16_t slot = P_LoadSlot(loadingthing);
+    const int16_t tics = 1 + (P_Random() % mobj.tics);
+    if (tics > 15)
+      I_Error("P_SpawnLoadStatic: static thing %i lasts %i tics", type, tics);
+    statictics[slot >> 1] |= tics << ((slot & 1) * 4);
+  }
 
   if (mobj.flags & MF_COUNTITEM)
     _g_totalitems++;
   return true;
 }
 
+static int16_t P_NextStaticState(int16_t state)
+{
+  do
+    state = states[state].nextstate;
+  while (!states[state].tics);
+  return state;
+}
+
+// Where P_CycleState, once per P_RunLoadStatics, has taken a map static by now; none of their
+// states has an action or ends them.
+static void P_StaticPhase(int16_t slot, mobj_t __far* mobj)
+{
+  int16_t state = mobj->state;
+  int16_t tics  = states[state].tics;
+  uint32_t n = 0;
+  if (tics > 0)
+    tics = (statictics[slot >> 1] >> ((slot & 1) * 4)) & 15, n = staticclock;
+  if (tics >= 0 && n >= (uint32_t)tics)
+  {
+    n -= tics;
+    state = P_NextStaticState(state);
+
+    uint32_t period = 0;
+    int16_t s = state;
+    for (int16_t k = 0; ; k++)
+    {
+      if (k == 16)
+        I_Error("P_StaticPhase: state %i does not cycle", state);
+      if (states[s].tics < 0)
+      {
+        period = 0;
+        break;
+      }
+      period += states[s].tics;
+      s = P_NextStaticState(s);
+      if (s == state)
+        break;
+    }
+    if (period)
+      n %= period;
+
+    while ((tics = states[state].tics) >= 0 && n >= (uint32_t)tics)
+    {
+      n -= tics;
+      state = P_NextStaticState(state);
+    }
+  }
+  mobj->state  = state;
+  mobj->tics   = tics < 0 ? -1 : tics - n;
+  mobj->frame  = states[state].frame;
+  mobj->sprite = states[state].sprite;
+}
+
+// A sector that moves has already taken its new heights when P_CheckSector adjusts the things
+// touching it, so until then its statics stand at the old ones.
+static boolean P_OwnNodeVisited(int16_t t, int16_t sector)
+{
+  const int16_t last = W_FetchInt16(&tlnodefirst[t + 1]);
+  for (int16_t k = W_FetchInt16(&tlnodefirst[t]); k < last; k++)
+    if (W_FetchInt16(&tlnodesector[k]) == sector)
+      return BIT(nodevisited, k) != 0;
+  return true;
+}
+
+static staticz_t __far* P_StaticZ(int16_t slot, int16_t* i)
+{
+  for (staticz_t __far* c = Z_Ptr(staticz); c; c = Z_Ptr(c->next))
+    for (*i = 0; *i < STATICZCHUNK; (*i)++)
+      if (c->slot[*i] == slot)
+        return c;
+  return NULL;
+}
+
 static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t __far* mobj)
 {
-  const loadstatic_t __far* s = &loadstatics[slot];
   const mobjinfo_t* info = &mobjinfo[lt->type];
   _fmemset(mobj, 0, sizeof(*mobj));
   mobj->x         = (fixed_t)lt->x << FRACBITS;
   mobj->y         = (fixed_t)lt->y << FRACBITS;
-  mobj->z         = s->z;
   mobj->angle     = ANG45 * (lt->angle & 0x7f);
   mobj->sprev     = t;
-  mobj->subsector = s->subsector;
-  mobj->floorz    = s->floorz;
-  mobj->ceilingz  = s->ceilingz;
+  mobj->subsector = lt->subsector;
+  if (BIT(staticmoved, slot))
+  {
+    int16_t i;
+    const staticz_t __far* c = P_StaticZ(slot, &i);
+    mobj->z        = c->z[i];
+    mobj->floorz   = c->floorz[i];
+    mobj->ceilingz = c->ceilingz[i];
+  }
+  else if (P_SubsectorSector(lt->subsector) - _g_sectors == changesector && !P_OwnNodeVisited(t, changesector))
+  {
+    mobj->z        = changefloor;
+    mobj->floorz   = changefloor;
+    mobj->ceilingz = changeceiling;
+  }
+  else
+  {
+    const sector_t __far* sector = P_SubsectorSector(lt->subsector);
+    mobj->z        = sector->floorheight;
+    mobj->floorz   = sector->floorheight;
+    mobj->ceilingz = sector->ceilingheight;
+  }
   mobj->radius    = info->radius;
   mobj->height    = info->height;
   mobj->flags     = info->flags | MF_STATIC | MF_INPLACE | (lt->angle & 0x80 ? MF_AMBUSH : 0);
-  mobj->state     = s->state;
-  mobj->frame     = states[s->state].frame;
-  mobj->tics      = s->tics;
-  mobj->sprite    = states[s->state].sprite;
+  mobj->state     = info->spawnstate;
   mobj->type      = lt->type;
+  P_StaticPhase(slot, mobj);
+}
+
+// Heights a visit changed to other than the sector's, which only a moving sector does, are kept.
+static void P_KeepStaticZ(int16_t slot, const mobj_t __far* mobj, const fixed_t* old)
+{
+  int16_t i;
+  staticz_t __far* c;
+  if (BIT(staticmoved, slot))
+    c = P_StaticZ(slot, &i);
+  else
+  {
+    if (mobj->z == old[0] && mobj->floorz == old[1] && mobj->ceilingz == old[2])
+      return;
+
+    const sector_t __far* sector = P_SubsectorSector(mobj->subsector);
+    if (mobj->z == sector->floorheight && mobj->floorz == sector->floorheight
+        && mobj->ceilingz == sector->ceilingheight)
+      return;
+
+    i = numstaticz % STATICZCHUNK;
+    if (!i)
+    {
+      c = Z_CallocLevel(sizeof(*c));
+      c->next = staticz;
+      staticz = Z_Ref(c);
+      for (int16_t k = 0; k < STATICZCHUNK; k++)
+        c->slot[k] = -1;
+    }
+    else
+      c = Z_Ptr(staticz);
+    numstaticz++;
+    c->slot[i] = slot;
+    SETBIT(staticmoved, slot);
+  }
+  c->z[i]        = mobj->z;
+  c->floorz[i]   = mobj->floorz;
+  c->ceilingz[i] = mobj->ceilingz;
 }
 
 static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
@@ -515,32 +654,16 @@ static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
 
   mobj_t mobj;
   P_StaticMobj(t, slot, &lt, &mobj);
+  const fixed_t old[3] = { mobj.z, mobj.floorz, mobj.ceilingz };
   boolean r = func(&mobj);
-  loadstatic_t __far* s = &loadstatics[slot];
-  s->z        = mobj.z;
-  s->floorz   = mobj.floorz;
-  s->ceilingz = mobj.ceilingz;
-  s->state    = mobj.state;
-  s->tics     = mobj.tics;
+  if (BIT(inplace, t))
+    P_KeepStaticZ(slot, &mobj, old);
   return r;
 }
 
-// P_CycleState for a map static; none of their states has an action or ends them.
 void P_RunLoadStatics(void)
 {
-  for (int16_t i = 0; i < numloadstatics; i++)
-  {
-    loadstatic_t __far* s = &loadstatics[i];
-    if (s->tics == -1 || !BIT(inplace, s->thing))
-      continue;
-
-    if (!--s->tics)
-      do
-      {
-        s->state = states[s->state].nextstate;
-        s->tics  = states[s->state].tics;
-      } while (!s->tics);
-  }
+  staticclock++;
 }
 
 mobj_t __far* P_InterceptThing(mobj_t __far* thing)
@@ -590,11 +713,19 @@ void P_KillLoadNodes(mobj_t __far* thing)
   }
 }
 
-void P_ClearLoadNodesVisited(int16_t sector)
+void P_BeginLoadNodeChange(int16_t sector, fixed_t oldfloor, fixed_t oldceiling)
 {
   const int16_t last = W_FetchInt16(&tlsecnodefirst[sector + 1]);
   for (int16_t j = W_FetchInt16(&tlsecnodefirst[sector]); j < last; j++)
     CLRBIT(nodevisited, W_FetchInt16(&tlsecnodes[j]));
+  changesector  = sector;
+  changefloor   = oldfloor;
+  changeceiling = oldceiling;
+}
+
+void P_EndLoadNodeChange(void)
+{
+  changesector = -1;
 }
 
 static void (*changefunc)(mobj_t __far*);
