@@ -1856,8 +1856,9 @@ static void R_AddSprites(int16_t subsec, int16_t lightlevel)
 
   // Handle all things in sector.
 
-  for (thing = P_Mobj(sec->thinglist); thing; thing = P_Mobj(thing->snext))
-    R_ProjectSprite(thing, lightlevel);
+  for (thing = P_Mobj(SEC_THINGS(sec)); thing; thing = P_Mobj(thing->snext))
+    if (P_SubsectorSector(thing->subsector) == sec)
+      R_ProjectSprite(thing, lightlevel);
 
   spritelight = lightlevel;
   P_SectorLoadThings(sec - _g_sectors, R_ProjectLoadThing);
@@ -2269,7 +2270,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         worldlow = SEC_FLOORHEIGHT(backsector) - viewz;
 
         // hack to allow height changes in outdoor areas
-        if (frontsector->ceilingpic == skyflatnum && backsector->ceilingpic == skyflatnum)
+        if (SEC_CEILINGSKY(frontsector) && SEC_CEILINGSKY(backsector))
             worldtop = worldhigh;
 
         markfloor = worldlow != worldbottom
@@ -2332,7 +2333,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     if (SEC_FLOORHEIGHT(frontsector) >= viewz)       // above view plane
         markfloor = false;
     if (SEC_CEILINGHEIGHT(frontsector) <= viewz &&
-            frontsector->ceilingpic != skyflatnum)   // below view plane
+            !SEC_CEILINGSKY(frontsector))   // below view plane
         markceiling = false;
 
     // calculate incremental stepping values for texture edges
@@ -2473,8 +2474,8 @@ static void R_RecalcLineFlags(int16_t n)
                     side->bottomtexture)
 
                 // properly render skies (consider door "open" if both ceilings are sky):
-                && (backsector->ceilingpic != skyflatnum ||
-                    frontsector->ceilingpic!= skyflatnum)
+                && (!SEC_CEILINGSKY(backsector) ||
+                    !SEC_CEILINGSKY(frontsector))
                 )
             )
         LN_SETBIT(LB_CLOSED, n);
@@ -2641,14 +2642,14 @@ static void R_Subsector(int16_t num)
 
 #if defined FLAT_SPAN
     if (SEC_FLOORHEIGHT(frontsector) < viewz)
-        floorplane_color = R_GetPlaneColor(frontsector->floorpic, frontsector->lightlevel);
+        floorplane_color = R_GetPlaneColor(SEC_FLOORPIC(frontsector), frontsector->lightlevel);
     else
         floorplane_color = -1;
 #else
     if(SEC_FLOORHEIGHT(frontsector) < viewz)
     {
         floorplane = R_FindPlane(SEC_FLOORHEIGHT(frontsector),
-                                     frontsector->floorpic,
+                                     SEC_FLOORPIC(frontsector),
                                      frontsector->lightlevel                // killough 3/16/98
                                      );
     }
@@ -2660,18 +2661,18 @@ static void R_Subsector(int16_t num)
 
 
 #if defined FLAT_SPAN
-    if (frontsector->ceilingpic == skyflatnum) {
+    if (SEC_CEILINGSKY(frontsector)) {
         ceilingplane_color = -2;
         R_LoadSkyPatch();
     } else if (SEC_CEILINGHEIGHT(frontsector) > viewz)
-        ceilingplane_color = R_GetPlaneColor(frontsector->ceilingpic, frontsector->lightlevel);
+        ceilingplane_color = R_GetPlaneColor(SEC_CEILINGPIC(frontsector), frontsector->lightlevel);
     else
         ceilingplane_color = -1;
 #else
-    if(SEC_CEILINGHEIGHT(frontsector) > viewz || (frontsector->ceilingpic == skyflatnum))
+    if(SEC_CEILINGHEIGHT(frontsector) > viewz || (SEC_CEILINGSKY(frontsector)))
     {
         ceilingplane = R_FindPlane(SEC_CEILINGHEIGHT(frontsector),     // killough 3/8/98
-                                       frontsector->ceilingpic,
+                                       SEC_CEILINGPIC(frontsector),
                                        frontsector->lightlevel
                                        );
     }

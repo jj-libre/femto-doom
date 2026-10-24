@@ -1071,7 +1071,7 @@ void P_SetThingPosition(mobj_t __far* thing)
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
 
-      zref_t __far* link = &P_SubsectorSector(ss)->thinglist;
+      zref_t __far* link = &SEC_THINGS(P_SubsectorSector(ss));
       zref_t snext = *link;
       if ((thing->snext = snext))
         P_Mobj(snext)->sprev = Z_Ref(&thing->snext);

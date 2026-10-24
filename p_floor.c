@@ -177,7 +177,8 @@ static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t o
 
   // Mark all things invalid
 
-  for (n=P_Node(sector->touching_thinglist); n; n=P_Node(n->m_snext))
+  const zref_t sref = Z_Ref(sector);
+  for (n=P_Node(SEC_TOUCHING(sector)); n; n=P_Node(n->m_snext))
     n->visited = false;
   P_BeginLoadNodeChange(sector - _g_sectors, oldfloor, oldceiling);
 
@@ -185,8 +186,8 @@ static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t o
   do
     {
     found = false;
-    for (n=P_Node(sector->touching_thinglist); n; n=P_Node(n->m_snext))  // go through list
-      if (!n->visited)               // unprocessed thing found
+    for (n=P_Node(SEC_TOUCHING(sector)); n; n=P_Node(n->m_snext))  // go through list
+      if (n->m_sector == sref && !n->visited)               // unprocessed thing found
         {
         n->visited  = true;          // mark thing as processed
         if (!(P_Mobj(n->m_thing)->flags & MF_NOBLOCKMAP)) //jff 4/7/98 don't do these

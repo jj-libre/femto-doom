@@ -193,7 +193,8 @@ static boolean P_LookForTargets(mobj_t __far* actor, boolean allaround)
 
 void A_Look(mobj_t __far* actor)
 {
-    mobj_t __far* targ = P_Mobj(P_SubsectorSector(actor->subsector)->soundtarget);
+    const int16_t s = P_SubsectorSector(actor->subsector) - _g_sectors;
+    mobj_t __far* targ = SEC_BIT(SB_HEARD, s) ? P_Mobj(_g_soundtarget) : NULL;
     P_Ext(actor)->threshold = 0; // any shot will wake up
     P_Ext(actor)->pursuecount = 0;
 

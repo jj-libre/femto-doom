@@ -89,24 +89,37 @@ typedef char assertDegenmobjSize[sizeof(degenmobj_t) == 8 ? 1 : -1];
 //
 
 // Its lines are in the map WAD's E1MxGL; P_SectorSoundOrg finds its sound origin.
+// Its things and touching nodes are in chains shared by SECBUCKETS sectors, and the
+// sound target is _g_soundtarget for every sector with SB_HEARD.
 typedef struct
 {
   int16_t floorheight;    // in quarter map units, SEC_FLOORHEIGHT
   int16_t ceilingheight;
 
-  zref_t soundtarget;   // mobj_t that made a sound (or null)
-  zref_t thinglist;     // list of mobjs in sector
-
-  // list of mobjs that are at least partially in the sector
-  // thinglist is a subset of touching_thinglist
-  zref_t touching_thinglist;    // msecnode_t
-
-  int16_t floorpic;
-  int16_t ceilingpic;
+  uint8_t floorpic;       // P_FlatByte, SEC_FLOORPIC
+  uint8_t ceilingpic;
 
   uint8_t lightlevel;
   int8_t special;
 } sector_t;
+
+// A flat in a byte: 0xFD and up are the negative FLAT_SPAN flats (sky, nukage).
+static inline int16_t SEC_FLAT(uint8_t p)
+{
+  return p >= 0xFD ? p - 0x100 : p;
+}
+#define SEC_FLOORPIC(s)      SEC_FLAT((s)->floorpic)
+#define SEC_CEILINGPIC(s)    SEC_FLAT((s)->ceilingpic)
+#define SEC_CEILINGSKY(s)    ((s)->ceilingpic == (uint8_t)skyflatnum)
+uint8_t P_FlatByte(int16_t pic);
+
+#define SECBUCKETS 16
+extern zref_t __far* _g_secthings;    // mobj_t chains by sector index, SECBUCKETS of them
+extern zref_t __far* _g_sectouching;  // msecnode_t chains by sector index
+#define SEC_THINGS(s)   (_g_secthings[((s) - _g_sectors) & (SECBUCKETS - 1)])
+#define SEC_TOUCHING(s) (_g_sectouching[((s) - _g_sectors) & (SECBUCKETS - 1)])
+
+extern zref_t _g_soundtarget;
 
 // Planes move by quarter units between heights that are whole or quarter units, so a
 // quarter unit is exact. P_PlaneHeight refuses any other height and any beyond 8191 units.
@@ -137,6 +150,7 @@ enum
   SB_SECRET,   // jff 2/16/98 remembers if sector WAS secret (automap)
   SB_SOUND2,   // the sound that flooded it last crossed a sound-blocking line
   SB_SPREAD,   // the sound still has to spread from it
+  SB_HEARD,    // _g_soundtarget is its sound target
   SB_PLANES
 };
 
@@ -146,7 +160,7 @@ extern int16_t _g_secbytes;
 #define SEC_SETBIT(p, i) (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] |= (1 << ((i) & 7)))
 #define SEC_CLRBIT(p, i) (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] &= ~(1 << ((i) & 7)))
 
-typedef char assertSectorSize[sizeof(sector_t) == 16 ? 1 : -1];
+typedef char assertSectorSize[sizeof(sector_t) == 8 ? 1 : -1];
 
 
 typedef struct {

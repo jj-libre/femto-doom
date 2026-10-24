@@ -895,7 +895,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
     y = _g_trace.y + FixedMul(_g_trace.dy, frac);
     z = shootz + FixedMul3(aimslope, frac, attackrange);
 
-    if (LN_FRONTSECTOR(li)->ceilingpic == skyflatnum)
+    if (SEC_CEILINGSKY(LN_FRONTSECTOR(li)))
     {
       // don't shoot the sky!
 
@@ -904,7 +904,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
 
       // it's a sky hack wall
 
-      if  (LN_BACKSECTOR(li) && LN_BACKSECTOR(li)->ceilingpic == skyflatnum)
+      if  (LN_BACKSECTOR(li) && SEC_CEILINGSKY(LN_BACKSECTOR(li)))
 
         // fix bullet-eaters -- killough:
         // WARNING: Almost all demos will lose sync without this
@@ -1267,10 +1267,10 @@ static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
   // Add new node at head of sector thread starting at s->touching_thinglist
 
   node->m_sprev  = 0;    // prev node on sector thread
-  node->m_snext  = s->touching_thinglist; // next node on sector thread
-  if (s->touching_thinglist)
+  node->m_snext  = SEC_TOUCHING(s); // next node on sector thread
+  if (node->m_snext)
     P_Node(node->m_snext)->m_sprev = nref;
-  s->touching_thinglist = nref;
+  SEC_TOUCHING(s) = nref;
   _s_sector_list = node;
   }
 
@@ -1307,7 +1307,7 @@ static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
     if (sp)
       P_Node(sp)->m_snext = sn;
     else
-      P_Sector(node->m_sector)->touching_thinglist = sn;
+      SEC_TOUCHING(P_Sector(node->m_sector)) = sn;
     if (sn)
       P_Node(sn)->m_sprev = sp;
 

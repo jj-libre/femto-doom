@@ -86,6 +86,9 @@ side_t   __far* _g_sides;
 mover_t  __far* _g_movers;
 uint8_t  __far* _g_secbits;
 int16_t         _g_secbytes;
+zref_t   __far* _g_secthings;
+zref_t   __far* _g_sectouching;
+zref_t          _g_soundtarget;
 static int16_t nummovers;
 const mapsidedef_t *_g_mapsides;
 
@@ -190,6 +193,13 @@ typedef char assertMapsectorSize[sizeof(mapsector_t) == 24 ? 1 : -1];
 #endif
 
 
+uint8_t P_FlatByte(int16_t pic)
+{
+  if (pic < -3 || pic >= 0xFD)
+    I_Error("P_FlatByte: flat %i", pic);
+  return pic;
+}
+
 static void P_LoadSectors (int16_t lump)
 {
   int16_t  i;
@@ -199,6 +209,9 @@ static void P_LoadSectors (int16_t lump)
   _g_sectors = Z_CallocLevel(_g_numsectors * sizeof(sector_t));
   _g_secbytes = (_g_numsectors + 7) / 8;
   _g_secbits = Z_CallocLevel(SB_PLANES * _g_secbytes);
+  _g_secthings = Z_CallocLevel(2 * SECBUCKETS * sizeof(*_g_secthings));
+  _g_sectouching = _g_secthings + SECBUCKETS;
+  _g_soundtarget = 0;
   _g_movers = NULL;
   nummovers = 0;
 
@@ -210,16 +223,13 @@ static void P_LoadSectors (int16_t lump)
 
       ss->floorheight   = P_PlaneHeight((fixed_t)SHORT(ms.floorheight) << FRACBITS);
       ss->ceilingheight = P_PlaneHeight((fixed_t)SHORT(ms.ceilingheight) << FRACBITS);
-      ss->floorpic   = P_SectorFlatNum(ms.floorpic);
-      ss->ceilingpic = P_SectorFlatNum(ms.ceilingpic);
+      ss->floorpic   = P_FlatByte(P_SectorFlatNum(ms.floorpic));
+      ss->ceilingpic = P_FlatByte(P_SectorFlatNum(ms.ceilingpic));
 
       ss->lightlevel = ms.lightlevel;
       ss->special    = ms.special;
       if (ms.special == 9)
         SEC_SETBIT(SB_SECRET, i);
-
-      ss->thinglist = 0;
-      ss->touching_thinglist = 0;
     }
 }
 

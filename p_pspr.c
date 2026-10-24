@@ -46,6 +46,7 @@
 #include "d_event.h"
 
 #include "globdata.h"
+#include "i_system.h"
 
 #define LOWERSPEED   (FRACUNIT*6)
 #define RAISESPEED   (FRACUNIT*6)
@@ -385,12 +386,18 @@ static boolean P_FloodSector(sector_t __far* sec, int16_t soundblocks, mobj_t __
   else
     SEC_CLRBIT(SB_SOUND2, s);
   SEC_SETBIT(SB_SPREAD, s);
-  sec->soundtarget    = Z_Ref(soundtarget);
+  SEC_SETBIT(SB_HEARD, s);
   return true;
 }
 
 static void P_RecursiveSound(sector_t __far* sec, mobj_t __far* soundtarget)
 {
+  if (_g_soundtarget != Z_Ref(soundtarget))
+  {
+    if (_g_soundtarget)
+      I_Error("P_RecursiveSound: second sound target");
+    _g_soundtarget = Z_Ref(soundtarget);
+  }
   boolean flooded = P_FloodSector(sec, 0, soundtarget);
   while (flooded)
   {
