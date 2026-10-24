@@ -104,6 +104,19 @@ int16_t R_FlatNumForName (const char* name);   // killough -- const added
 int16_t R_CheckTextureNumForName (const char *name);
 
 const texture_t __far* R_GetTexture(int16_t texture);
+
+#define TEXCOLBITS (7 - TEXSHIFT)
+
+// A wall texture in TEXCOLS: its columns at a stride of 1 << TEXCOLBITS bytes, each shared
+// by 1 << cshift texture columns.
+typedef struct
+{
+  const byte __far* columns;
+  uint16_t widthmask;
+  uint8_t cshift;
+} texcols_t;
+
+texcols_t R_GetTexCols(int16_t texture);
 void P_LoadTexture(int16_t texture);
 
 

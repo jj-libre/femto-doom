@@ -518,9 +518,9 @@ static boolean  maskedtexture;
 static int16_t      toptexture;
 static int16_t      bottomtexture;
 static int16_t      midtexture;
-static const texture_t __far* textoptexture;
-static const texture_t __far* texbottomtexture;
-static const texture_t __far* texmidtexture;
+static texcols_t textoptexture;
+static texcols_t texbottomtexture;
+static texcols_t texmidtexture;
 
 static fixed_t  rw_midtexturemid;
 static fixed_t  rw_toptexturemid;
@@ -1224,42 +1224,6 @@ static void R_DrawVisSprite(const vissprite_t *vis)
 }
 
 
-static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16_t* patch_num, int16_t* x_c)
-{
-	texture_t tex;
-	W_Fetch(texture, &tex, sizeof(tex));
-
-	const uint8_t patchcount = tex.patchcount;
-
-	const int16_t xc = texcolumn & tex.widthmask;
-
-	if (patchcount == 1)
-	{
-		//simple texture.
-		*patch_num = tex.patches[0].patch_num;
-		*x_c = xc;
-	}
-	else
-	{
-		uint8_t i = 0;
-
-		do
-		{
-			texpatch_t patch;
-			W_Fetch(&texture->patches[i], &patch, sizeof(patch));
-
-			int16_t x = xc - patch.originx;
-			if (0 <= x && x < patch.patch_width)
-			{
-				*patch_num = patch.patch_num;
-				*x_c = x;
-				break;
-			}
-		} while (++i < patchcount);
-	}
-}
-
-
 //
 // R_RenderMaskedSegRange
 //
@@ -1860,260 +1824,11 @@ static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
 #if defined FLAT_WALL
 #define R_DrawSegTextureColumn(w,x,y,z) R_DrawColumnFlat(x,z)
 #else
-static void R_DrawColumnInCache(const column_t __far* patch, byte* cache, int16_t originy, int16_t cacheheight)
+static void R_DrawSegTextureColumn(const texcols_t* tex, int16_t texture, int16_t texcolumn, draw_column_vars_t* dcvars)
 {
-    post_t post;
-    W_Fetch(patch, &post, sizeof(post));
-
-    while (post.topdelta != 0xff)
-    {
-        const byte __far* source = (const byte __far*)patch + 3;
-        int16_t count = post.length;
-        int16_t position = originy + post.topdelta;
-
-        if (position < 0)
-        {
-            count += position;
-            position = 0;
-        }
-
-        if (position + count > cacheheight)
-            count = cacheheight - position;
-
-        if (count > 0)
-            W_Fetch(source, cache + position, count);
-
-        patch = (const column_t __far*)((const byte __far*)patch + post.length + 4);
-        W_Fetch(patch, &post, sizeof(post));
-    }
-}
-
-/*
- * Draw a column of pixels of the specified texture.
- * If the texture is simple (1 patch, full height) then just draw
- * straight from const patch_t*.
-*/
-
-#if !defined MAX_CACHE_ENTRIES
-#define MAX_CACHE_ENTRIES 32
-#endif
-#define MAX_CACHE_TRIES 4
-
-static uint16_t CACHE_ENTRY(int16_t column, int16_t texture)
-{
-	return column | (texture << 8);
-}
-
-
-#if defined __NGDEVKIT__
-#include <ngdevkit/registers.h>
-static byte *columnCache = (byte *)&MMAP_PALBANK1[16 * 16];
-#else
-static byte __far columnCache[MAX_CACHE_ENTRIES*128];
-#endif
-static uint16_t columnCacheEntries[MAX_CACHE_ENTRIES];
-
-static uint16_t FindColumnCacheItem(int16_t texture, int16_t column)
-{
-	uint16_t hash = ((column >> 2) ^ (texture * 71)) & (MAX_CACHE_ENTRIES - 1);
-	uint16_t key = hash;
-
-	uint16_t cx = CACHE_ENTRY(column, texture);
-
-	for (int16_t i = 0; i < MAX_CACHE_TRIES; i++)
-	{
-		if (columnCacheEntries[key] == 0 || columnCacheEntries[key] == cx)
-			return key;
-
-		key += 119;
-		key &= (MAX_CACHE_ENTRIES - 1);
-	}
-
-	return hash;
-}
-
-
-static const byte __far* R_ComposeColumn(const int16_t texture, const texture_t __far* texp, int16_t texcolumn)
-{
-    texture_t texcopy;
-    W_Fetch(texp, &texcopy, sizeof(texcopy));
-    const texture_t* tex = &texcopy;
-
-#if defined HIGH_DETAIL
-    const int16_t xc = texcolumn & tex->widthmask;
-#else
-    const int16_t xc = (texcolumn & 0xfffc) & tex->widthmask;
-#endif
-
-    uint16_t cachekey = FindColumnCacheItem(texture, xc);
-
-    byte __far* colcache = &columnCache[cachekey*128];
-    uint16_t cacheEntry = columnCacheEntries[cachekey];
-
-    //total++;
-
-    if (cacheEntry != CACHE_ENTRY(xc, texture))
-    {
-        //misses++;
-        byte tmpCache[128];
-
-        uint8_t i = 0;
-        uint8_t patchcount = tex->patchcount;
-
-        do
-        {
-            texpatch_t patch;
-            W_Fetch(&texp->patches[i], &patch, sizeof(patch));
-
-            const int16_t x1 = patch.originx;
-
-            if (xc < x1)
-                continue;
-
-            const patch_t __far* realpatch = W_GetLumpByNum(patch.patch_num);
-
-            const int16_t x2 = x1 + W_FetchInt16(&realpatch->width);
-
-            if (xc < x2)
-            {
-                const column_t __far* patchcol = (const column_t __far*)((const byte __far*)realpatch + W_FetchInt32(&realpatch->columnofs[xc - x1]));
-
-                R_DrawColumnInCache (patchcol, tmpCache, patch.originy, tex->height);
-            }
-        } while(++i < patchcount);
-
-        //Block copy will drop low 2 bits of len.
-        _fmemcpy(colcache, tmpCache, (tex->height + 3) & ~3);
-
-        columnCacheEntries[cachekey] = CACHE_ENTRY(xc, texture);
-    }
-
-    return colcache;
-}
-
-#if defined WALL_PATCH_CACHE
-// The patch R_GetColumn found last, for the two textures a column can draw (top and
-// bottom, or mid), with the range of texture columns for which it is the first match.
-typedef struct
-{
-    const texture_t __far* tex;
-    const patch_t __far* patch;
-    uint16_t widthmask;
-    int16_t lo, hi, originx;
-    boolean overlapped;
-    uint8_t patchcount;
-} wallpatch_t;
-
-static wallpatch_t wallpatches[2];
-static uint8_t wallpatchnext;
-
-static const patch_t __far* R_GetWallPatch(const texture_t __far* tex, int16_t texcolumn, int16_t* x_c)
-{
-    wallpatch_t* wp;
-
-    if (wallpatches[0].tex == tex)
-        wp = &wallpatches[0];
-    else if (wallpatches[1].tex == tex)
-        wp = &wallpatches[1];
-    else
-    {
-        wp = &wallpatches[wallpatchnext];
-        wallpatchnext ^= 1;
-
-        texture_t t;
-        W_Fetch(tex, &t, sizeof(t));
-
-        wp->tex        = tex;
-        wp->widthmask  = t.widthmask;
-        wp->overlapped = t.overlapped;
-        wp->patchcount = t.patchcount;
-        wp->lo = wp->hi = 0;
-
-        if (!wp->overlapped && t.patchcount == 1)
-        {
-            wp->patch   = W_GetLumpByNum(t.patches[0].patch_num);
-            wp->lo      = INT16_MIN;
-            wp->hi      = INT16_MAX;
-            wp->originx = 0;
-        }
-    }
-
-    if (wp->overlapped)
-        return NULL;
-
-    const int16_t xc = texcolumn & wp->widthmask;
-
-    if (xc < wp->lo || xc >= wp->hi)
-    {
-        const uint8_t patchcount = wp->patchcount;
-        int16_t lo = INT16_MIN, hi = INT16_MAX;
-        uint8_t i = 0;
-
-        do
-        {
-            texpatch_t patch;
-            W_Fetch(&tex->patches[i], &patch, sizeof(patch));
-            const int16_t a = patch.originx;
-            const int16_t b = a + patch.patch_width;
-
-            if (a <= xc && xc < b)
-            {
-                wp->patch   = W_GetLumpByNum(patch.patch_num);
-                wp->lo      = a > lo ? a : lo;
-                wp->hi      = b < hi ? b : hi;
-                wp->originx = a;
-                break;
-            }
-
-            if (b <= xc && b > lo)
-                lo = b;
-            else if (a > xc && a < hi)
-                hi = a;
-        } while (++i < patchcount);
-
-        if (i == patchcount)
-            return NULL;
-    }
-
-    *x_c = xc - wp->originx;
-    return wp->patch;
-}
-#endif
-
-static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, int16_t texcolumn, draw_column_vars_t* dcvars)
-{
-#if defined WALL_PATCH_CACHE
-    int16_t x_c;
-    const patch_t __far* patch = R_GetWallPatch(tex, texcolumn, &x_c);
-
-    if (patch)
-    {
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[x_c]));
-
-        dcvars->source = (const byte __far*)column + 3;
-        R_DrawColumnWall(dcvars);
-        return;
-    }
-#endif
-
-    if (!W_FetchUInt8(&tex->overlapped))
-    {
-        int16_t patch_num;
-        int16_t x_c;
-        R_GetColumn(tex, texcolumn, &patch_num, &x_c);
-
-        const patch_t __far* patch = W_GetLumpByNum(patch_num);
-
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[x_c]));
-
-        dcvars->source = (const byte __far*)column + 3;
-        R_DrawColumnWall(dcvars);
-    }
-    else
-    {
-        dcvars->source = R_ComposeColumn(texture, tex, texcolumn);
-        R_DrawColumnWall(dcvars);
-    }
+    UNUSED(texture);
+    dcvars->source = tex->columns + ((uint32_t)((uint16_t)(texcolumn & tex->widthmask) >> tex->cshift) << TEXCOLBITS);
+    R_DrawColumnWall(dcvars);
 }
 #endif
 
@@ -2225,7 +1940,7 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
             dcvars.texturemid = rw_midtexturemid;
             //
 
-            R_DrawSegTextureColumn(texmidtexture, midtexture, texturecolumn, &dcvars);
+            R_DrawSegTextureColumn(&texmidtexture, midtexture, texturecolumn, &dcvars);
 
             cc_rwx = VIEWWINDOWHEIGHT;
             fc_rwx = -1;
@@ -2249,7 +1964,7 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
                     dcvars.yh = mid;
                     dcvars.texturemid = rw_toptexturemid;
 
-                    R_DrawSegTextureColumn(textoptexture, toptexture, texturecolumn, &dcvars);
+                    R_DrawSegTextureColumn(&textoptexture, toptexture, texturecolumn, &dcvars);
 
                     cc_rwx = mid;
                 }
@@ -2278,7 +1993,7 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
                     dcvars.yh = yh;
                     dcvars.texturemid = rw_bottomtexturemid;
 
-                    R_DrawSegTextureColumn(texbottomtexture, bottomtexture, texturecolumn, &dcvars);
+                    R_DrawSegTextureColumn(&texbottomtexture, bottomtexture, texturecolumn, &dcvars);
 
                     fc_rwx = mid;
                 }
@@ -2437,7 +2152,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     {
         // single sided line
         midtexture = R_GetTextureTranslation(sidedef->midtexture);
-        texmidtexture = R_GetTexture(midtexture);
+        texmidtexture = R_GetTexCols(midtexture);
 
         // a single sided line is terminal, so it must mark ends
         markfloor = markceiling = true;
@@ -2531,7 +2246,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         if (worldhigh < worldtop)   // top texture
         {
             toptexture = R_GetTextureTranslation(sidedef->toptexture);
-            textoptexture = R_GetTexture(toptexture);
+            textoptexture = R_GetTexCols(toptexture);
             rw_toptexturemid = maplineflags & ML_DONTPEGTOP ? worldtop :
                                                                         backsector->ceilingheight + ((int32_t)(W_FetchInt16(&textureheight[sidedef->toptexture]) << TEXSHIFT) << FRACBITS) - viewz;
             rw_toptexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[toptexture]) << TEXSHIFT))) << FRACBITS;
@@ -2540,7 +2255,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         if (worldlow > worldbottom) // bottom texture
         {
             bottomtexture = R_GetTextureTranslation(sidedef->bottomtexture);
-            texbottomtexture = R_GetTexture(bottomtexture);
+            texbottomtexture = R_GetTexCols(bottomtexture);
             rw_bottomtexturemid = maplineflags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
 
             rw_bottomtexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[bottomtexture]) << TEXSHIFT))) << FRACBITS;

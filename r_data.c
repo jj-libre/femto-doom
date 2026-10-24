@@ -101,6 +101,7 @@ typedef char assertMaptextureSize[sizeof(maptexture_t) == 20 ? 1 : -1];
 
 static const uint16_t *texturep;
 static int16_t numtextures;
+static const byte __far* texcols;
 
 
 const texture_t __far* R_GetTexture(int16_t texture)
@@ -115,6 +116,15 @@ const texture_t __far* R_GetTexture(int16_t texture)
 #endif
 
     return (texture_t*)((const byte*)texturep + W_FetchUInt16(&texturep[texture]));
+}
+
+texcols_t R_GetTexCols(int16_t texture)
+{
+    struct { uint32_t offset; uint16_t widthmask; uint8_t cshift, pad; } entry;
+    W_Fetch(texcols + 8 + 8 * texture, &entry, sizeof(entry));
+
+    texcols_t tex = { texcols + entry.offset, entry.widthmask, entry.cshift };
+    return tex;
 }
 
 static int16_t R_GetTextureNumForName(const char* tex_name)
@@ -184,6 +194,17 @@ static void R_InitTextures()
 	texturep = W_GetLumpByName("TEXTUREP");
 
 	textureheight = W_GetLumpByName("TEXHEIGH");
+
+#if defined HIGH_DETAIL
+	const uint8_t highdetail = 1;
+#else
+	const uint8_t highdetail = 0;
+#endif
+	texcols = W_GetLumpByName("TEXCOLS");
+	uint8_t header[4];
+	W_Fetch(texcols, header, sizeof(header));
+	if (header[0] != 1 || header[1] != TEXSHIFT || header[2] != highdetail || header[3] != TEXCOLBITS)
+		I_Error("R_InitTextures: TEXCOLS built for TEXSHIFT %i", header[1]);
 }
 
 
