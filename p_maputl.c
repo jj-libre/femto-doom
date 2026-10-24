@@ -377,7 +377,7 @@ void P_BeginLoadThings(int16_t map)
 
   loadheader_t h;
   W_Fetch(tl, &h, sizeof(h));
-  if (h.version != 2)
+  if (h.version != 3)
     I_Error("P_BeginLoadThings: %s version %i", name, h.version);
 
   tlthings       = (const loadthing_t __far*)(tl + h.things);

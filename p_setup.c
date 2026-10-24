@@ -330,23 +330,57 @@ static void P_LoadSideDefs (int16_t lump)
 {
   numsides = W_MapLumpLength(lump) / sizeof(mapsidedef_t);
   _g_mapsides = W_GetMapLumpByNum(lump);
-  _g_sides = Z_CallocLevel(numsides * sizeof(side_t));
+
+  int16_t numchangeable = 0;
+  for (int16_t i = 0; i < numsides; i++)
+  {
+    const uint8_t k = W_FetchUInt8(&_g_mapsides[i].changeable);
+    if (k > numchangeable)
+      numchangeable = k;
+  }
+  _g_sides = Z_CallocLevel(numchangeable * sizeof(side_t));
 
     for (int16_t i = 0; i < numsides; i++)
     {
         mapsidedef_t msd;
         W_Fetch(_g_mapsides + i, &msd, sizeof(msd));
-        side_t __far* sd = _g_sides + i;
+        if (msd.changeable)
+        {
+            side_t __far* sd = &_g_sides[msd.changeable - 1];
+            sd->textureoffset = msd.textureoffset;
+            sd->midtexture    = msd.midtexture;
+            sd->toptexture    = msd.toptexture;
+            sd->bottomtexture = msd.bottomtexture;
+        }
 
-        sd->textureoffset = msd.textureoffset;
-        sd->midtexture    = msd.midtexture;
-        sd->toptexture    = msd.toptexture;
-        sd->bottomtexture = msd.bottomtexture;
-
-        P_LoadTexture(sd->midtexture);
-        P_LoadTexture(sd->toptexture);
-        P_LoadTexture(sd->bottomtexture);
+        P_LoadTexture(msd.midtexture);
+        P_LoadTexture(msd.toptexture);
+        P_LoadTexture(msd.bottomtexture);
     }
+}
+
+uint8_t P_GetSide(int16_t n, side_t* side)
+{
+  mapsidedef_t msd;
+  W_Fetch(&_g_mapsides[n], &msd, sizeof(msd));
+  if (msd.changeable)
+    *side = _g_sides[msd.changeable - 1];
+  else
+  {
+    side->textureoffset = msd.textureoffset;
+    side->toptexture    = msd.toptexture;
+    side->bottomtexture = msd.bottomtexture;
+    side->midtexture    = msd.midtexture;
+  }
+  return msd.rowoffset;
+}
+
+side_t __far* P_ChangeableSide(int16_t n)
+{
+  const uint8_t k = W_FetchUInt8(&_g_mapsides[n].changeable);
+  if (!k)
+    I_Error("P_ChangeableSide: side %i cannot change", n);
+  return &_g_sides[k - 1];
 }
 
 

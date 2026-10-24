@@ -159,10 +159,15 @@ typedef PACKEDATTR_PRE struct {
    int8_t bottomtexture;
    int8_t midtexture;
   uint8_t sector;  // Front sector, towards viewer.
-   int8_t unused;
+  uint8_t changeable;
 } PACKEDATTR_POST mapsidedef_t;
 
 typedef char assertMapsidedefSize[sizeof(mapsidedef_t) == 8 ? 1 : -1];
+
+// Play changes only the sides at the front of lines with a special. femtowad numbers them
+// from 1 in mapsidedef_t.changeable, and only they are in _g_sides.
+uint8_t P_GetSide(int16_t n, side_t* side);  // returns the row offset
+side_t __far* P_ChangeableSide(int16_t n);
 
 
 //

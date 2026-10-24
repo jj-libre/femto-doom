@@ -310,17 +310,17 @@ void P_UpdateSpecials (void)
                 switch(_g_buttonlist[i].where)
                 {
                     case top:
-                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].toptexture =
+                        P_ChangeableSide(LN_SIDENUM(_g_buttonlist[i].line, 0))->toptexture =
                                 _g_buttonlist[i].btexture;
                         break;
 
                     case middle:
-                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].midtexture =
+                        P_ChangeableSide(LN_SIDENUM(_g_buttonlist[i].line, 0))->midtexture =
                                 _g_buttonlist[i].btexture;
                         break;
 
                     case bottom:
-                        _g_sides[LN_SIDENUM(_g_buttonlist[i].line, 0)].bottomtexture =
+                        P_ChangeableSide(LN_SIDENUM(_g_buttonlist[i].line, 0))->bottomtexture =
                                 _g_buttonlist[i].btexture;
                         break;
                 }
@@ -449,7 +449,7 @@ static void Add_Scroller(int16_t affectee)
 {
 	scroll_t __far* s = Z_CallocLevSpec(sizeof *s);
 	s->thinker.function = T_Scroll;
-	s->textureoffset = &_g_sides[affectee].textureoffset;
+	s->textureoffset = &P_ChangeableSide(affectee)->textureoffset;
 	P_AddThinker(&s->thinker);
 }
 

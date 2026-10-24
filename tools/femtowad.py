@@ -6,7 +6,8 @@ R_DrawColumnWall samples, so a wall column costs no patch, directory or column o
 In the map WAD, E1MxTL holds per map what spawning the map's things leaves behind, so it
 needs no memory: each thing's spawn data, subsector and slot per skill, and, in reverse load order, the
 things in each sector and block and the sectors each thing touches. E1MxGL holds what
-P_GroupLines would build: the lines of each sector and the sector of each subsector.
+P_GroupLines would build: the lines of each sector and the sector of each subsector. SIDEDEFS
+numbers from 1 the sides play can change, those at the front of lines with a special.
 
 usage: python -I tools/femtowad.py <in.wad> <out.wad> [--texshift=N] [--high-detail]
 """
@@ -14,7 +15,7 @@ import struct
 import sys
 from pathlib import Path
 
-VERSION = 2
+VERSION = 3
 
 
 def lumps(wad):
@@ -24,7 +25,7 @@ def lumps(wad):
     out = []
     for i in range(count):
         pos, size = struct.unpack_from("<ii", wad, table + 16 * i)
-        out.append((wad[table + 16 * i + 8:table + 16 * i + 16].rstrip(b"\0"), pos, size))
+        out.append((bytes(wad[table + 16 * i + 8:table + 16 * i + 16]).rstrip(b"\0"), pos, size))
     return out
 
 
@@ -358,6 +359,20 @@ def thing_lists(mp, info, misc0, flags):
 
 
 
+def number_changeable_sides(mp, wad):
+    pos, _ = mp.lumps[b"SIDEDEFS"]
+    slots = {}
+    for line in mp.lines:
+        if line[16] and line[7] not in slots:
+            slots[line[7]] = len(slots) + 1
+    if len(slots) > 255:
+        sys.exit(f"{len(slots)} changeable sides, at most 255")
+    for side, k in slots.items():
+        if wad[pos + side * 8 + 7]:
+            sys.exit("SIDEDEFS already uses its last byte")
+        wad[pos + side * 8 + 7] = k
+
+
 def geometry_lists(mp):
     lists = [[] for _ in range(mp.numsectors)]
     for i, line in enumerate(mp.lines):
@@ -384,7 +399,7 @@ def main():
     flags = dict((a[2:].split("=") + ["1"])[:2] for a in sys.argv[1:] if a.startswith("--"))
     if len(args) != 2:
         sys.exit(__doc__)
-    wad = open(args[0], "rb").read()
+    wad = bytearray(open(args[0], "rb").read())
     directory = lumps(wad)
     names = [name for name, _, _ in directory]
     if b"TEXCOLS" in names or any(len(name) == 6 and name[2:3] == b"M" and name[4:] in (b"TL", b"GL") for name in names):
@@ -399,6 +414,7 @@ def main():
     for name in maps:
         mp = Map(wad, directory, name)
         extra += [(name + b"TL", thing_lists(mp, info, misc0, mflags)), (name + b"GL", geometry_lists(mp))]
+        number_changeable_sides(mp, wad)
     print(f"thing and geometry lists: {len(maps)} maps, {sum(len(d) for _, d in extra)} B")
     write(args[1], wad, extra)
 

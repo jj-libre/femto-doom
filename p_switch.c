@@ -179,9 +179,10 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
     int16_t   *texture, ttop, tmid, tbot;
     bwhere_e position;
 
-    ttop = _g_sides[LN_SIDENUM(line, 0)].toptexture;
-    tmid = _g_sides[LN_SIDENUM(line, 0)].midtexture;
-    tbot = _g_sides[LN_SIDENUM(line, 0)].bottomtexture;
+    side_t __far* side = P_ChangeableSide(LN_SIDENUM(line, 0));
+    ttop = side->toptexture;
+    tmid = side->midtexture;
+    tbot = side->bottomtexture;
 
     /* don't zero line->special until after exit switch test */
     if (!useAgain)
@@ -221,15 +222,15 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
     switch(position)
     {
         case top:
-            _g_sides[LN_SIDENUM(line, 0)].toptexture = *texture;
+            side->toptexture = *texture;
             break;
 
         case middle:
-            _g_sides[LN_SIDENUM(line, 0)].midtexture = *texture;
+            side->midtexture = *texture;
             break;
 
         case bottom:
-            _g_sides[LN_SIDENUM(line, 0)].bottomtexture = *texture;
+            side->bottomtexture = *texture;
             break;
     }
 

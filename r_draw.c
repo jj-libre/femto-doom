@@ -1248,7 +1248,9 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	frontsector = &_g_sectors[curseg.frontsectornum];
 	backsector  = &_g_sectors[curseg.backsectornum];
 
-	int16_t texnum = R_GetTextureTranslation(_g_sides[curseg.sidenum].midtexture);
+	side_t side;
+	P_GetSide(curseg.sidenum, &side);
+	int16_t texnum = R_GetTextureTranslation(side.midtexture);
 
 	// killough 4/13/98: get correct lightlevel for 2s normal textures
 	rw_lightlevel = frontsector->lightlevel;
@@ -2108,8 +2110,9 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     }
 
 
-    side_t    __far* sidedef = &_g_sides[curseg.sidenum];
-    const uint8_t rowoffset = W_FetchUInt8(&_g_mapsides[curseg.sidenum].rowoffset);
+    side_t sidecopy;
+    const uint8_t rowoffset = P_GetSide(curseg.sidenum, &sidecopy);
+    const side_t* sidedef = &sidecopy;
     // mark the segment as visible for auto map
     LN_SETBIT(LB_MAPPED, curseg.linenum);
 
@@ -2419,7 +2422,9 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
 static void R_RecalcLineFlags(int16_t n)
 {
-    const side_t __far* side = &_g_sides[curseg.sidenum];
+    side_t sidecopy;
+    P_GetSide(curseg.sidenum, &sidecopy);
+    const side_t* side = &sidecopy;
 
     LN_SETBIT(LB_DONE, n);
     LN_CLRBIT(LB_CLOSED, n);
