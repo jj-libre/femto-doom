@@ -39,6 +39,7 @@
 #include "m_random.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -178,17 +179,25 @@ static boolean P_CheckSector(sector_t __far* sector)
 
   for (n=P_Node(sector->touching_thinglist); n; n=P_Node(n->m_snext))
     n->visited = false;
+  P_ClearLoadNodesVisited(sector - _g_sectors);
 
+  boolean found;
   do
+    {
+    found = false;
     for (n=P_Node(sector->touching_thinglist); n; n=P_Node(n->m_snext))  // go through list
       if (!n->visited)               // unprocessed thing found
         {
         n->visited  = true;          // mark thing as processed
         if (!(P_Mobj(n->m_thing)->flags & MF_NOBLOCKMAP)) //jff 4/7/98 don't do these
           PIT_ChangeSector(P_Mobj(n->m_thing));    // process it
+        found = true;
         break;                 // exit and start over
         }
-  while (n);  // repeat from scratch until all things left are marked valid
+    if (!found)
+      found = P_ChangeLoadNodeThing(sector - _g_sectors, PIT_ChangeSector);
+    }
+  while (found);  // repeat from scratch until all things left are marked valid
 
   return nofit;
   }

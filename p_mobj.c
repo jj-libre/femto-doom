@@ -822,6 +822,8 @@ void P_RunStatics(void)
         else
             P_CycleState(mobj);
     }
+
+    P_RunLoadStatics();
 }
 
 
@@ -950,6 +952,7 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 
 void P_RemoveMobj(mobj_t __far* mobj)
 {
+  P_KillLoadNodes(mobj);
   P_UnsetThingPosition (mobj);
 
   // Delete all nodes on the current sector_list               phares 3/16/98
@@ -1104,6 +1107,9 @@ void P_SpawnMapThing(const mapthing_t* mthing)
 
     x = ((int32_t)mthing->x) << FRACBITS;
     y = ((int32_t)mthing->y) << FRACBITS;
+
+    if (i >= MT_MISC0 && P_SpawnLoadStatic(x, y, i))
+        return;
 
     mobj = P_SpawnMobj(x, y, ONFLOORZ, i);
 

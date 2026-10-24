@@ -63,6 +63,7 @@ void    P_SetSecnodeFirstpoolToNull(void);
 void    P_DelSeclist(void);
 void    P_SetSeclist(msecnode_t __far* sectorList);
 void    P_CreateSecNodeList(mobj_t __far*);
+void    P_MarkSecNodeLines(mobj_t __far* thing);
 
 
 void	P_MapEnd(void);

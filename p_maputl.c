@@ -41,6 +41,11 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_setup.h"
+#include "i_system.h"
+#include "info.h"
+#include "m_random.h"
+#include "w_wad.h"
+#include <stdio.h>
 
 #include "globdata.h"
 
@@ -294,6 +299,352 @@ void P_LineOpening(const line_t __far* linedef)
 //
 
 //
+// Things the map spawns are not chained while they stay where the map put them: the chains
+// then hold only what was linked since. The map WAD's E1MxTL lists, per sector and block,
+// the map things in reverse load order, as the chains would have them after their later
+// links, and the sectors each thing touched after loading. Memory keeps a bit per thing and
+// per touch, and for each map static, which never moves and is never shot, only what play
+// changes; the mobj_t code sees is rebuilt whenever it is visited.
+//
+
+typedef struct
+{
+  int16_t x, y;
+  uint8_t type;
+  uint8_t angle;  // in 45 degree steps, | 0x80 for MF_AMBUSH
+  int16_t slot[3];  // per skill group, -1 if it does not spawn
+} loadthing_t;
+
+typedef char assertLoadthingSize[sizeof(loadthing_t) == 12 ? 1 : -1];
+
+typedef struct
+{
+  uint16_t version, numthings, numsectors, numblocks, numnodes, pad;
+  uint16_t numstatics[3], numthinking[3];
+  uint32_t things, sectorfirst, blockfirst, list, nodefirst, nodesector, nodething, secnodefirst, secnodes;
+} loadheader_t;
+
+typedef struct
+{
+  int16_t thing;
+  int16_t state, tics;
+  zref_t subsector;
+  fixed_t z, floorz, ceilingz;
+} loadstatic_t;
+
+static const byte __far* tl;
+static const loadthing_t __far* tlthings;
+static const int16_t __far* tlsectorfirst;
+static const int16_t __far* tlblockfirst;
+static const int16_t __far* tllist;
+static const int16_t __far* tlnodefirst;
+static const int16_t __far* tlnodesector;
+static const int16_t __far* tlnodething;
+static const int16_t __far* tlsecnodefirst;
+static const int16_t __far* tlsecnodes;
+
+static boolean loadingthings;
+static int16_t loadingthing;
+static int16_t skillgroup;
+static int16_t numloadthings, numloadnodes, numloadstatics;
+static uint16_t numloadsectors, numloadblocks;
+static zref_t __far* loadrefs;
+static loadstatic_t __far* loadstatics;
+static uint8_t __far* inplace;
+static uint8_t __far* nodealive;
+static uint8_t __far* nodevisited;
+
+#define BIT(bits, i)    ((bits)[(i) >> 3] & (1 << ((i) & 7)))
+#define SETBIT(bits, i) ((bits)[(i) >> 3] |= (1 << ((i) & 7)))
+#define CLRBIT(bits, i) ((bits)[(i) >> 3] &= ~(1 << ((i) & 7)))
+
+static const mobj_t staticproxy = { .flags = MF_STATIC };
+
+void P_BeginLoadThings(int16_t map)
+{
+  char name[9];
+  sprintf(name, "E1M%dTL", map);
+  tl = W_GetMapLumpByNum(W_GetMapNumForName(name));
+
+  loadheader_t h;
+  W_Fetch(tl, &h, sizeof(h));
+  if (h.version != 1)
+    I_Error("P_BeginLoadThings: %s version %i", name, h.version);
+
+  tlthings       = (const loadthing_t __far*)(tl + h.things);
+  tlsectorfirst  = (const int16_t __far*)(tl + h.sectorfirst);
+  tlblockfirst   = (const int16_t __far*)(tl + h.blockfirst);
+  tllist         = (const int16_t __far*)(tl + h.list);
+  tlnodefirst    = (const int16_t __far*)(tl + h.nodefirst);
+  tlnodesector   = (const int16_t __far*)(tl + h.nodesector);
+  tlnodething    = (const int16_t __far*)(tl + h.nodething);
+  tlsecnodefirst = (const int16_t __far*)(tl + h.secnodefirst);
+  tlsecnodes     = (const int16_t __far*)(tl + h.secnodes);
+
+  if (_g_gameskill == sk_baby || _g_gameskill == sk_easy)
+    skillgroup = 0;
+  else if (_g_gameskill == sk_hard || _g_gameskill == sk_nightmare)
+    skillgroup = 2;
+  else
+    skillgroup = 1;
+
+  numloadthings  = h.numthings;
+  numloadnodes   = h.numnodes;
+  numloadsectors = h.numsectors;
+  numloadblocks  = h.numblocks;
+  numloadstatics = h.numstatics[skillgroup];
+  loadrefs    = Z_CallocLevel(h.numthinking[skillgroup] * sizeof(*loadrefs));
+  loadstatics = Z_CallocLevel(numloadstatics * sizeof(*loadstatics));
+  inplace     = Z_CallocLevel((numloadthings + 7) / 8);
+  nodealive   = Z_CallocLevel((numloadnodes + 7) / 8);
+  nodevisited = Z_CallocLevel((numloadnodes + 7) / 8);
+  loadingthings = true;
+}
+
+void P_SetLoadingThing(int16_t thing)
+{
+  loadingthing = thing;
+}
+
+void P_EndLoadThings(void)
+{
+  if (numloadsectors != _g_numsectors || numloadblocks != _g_bmapwidth * _g_bmapheight)
+    I_Error("P_EndLoadThings: E1MxTL built for another map");
+  loadingthings = false;
+}
+
+static int16_t P_LoadSlot(int16_t thing)
+{
+  int16_t slot = W_FetchInt16(&tlthings[thing].slot[skillgroup]);
+  if (slot < 0)
+    I_Error("P_LoadSlot: map thing %i does not spawn", thing);
+  return slot;
+}
+
+// The part of P_SetThingPosition loading does.
+static void P_PlaceLoadThing(mobj_t __far* thing)
+{
+  const int16_t t = loadingthing;
+  thing->flags |= MF_INPLACE;
+  thing->sprev = t;
+  SETBIT(inplace, t);
+  if (!(thing->flags & MF_STATIC))
+  {
+    P_Ext(thing)->loadthing = t + 1;
+    loadrefs[P_LoadSlot(t)] = Z_Ref(thing);
+  }
+  if (!(thing->flags & MF_NOSECTOR))
+  {
+    const int16_t last = W_FetchInt16(&tlnodefirst[t + 1]);
+    for (int16_t k = W_FetchInt16(&tlnodefirst[t]); k < last; k++)
+      SETBIT(nodealive, k);
+    P_MarkSecNodeLines(thing);
+  }
+}
+
+boolean P_SpawnLoadStatic(fixed_t x, fixed_t y, mobjtype_t type)
+{
+  if (!loadingthings)
+    return false;
+
+  // what P_SpawnMobj and P_SpawnMapThing do for it
+  const mobjinfo_t* info = &mobjinfo[type];
+  mobj_t mobj;
+  _fmemset(&mobj, 0, sizeof(mobj));
+  mobj.type   = type;
+  mobj.x      = x;
+  mobj.y      = y;
+  mobj.radius = info->radius;
+  mobj.height = info->height;
+  mobj.flags  = info->flags | MF_STATIC;
+  if (mobj.flags & (MF_SHOOTABLE | MF_MISSILE | MF_COUNTKILL))
+    I_Error("P_SpawnLoadStatic: static thing %i acts", type);
+
+  P_Random();
+
+  mobj.state = info->spawnstate;
+  mobj.tics  = states[info->spawnstate].tics;
+
+  P_SetThingPosition(&mobj);
+
+  const sector_t __far* sector = P_Subsector(mobj.subsector)->sector;
+  loadstatic_t __far* s = &loadstatics[P_LoadSlot(loadingthing)];
+  s->thing     = loadingthing;
+  s->state     = mobj.state;
+  s->tics      = mobj.tics > 0 ? 1 + (P_Random() % mobj.tics) : mobj.tics;
+  s->subsector = mobj.subsector;
+  s->floorz    = sector->floorheight;
+  s->ceilingz  = sector->ceilingheight;
+  s->z         = s->floorz;
+
+  if (mobj.flags & MF_COUNTITEM)
+    _g_totalitems++;
+  return true;
+}
+
+static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t __far* mobj)
+{
+  const loadstatic_t __far* s = &loadstatics[slot];
+  const mobjinfo_t* info = &mobjinfo[lt->type];
+  _fmemset(mobj, 0, sizeof(*mobj));
+  mobj->x         = (fixed_t)lt->x << FRACBITS;
+  mobj->y         = (fixed_t)lt->y << FRACBITS;
+  mobj->z         = s->z;
+  mobj->angle     = ANG45 * (lt->angle & 0x7f);
+  mobj->sprev     = t;
+  mobj->subsector = s->subsector;
+  mobj->floorz    = s->floorz;
+  mobj->ceilingz  = s->ceilingz;
+  mobj->radius    = info->radius;
+  mobj->height    = info->height;
+  mobj->flags     = info->flags | MF_STATIC | MF_INPLACE | (lt->angle & 0x80 ? MF_AMBUSH : 0);
+  mobj->state     = s->state;
+  mobj->frame     = states[s->state].frame;
+  mobj->tics      = s->tics;
+  mobj->sprite    = states[s->state].sprite;
+  mobj->type      = lt->type;
+}
+
+static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
+{
+  loadthing_t lt;
+  W_Fetch(&tlthings[t], &lt, sizeof(lt));
+  const int16_t slot = lt.slot[skillgroup];
+  if (lt.type < MT_MISC0)
+    return func(P_Mobj(loadrefs[slot]));
+
+  mobj_t mobj;
+  P_StaticMobj(t, slot, &lt, &mobj);
+  boolean r = func(&mobj);
+  loadstatic_t __far* s = &loadstatics[slot];
+  s->z        = mobj.z;
+  s->floorz   = mobj.floorz;
+  s->ceilingz = mobj.ceilingz;
+  s->state    = mobj.state;
+  s->tics     = mobj.tics;
+  return r;
+}
+
+// P_CycleState for a map static; none of their states has an action or ends them.
+void P_RunLoadStatics(void)
+{
+  for (int16_t i = 0; i < numloadstatics; i++)
+  {
+    loadstatic_t __far* s = &loadstatics[i];
+    if (s->tics == -1 || !BIT(inplace, s->thing))
+      continue;
+
+    if (!--s->tics)
+      do
+      {
+        s->state = states[s->state].nextstate;
+        s->tics  = states[s->state].tics;
+      } while (!s->tics);
+  }
+}
+
+mobj_t __far* P_InterceptThing(mobj_t __far* thing)
+{
+  if ((thing->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE))
+    return (mobj_t __far*)&staticproxy;
+  return thing;
+}
+
+int16_t P_LoadIndex(mobj_t __far* thing)
+{
+  if (loadingthings)
+    return -1;
+  if (thing->flags & MF_STATIC)
+    return thing->flags & MF_INPLACE ? (int16_t)thing->sprev : -1;
+  return P_Ext(thing)->loadthing - 1;
+}
+
+int16_t P_LoadNodeFirst(int16_t i)
+{
+  return W_FetchInt16(&tlnodefirst[i]);
+}
+
+boolean P_LoadNodeAlive(int16_t k)
+{
+  return BIT(nodealive, k) != 0;
+}
+
+int16_t P_LoadNodeSector(int16_t k)
+{
+  return W_FetchInt16(&tlnodesector[k]);
+}
+
+void P_KillLoadNode(int16_t k)
+{
+  CLRBIT(nodealive, k);
+}
+
+void P_KillLoadNodes(mobj_t __far* thing)
+{
+  int16_t i = P_LoadIndex(thing);
+  if (i >= 0)
+  {
+    const int16_t last = W_FetchInt16(&tlnodefirst[i + 1]);
+    for (int16_t k = W_FetchInt16(&tlnodefirst[i]); k < last; k++)
+      CLRBIT(nodealive, k);
+  }
+}
+
+void P_ClearLoadNodesVisited(int16_t sector)
+{
+  const int16_t last = W_FetchInt16(&tlsecnodefirst[sector + 1]);
+  for (int16_t j = W_FetchInt16(&tlsecnodefirst[sector]); j < last; j++)
+    CLRBIT(nodevisited, W_FetchInt16(&tlsecnodes[j]));
+}
+
+static void (*changefunc)(mobj_t __far*);
+
+static boolean P_ChangeThing(mobj_t __far* thing)
+{
+  if (!(thing->flags & MF_NOBLOCKMAP))
+    changefunc(thing);
+  return true;
+}
+
+boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*))
+{
+  const int16_t last = W_FetchInt16(&tlsecnodefirst[sector + 1]);
+  for (int16_t j = W_FetchInt16(&tlsecnodefirst[sector]); j < last; j++)
+  {
+    int16_t k = W_FetchInt16(&tlsecnodes[j]);
+    if (BIT(nodealive, k) && !BIT(nodevisited, k))
+    {
+      SETBIT(nodevisited, k);
+      void (*saved)(mobj_t __far*) = changefunc;
+      changefunc = func;
+      P_VisitLoadThing(W_FetchInt16(&tlnodething[k]), P_ChangeThing);
+      changefunc = saved;
+      return true;
+    }
+  }
+  return false;
+}
+
+static boolean P_LoadListThings(const int16_t __far* first, boolean func(mobj_t __far*))
+{
+  int16_t range[2];
+  W_Fetch(first, range, sizeof(range));
+  for (int16_t k = range[0]; k < range[1]; k++)
+  {
+    int16_t t = W_FetchInt16(&tllist[k]);
+    if (BIT(inplace, t))
+      if (!P_VisitLoadThing(t, func))
+        return false;
+  }
+  return true;
+}
+
+boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t __far*))
+{
+  return P_LoadListThings(&tlsectorfirst[sector], func);
+}
+
+//
 // P_UnsetThingPosition
 // Unlinks a thing from block map and sectors.
 // On each position change, BLOCKMAP and other
@@ -303,6 +654,18 @@ void P_LineOpening(const line_t __far* linedef)
 
 void P_UnsetThingPosition(mobj_t __far* thing)
 {
+  if (thing->flags & MF_INPLACE)
+    {
+      CLRBIT(inplace, thing->sprev);
+      thing->flags &= ~MF_INPLACE;
+      if (!(thing->flags & MF_NOSECTOR))
+        {
+          P_SetSeclist(P_Node(thing->touching_sectorlist));
+          thing->touching_sectorlist = 0;
+        }
+      return;
+    }
+
   if (!(thing->flags & MF_NOSECTOR))
     {
       /* invisible things don't need to be in sector list
@@ -365,6 +728,11 @@ void P_SetThingPosition(mobj_t __far* thing)
 {                                                      // link into subsector
   subsector_t __far* ss = R_PointInSubsector(thing->x, thing->y);
   thing->subsector = Z_Ref(ss);
+  if (loadingthings)
+    {
+      P_PlaceLoadThing(thing);
+      return;
+    }
   if (!(thing->flags & MF_NOSECTOR))
     {
       // invisible things don't go into the sector links
@@ -481,9 +849,13 @@ boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*))
 {
   mobj_t __far* mobj;
   if (0 <= x && x < _g_bmapwidth && 0 <= y && y < _g_bmapheight)
-    for (mobj = P_Mobj(_g_blocklinks[y*_g_bmapwidth+x]); mobj; mobj = P_Mobj(mobj->bnext))
+    {
+    const int16_t b = y*_g_bmapwidth+x;
+    for (mobj = P_Mobj(_g_blocklinks[b]); mobj; mobj = P_Mobj(mobj->bnext))
       if (!func(mobj))
         return false;
+    return P_LoadListThings(&tlblockfirst[b], func);
+    }
   return true;
 }
 
@@ -603,7 +975,7 @@ static boolean PIT_AddThingIntercepts(mobj_t __far* thing)
 
   intercept_p->frac = frac;
   intercept_p->isaline = false;
-  intercept_p->d.thing = thing;
+  intercept_p->d.thing = P_InterceptThing(thing);
   intercept_p++;
 
   return true;          // keep going

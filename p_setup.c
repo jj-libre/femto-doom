@@ -258,18 +258,18 @@ static void P_LoadThings(int16_t lump, int16_t map)
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
+	// Map statics need no pool; it is for the items map monsters drop.
 	_g_thingPoolSize  = 0;
 	_g_staticPoolSize = 0;
 	for (int16_t i = 0; i < mapThingCount; i++)
 	{
 		mapthing_t mt;
 		W_Fetch(&data[i], &mt, sizeof(mt));
-		if (!P_ThingLoads(&mt, map))
+		if (!P_ThingLoads(&mt, map) || P_MapThingIsStatic(&mt))
 			continue;
-		if (P_MapThingIsStatic(&mt))
+		_g_thingPoolSize++;
+		if (mt.type == mobjinfo[MT_POSSESSED].doomednum || mt.type == mobjinfo[MT_SHOTGUY].doomednum)
 			_g_staticPoolSize++;
-		else
-			_g_thingPoolSize++;
 	}
 
 	_g_thingPool = P_CallocPool(_g_thingPoolSize, sizeof(mobjext_t));
@@ -279,6 +279,8 @@ static void P_LoadThings(int16_t lump, int16_t map)
 	_g_staticPool = P_CallocPool(_g_staticPoolSize, sizeof(mobj_t));
 	for (int16_t i = 0; i < _g_staticPoolSize; i++)
 		_g_staticPool[i].type = MT_NOTHING;
+
+	P_BeginLoadThings(map);
 }
 
 
@@ -291,6 +293,7 @@ static void P_LoadThings2(int16_t lump, int16_t map)
 	{
 		mapthing_t mt;
 		W_Fetch(&data[i], &mt, sizeof(mt));
+		P_SetLoadingThing(i);
 		if (P_ThingLoads(&mt, map))
 			P_SpawnMapThing(&mt);
 	}
@@ -564,6 +567,7 @@ void P_SetupLevel(int16_t map)
         _g_player.mo = NULL;
 
     P_LoadThings2(lumpnum + ML_THINGS, map);
+    P_EndLoadThings();
 
     // set up world state
     P_SpawnSpecials();

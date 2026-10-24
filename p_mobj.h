@@ -181,6 +181,8 @@
 #define MF_POOLED       0x10000000UL
 #define MF_STATIC       0x20000000UL
 #define MF_REMOVED      0x40000000UL
+// Still linked where the map put it, through the load lists; sprev is its load index.
+#define MF_INPLACE      0x80000000UL
 
 
 // Map Object definition.
@@ -292,6 +294,9 @@ typedef struct
     // If >0, the current target will be chased no
     // matter what (even if shot by another object)
     uint8_t            threshold;
+
+    // Load index + 1 of a map thing, 0 for any other.
+    int16_t            loadthing;
 
     mobj_t              mo;
 } mobjext_t;

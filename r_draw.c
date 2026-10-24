@@ -46,6 +46,7 @@
 #include "d_player.h"
 #include "w_wad.h"
 #include "r_main.h"
+#include "p_maputl.h"
 #include "r_things.h"
 #include "m_fixed.h"
 #include "st_stuff.h"
@@ -1798,6 +1799,14 @@ static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
 // During BSP traversal, this adds sprites by sector.
 //
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
+static int16_t spritelight;
+
+static boolean R_ProjectLoadThing(mobj_t __far* thing)
+{
+  R_ProjectSprite(thing, spritelight);
+  return true;
+}
+
 static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
 {
   sector_t __far* sec=subsec->sector;
@@ -1818,6 +1827,9 @@ static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
 
   for (thing = P_Mobj(sec->thinglist); thing; thing = P_Mobj(thing->snext))
     R_ProjectSprite(thing, lightlevel);
+
+  spritelight = lightlevel;
+  P_SectorLoadThings(sec - _g_sectors, R_ProjectLoadThing);
 }
 
 

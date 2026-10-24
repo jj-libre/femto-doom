@@ -1220,6 +1220,10 @@ inline static void P_PutSecnode(msecnode_t __far* node)
 // sectors this object appears in. This is called when creating a list of
 // nodes that will get linked in later.
 
+// The thing's nodes from loading, and which of them P_CreateSecNodeList keeps.
+static int16_t loadnodes, numloadnodes;
+static uint16_t keptloadnodes;
+
 static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
   {
   msecnode_t __far* node;
@@ -1235,6 +1239,13 @@ static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
       }
     node = P_Node(node->m_tnext);
     }
+
+  for (int16_t j = 0; j < numloadnodes; j++)
+    if (P_LoadNodeAlive(loadnodes + j) && P_LoadNodeSector(loadnodes + j) == s - _g_sectors)
+      {
+      keptloadnodes |= 1 << j;
+      return;
+      }
 
   // Couldn't find an existing node for this sector. Add one at the head
   // of the list.
@@ -1333,8 +1344,14 @@ void P_SetSeclist(msecnode_t __far* sectorList)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 
+// P_MarkSecNodeLines walks the lines as P_CreateSecNodeList would, adding no nodes.
+static boolean marklinesonly;
+
 static boolean PIT_GetSectors(const line_t __far* ld)
   {
+  if (marklinesonly)
+    return true;
+
   int16_t bbox[4];
   W_Fetch(ld->bbox, bbox, sizeof(bbox));
 
@@ -1395,6 +1412,11 @@ void P_CreateSecNodeList(mobj_t __far* thing)
 
   tmthing = thing;
 
+  int16_t i = P_LoadIndex(thing);
+  loadnodes = i >= 0 ? P_LoadNodeFirst(i) : 0;
+  numloadnodes = i >= 0 ? P_LoadNodeFirst(i + 1) - loadnodes : 0;
+  keptloadnodes = 0;
+
   tmx = thing->x;
   tmy = thing->y;
 
@@ -1416,7 +1438,8 @@ void P_CreateSecNodeList(mobj_t __far* thing)
 
   // Add the sector of the (x,y) point to sector_list.
 
-  P_AddSecnode(P_Subsector(thing->subsector)->sector,thing);
+  if (!marklinesonly)
+    P_AddSecnode(P_Subsector(thing->subsector)->sector,thing);
 
   // Now delete any nodes that won't be used. These are the ones where
   // m_thing is still NULL.
@@ -1433,6 +1456,11 @@ void P_CreateSecNodeList(mobj_t __far* thing)
     else
       node = P_Node(node->m_tnext);
     }
+
+  for (int16_t j = 0; j < numloadnodes; j++)
+    if (!(keptloadnodes & (1 << j)))
+      P_KillLoadNode(loadnodes + j);
+  numloadnodes = 0;
 
   /* cph -
    * This is the strife we get into for using global variables. tmthing
@@ -1451,4 +1479,12 @@ void P_CreateSecNodeList(mobj_t __far* thing)
 void P_MapEnd(void)
 {
     tmthing = NULL;
+}
+
+
+void P_MarkSecNodeLines(mobj_t __far* thing)
+{
+  marklinesonly = true;
+  P_CreateSecNodeList(thing);
+  marklinesonly = false;
 }
