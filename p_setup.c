@@ -265,13 +265,18 @@ static void __far* P_CallocPool(int16_t count, uint16_t size)
 }
 
 
+#if !defined THING_POOL_RESERVE
+#define THING_POOL_RESERVE 8
+#endif
+
 static void P_LoadThings(int16_t lump, int16_t map)
 {
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
-	// Map statics need no pool; it is for the items map monsters drop.
-	_g_thingPoolSize  = 0;
+	// Map statics need no pool; it is for the items map monsters drop. Map monsters and barrels
+	// spawn asleep, without a mobj.
+	_g_thingPoolSize  = THING_POOL_RESERVE;
 	_g_staticPoolSize = 0;
 	for (int16_t i = 0; i < mapThingCount; i++)
 	{
@@ -279,7 +284,8 @@ static void P_LoadThings(int16_t lump, int16_t map)
 		W_Fetch(&data[i], &mt, sizeof(mt));
 		if (!P_ThingLoads(&mt, map) || P_MapThingIsStatic(&mt))
 			continue;
-		_g_thingPoolSize++;
+		if (mt.type == 1 || mt.type == mobjinfo[MT_TELEPORTMAN].doomednum)
+			_g_thingPoolSize++;
 		if (mt.type == mobjinfo[MT_POSSESSED].doomednum || mt.type == mobjinfo[MT_SHOTGUY].doomednum)
 			_g_staticPoolSize++;
 	}

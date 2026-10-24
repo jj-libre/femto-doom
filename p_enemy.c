@@ -482,6 +482,8 @@ void A_BossDeath(mobj_t __far* mo)
 
     // scan the remaining thinkers to see
     // if all bosses are dead
+    if (P_SleeperOfType(mo->type))
+        return;
     for (th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
         if (th->function == P_MobjThinker)
         {

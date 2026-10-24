@@ -846,7 +846,7 @@ static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t __far* mobj)
 // P_SpawnMobj
 //
 
-static mobj_t __far* P_NewMobj(mobjtype_t type)
+mobj_t __far* P_NewMobj(mobjtype_t type)
 {
     mobjext_t __far* ext;
 
@@ -1125,6 +1125,8 @@ void P_SpawnMapThing(const mapthing_t* mthing)
     mobj->angle = ANG45 * mthing->angle;
     if (mthing->options & MTF_AMBUSH)
         mobj->flags |= MF_AMBUSH;
+
+    P_SleepAtLoad(mobj);
 }
 
 

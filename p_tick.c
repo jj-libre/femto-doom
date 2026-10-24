@@ -38,6 +38,8 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
 
 #include "globdata.h"
 
@@ -47,6 +49,11 @@ int32_t _g_leveltime; // tics in game play for par
 // killough 8/29/98: we maintain several separate threads, each containing
 // a special class of thinkers, to allow more efficient searches.
 thinker_t _g_thinkerclasscap;
+
+// The thinker P_RunThinkers runs next, and the load index of the map thing thinking now. A map
+// thing linked right before runnext runs next if it has not had its turn yet.
+thinker_t __far* _g_runnext;
+int16_t _g_runlast;
 
 
 //
@@ -79,6 +86,11 @@ void P_AddThinker(thinker_t __far* thinker)
   thinker->next = &_g_thinkerclasscap;
   thinker->prev = _g_thinkerclasscap.prev;
   _g_thinkerclasscap.prev = thinker;
+}
+
+void P_UnlinkThinker(thinker_t __far* thinker)
+{
+  (thinker->next->prev = thinker->prev)->next = thinker->next;
 }
 
 //
@@ -148,6 +160,33 @@ void P_RemoveThinker(thinker_t __far* thinker)
   thinker->function = P_RemoveThinkerDelayed;
 }
 
+// Map things spawn first and thinkers are only ever added at the end, so the map things
+// lead the list in load order.
+static int16_t P_ThinkerLoadIndex(thinker_t __far* th)
+{
+  if (th->function == P_MobjThinker || th->function == P_RemoveThingDelayed)
+  {
+    const int16_t i = ((mobjext_t __far*)th)->loadthing;
+    if (i)
+      return i - 1;
+  }
+  return INT16_MAX;
+}
+
+// Links a map thing that was asleep where it would have been all along.
+void P_AddLoadThinker(thinker_t __far* thinker, int16_t t)
+{
+  thinker_t __far* next = _g_thinkerclasscap.next;
+  while (next != &_g_thinkerclasscap && P_ThinkerLoadIndex(next) < t)
+    next = next->next;
+  thinker->next = next;
+  thinker->prev = next->prev;
+  next->prev->next = thinker;
+  next->prev = thinker;
+  if (next == _g_runnext && t > _g_runlast)
+    _g_runnext = thinker;
+}
+
 void P_RemoveThing(mobj_t __far* thing)
 {
   if (thing->flags & MF_STATIC)
@@ -196,15 +235,32 @@ static void P_RunThinkers (void)
 {
     thinker_t __far* th = _g_thinkerclasscap.next;
     thinker_t* th_end = &_g_thinkerclasscap;
+    int16_t sleeper = 0;
 
-    while(th != th_end)
+    _g_runlast = -1;
+    for (;;)
     {
-        thinker_t __far* th_next = th->next;
+        const int16_t t = th == th_end ? INT16_MAX : P_ThinkerLoadIndex(th);
+        _g_runnext = th;
+        sleeper = P_RunSleepers(sleeper, t);
+        if (_g_runnext != th)
+        {
+            th = _g_runnext;
+            continue;
+        }
+        if (th == th_end)
+            break;
+
+        _g_runlast = t;
+        _g_runnext = th->next;
         if(th->function)
             th->function(th);
+        if (th->function == P_MobjThinker)
+            P_SleepIfUnchanged((mobjext_t __far*)th);
 
-        th = th_next;
+        th = _g_runnext;
     }
+    _g_runnext = NULL;
 
     P_RunStatics();
 }

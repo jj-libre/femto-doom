@@ -63,8 +63,12 @@ typedef struct {
   {
     mobj_t __far* thing;
     const line_t __far* line;
+    int16_t loadthing;  // isaline == INTERCEPT_SLEEPER
   } d;
 } intercept_t;
+
+// A map thing that was asleep when its intercept was added; it wakes when traversed.
+#define INTERCEPT_SLEEPER 2
 
 
 typedef boolean (*traverser_t)(intercept_t *in);
@@ -91,7 +95,10 @@ void    P_BeginLoadNodeChange(int16_t sector, fixed_t oldfloor, fixed_t oldceili
 void    P_EndLoadNodeChange(void);
 boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*));
 void    P_RunLoadStatics(void);
-mobj_t __far* P_InterceptThing(mobj_t __far* thing);
+int16_t P_RunSleepers(int16_t slot, int16_t t);
+void    P_SleepIfUnchanged(mobjext_t __far* ext);
+void    P_SleepAtLoad(mobj_t __far* mobj);
+boolean P_SleeperOfType(mobjtype_t type);
 boolean P_BlockLinesIterator (int16_t x, int16_t y, boolean func(const line_t __far*));
 boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*));
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,

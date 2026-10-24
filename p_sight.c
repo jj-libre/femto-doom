@@ -274,6 +274,15 @@ static uint32_t linearAddress(const void __far* ptr)
 }
 
 
+// Which thing the last result was for. A map thing's mobj can change while it sleeps, so it is
+// known by its load index.
+static uint32_t P_SightKey(const mobj_t __far* t)
+{
+  if (!(t->flags & MF_STATIC) && P_Ext(t)->loadthing)
+    return 0xffff0000UL | (uint16_t)P_Ext(t)->loadthing;
+  return linearAddress(t);
+}
+
 //
 // P_CheckSight
 // Returns true
@@ -288,11 +297,11 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   static uint32_t prevlat2;
   static boolean prevr;
 
-  if (prevlat1 == linearAddress(t1)
-   && prevlat2 == linearAddress(t2))
+  if (prevlat1 == P_SightKey(t1)
+   && prevlat2 == P_SightKey(t2))
     return prevr;
-  prevlat1 = linearAddress(t1);
-  prevlat2 = linearAddress(t2);
+  prevlat1 = P_SightKey(t1);
+  prevlat2 = P_SightKey(t2);
 
   const sector_t __far* s1 = P_SubsectorSector(t1->subsector);
   const sector_t __far* s2 = P_SubsectorSector(t2->subsector);

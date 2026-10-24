@@ -324,6 +324,7 @@ void    P_RemoveMobj(mobj_t __far* th);
 boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state);
 
 void    P_MobjThinker(thinker_t __far* th);
+mobj_t __far* P_NewMobj(mobjtype_t type);
 
 mobjext_t __far* P_Ext(mobj_t __far* mobj);
 mobj_t __far* P_MobjOfThinker(thinker_t __far* th);

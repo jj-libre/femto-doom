@@ -45,6 +45,7 @@
 #include "info.h"
 #include "m_random.h"
 #include "w_wad.h"
+#include "p_tick.h"
 #include <stdio.h>
 
 #include "globdata.h"
@@ -352,6 +353,9 @@ static int16_t skillgroup;
 static int16_t numloadthings, numloadnodes, numloadstatics;
 static uint16_t numloadsectors, numloadblocks;
 static zref_t __far* loadrefs;
+static int16_t numthinking;
+static int16_t __far* slotthing;
+static uint8_t __far* sleeprec;
 static uint8_t __far* statictics;
 static uint8_t __far* staticmoved;
 static zref_t staticz;
@@ -402,7 +406,17 @@ void P_BeginLoadThings(int16_t map)
   numloadsectors = h.numsectors;
   numloadblocks  = h.numblocks;
   numloadstatics = h.numstatics[skillgroup];
-  loadrefs    = Z_CallocLevel(h.numthinking[skillgroup] * sizeof(*loadrefs));
+  numthinking = h.numthinking[skillgroup];
+  loadrefs    = Z_CallocLevel(numthinking * sizeof(*loadrefs));
+  slotthing   = Z_CallocLevel(numthinking * sizeof(*slotthing));
+  sleeprec    = Z_CallocLevel(numthinking);
+  for (int16_t t = 0; t < h.numthings; t++)
+  {
+    loadthing_t lt;
+    W_Fetch(&tlthings[t], &lt, sizeof(lt));
+    if (lt.slot[skillgroup] >= 0 && lt.type < MT_MISC0)
+      slotthing[lt.slot[skillgroup]] = t;
+  }
   statictics  = Z_CallocLevel((numloadstatics + 1) / 2);
   staticmoved = Z_CallocLevel((numloadstatics + 7) / 8);
   staticz     = 0;
@@ -560,6 +574,24 @@ static boolean P_OwnNodeVisited(int16_t t, int16_t sector)
   return true;
 }
 
+// The heights of a map thing that no moving sector changed yet.
+static void P_LoadThingHeights(int16_t t, int16_t subsector, mobj_t __far* mobj)
+{
+  if (P_SubsectorSector(subsector) - _g_sectors == changesector && !P_OwnNodeVisited(t, changesector))
+  {
+    mobj->z        = changefloor;
+    mobj->floorz   = changefloor;
+    mobj->ceilingz = changeceiling;
+  }
+  else
+  {
+    const sector_t __far* sector = P_SubsectorSector(subsector);
+    mobj->z        = SEC_FLOORHEIGHT(sector);
+    mobj->floorz   = SEC_FLOORHEIGHT(sector);
+    mobj->ceilingz = SEC_CEILINGHEIGHT(sector);
+  }
+}
+
 static staticz_t __far* P_StaticZ(int16_t slot, int16_t* i)
 {
   for (staticz_t __far* c = Z_Ptr(staticz); c; c = Z_Ptr(c->next))
@@ -586,19 +618,8 @@ static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t 
     mobj->floorz   = c->floorz[i];
     mobj->ceilingz = c->ceilingz[i];
   }
-  else if (P_SubsectorSector(lt->subsector) - _g_sectors == changesector && !P_OwnNodeVisited(t, changesector))
-  {
-    mobj->z        = changefloor;
-    mobj->floorz   = changefloor;
-    mobj->ceilingz = changeceiling;
-  }
   else
-  {
-    const sector_t __far* sector = P_SubsectorSector(lt->subsector);
-    mobj->z        = SEC_FLOORHEIGHT(sector);
-    mobj->floorz   = SEC_FLOORHEIGHT(sector);
-    mobj->ceilingz = SEC_CEILINGHEIGHT(sector);
-  }
+    P_LoadThingHeights(t, lt->subsector, mobj);
   mobj->radius    = info->radius;
   mobj->height    = info->height;
   mobj->flags     = info->flags | MF_STATIC | MF_INPLACE | (lt->angle & 0x80 ? MF_AMBUSH : 0);
@@ -644,13 +665,169 @@ static void P_KeepStaticZ(int16_t slot, const mobj_t __far* mobj, const fixed_t*
   c->ceilingz[i] = mobj->ceilingz;
 }
 
+//
+// A map monster or barrel that has not changed since it spawned sleeps: it has no mobj, only
+// the state it reached and its tics in sleeprec, and P_RunThinkers counts its tics down among
+// the map things in load order. On the tic its state changes, and whenever something visits
+// it, it gets a mobj again, and keeps it if that no longer equals its sleeping form.
+//
+
+static boolean P_Asleep(int16_t slot)
+{
+  return !loadrefs[slot] && BIT(inplace, slotthing[slot]);
+}
+
+// What P_SpawnMobj, P_SpawnMapThing and the time since have made of a sleeping map thing.
+static void P_SleeperMobj(int16_t slot, uint8_t rec, mobjext_t __far* ext)
+{
+  const int16_t t = slotthing[slot];
+  loadthing_t lt;
+  W_Fetch(&tlthings[t], &lt, sizeof(lt));
+  const mobjinfo_t* info = &mobjinfo[lt.type];
+  const uint32_t pooled = ext->mo.flags & MF_POOLED;
+  _fmemset(ext, 0, sizeof(*ext));
+  mobj_t __far* mobj = &ext->mo;
+  mobj->x         = (fixed_t)lt.x << FRACBITS;
+  mobj->y         = (fixed_t)lt.y << FRACBITS;
+  mobj->angle     = ANG45 * (lt.angle & 0x7f);
+  mobj->sprev     = t;
+  mobj->subsector = lt.subsector;
+  P_LoadThingHeights(t, lt.subsector, mobj);
+  mobj->radius    = info->radius;
+  mobj->height    = info->height;
+  mobj->flags     = info->flags | pooled | MF_INPLACE | (lt.angle & 0x80 ? MF_AMBUSH : 0);
+  mobj->state     = info->spawnstate + (rec >> 4);
+  mobj->tics      = rec & 15;
+  mobj->sprite    = states[mobj->state].sprite;
+  mobj->frame     = states[mobj->state].frame;
+  mobj->type      = lt.type;
+  ext->dropoffz     = mobj->floorz;
+  ext->health       = info->spawnhealth;
+  ext->reactiontime = _g_gameskill != sk_nightmare ? info->reactiontime : 0;
+  ext->loadthing    = t + 1;
+}
+
+// Whether a map thing's mobj equals its sleeping form, which rec then holds.
+static boolean P_SleepForm(int16_t slot, const mobjext_t __far* ext, uint8_t* rec)
+{
+  const mobj_t __far* mobj = &ext->mo;
+  if (mobj->type == MT_PLAYER || mobj->type == MT_TELEPORTMAN || ext->thinker.function != P_MobjThinker
+      || _g_linetarget == mobj)
+    return false;
+  const int16_t offset = mobj->state - mobjinfo[mobj->type].spawnstate;
+  if (offset < 0 || offset > 15 || mobj->tics < 1 || mobj->tics > 15)
+    return false;
+  *rec = offset << 4 | mobj->tics;
+  mobjext_t form;
+  form.mo.flags = mobj->flags & MF_POOLED;
+  P_SleeperMobj(slot, *rec, &form);
+  return !_fmemcmp((const uint8_t*)&form + sizeof(thinker_t), (const uint8_t __far*)ext + sizeof(thinker_t),
+                   sizeof(form) - sizeof(thinker_t));
+}
+
+static void P_Sleep(int16_t slot, mobjext_t __far* ext, uint8_t rec)
+{
+  sleeprec[slot] = rec;
+  loadrefs[slot] = 0;
+  if (ext->mo.flags & MF_POOLED)
+    ext->mo.type = MT_NOTHING;
+  else
+    Z_Free(ext);
+}
+
+static mobjext_t __far* P_WakeMobj(int16_t slot)
+{
+  mobjext_t __far* ext = P_Ext(P_NewMobj(MT_POSSESSED));
+  P_SleeperMobj(slot, sleeprec[slot], ext);
+  ext->thinker.function = P_MobjThinker;
+  loadrefs[slot] = Z_Ref(&ext->mo);
+  return ext;
+}
+
+static void P_SettleMobj(int16_t slot, mobjext_t __far* ext)
+{
+  uint8_t rec;
+  if (BIT(inplace, slotthing[slot]) && P_SleepForm(slot, ext, &rec))
+    P_Sleep(slot, ext, rec);
+  else
+    P_AddLoadThinker(&ext->thinker, slotthing[slot]);
+}
+
+// Runs the sleeping map things before map thing t and skips t, or stops after one whose turn
+// woke a later one before t.
+int16_t P_RunSleepers(int16_t slot, int16_t t)
+{
+  thinker_t __far* const next = _g_runnext;
+  for (; slot < numthinking && slotthing[slot] <= t; slot++)
+    if (slotthing[slot] < t && P_Asleep(slot))
+    {
+      const uint8_t rec = sleeprec[slot];
+      if ((rec & 15) > 1)
+        sleeprec[slot] = rec - 1;
+      else
+      {
+        _g_runlast = slotthing[slot];
+        mobjext_t __far* ext = P_WakeMobj(slot);
+        P_MobjThinker(&ext->thinker);
+        P_SettleMobj(slot, ext);
+        if (_g_runnext != next)
+          return slot + 1;
+      }
+    }
+  return slot;
+}
+
+void P_SleepIfUnchanged(mobjext_t __far* ext)
+{
+  const mobj_t __far* mobj = &ext->mo;
+  if (!(mobj->flags & MF_INPLACE) || !ext->loadthing || mobj->type == MT_PLAYER || ext->target
+      || ext->health != mobjinfo[mobj->type].spawnhealth)
+    return;
+  const int16_t slot = P_LoadSlot(ext->loadthing - 1);
+  uint8_t rec;
+  if (P_SleepForm(slot, ext, &rec))
+  {
+    P_UnlinkThinker(&ext->thinker);
+    P_Sleep(slot, ext, rec);
+  }
+}
+
+void P_SleepAtLoad(mobj_t __far* mobj)
+{
+  if (!loadingthings || (mobj->flags & MF_STATIC))
+    return;
+  mobjext_t __far* ext = P_Ext(mobj);
+  const int16_t slot = P_LoadSlot(loadingthing);
+  uint8_t rec;
+  if (P_SleepForm(slot, ext, &rec))
+  {
+    P_UnlinkThinker(&ext->thinker);
+    P_Sleep(slot, ext, rec);
+  }
+}
+
+boolean P_SleeperOfType(mobjtype_t type)
+{
+  for (int16_t slot = 0; slot < numthinking; slot++)
+    if (P_Asleep(slot) && (mobjtype_t)W_FetchUInt8(&tlthings[slotthing[slot]].type) == type)
+      return true;
+  return false;
+}
+
 static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
 {
   loadthing_t lt;
   W_Fetch(&tlthings[t], &lt, sizeof(lt));
   const int16_t slot = lt.slot[skillgroup];
   if (lt.type < MT_MISC0)
-    return func(P_Mobj(loadrefs[slot]));
+  {
+    if (loadrefs[slot])
+      return func(P_Mobj(loadrefs[slot]));
+    mobjext_t __far* ext = P_WakeMobj(slot);
+    const boolean r = func(&ext->mo);
+    P_SettleMobj(slot, ext);
+    return r;
+  }
 
   mobj_t mobj;
   P_StaticMobj(t, slot, &lt, &mobj);
@@ -666,11 +843,34 @@ void P_RunLoadStatics(void)
   staticclock++;
 }
 
-mobj_t __far* P_InterceptThing(mobj_t __far* thing)
+static void P_SetInterceptThing(intercept_t* in, mobj_t __far* thing)
 {
+  in->isaline = false;
   if ((thing->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE))
-    return (mobj_t __far*)&staticproxy;
-  return thing;
+    in->d.thing = (mobj_t __far*)&staticproxy;
+  else if ((thing->flags & MF_INPLACE) && !P_Ext(thing)->thinker.next)
+  {
+    in->isaline     = INTERCEPT_SLEEPER;
+    in->d.loadthing = P_Ext(thing)->loadthing - 1;
+  }
+  else
+    in->d.thing = thing;
+}
+
+static boolean P_TraverseSleeper(intercept_t* in, traverser_t func)
+{
+  const int16_t slot = P_LoadSlot(in->d.loadthing);
+  in->isaline = false;
+  if (loadrefs[slot])
+  {
+    in->d.thing = P_Mobj(loadrefs[slot]);
+    return func(in);
+  }
+  mobjext_t __far* ext = P_WakeMobj(slot);
+  in->d.thing = &ext->mo;
+  const boolean r = func(in);
+  P_SettleMobj(slot, ext);
+  return r;
 }
 
 int16_t P_LoadIndex(mobj_t __far* thing)
@@ -1111,8 +1311,7 @@ static boolean PIT_AddThingIntercepts(mobj_t __far* thing)
       return false;
 
   intercept_p->frac = frac;
-  intercept_p->isaline = false;
-  intercept_p->d.thing = P_InterceptThing(thing);
+  P_SetInterceptThing(intercept_p, thing);
   intercept_p++;
 
   return true;          // keep going
@@ -1137,7 +1336,7 @@ static boolean P_TraverseIntercepts(traverser_t func)
           dist = (in=scan)->frac;
       if (dist > FRACUNIT)
         return true;    // checked everything in range
-      if (!func(in))
+      if (!(in->isaline == INTERCEPT_SLEEPER ? P_TraverseSleeper(in, func) : func(in)))
         return false;           // don't bother going farther
       in->frac = INT32_MAX;
     }
