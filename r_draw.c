@@ -563,6 +563,12 @@ static int32_t      worldlow;
 
 uint16_t validcount = 1;         // increment every time a check is made
 
+void P_NextValidCount(void)
+{
+  ++validcount;
+  _fmemset(&_g_linebits[LB_CHECKED * _g_linebytes], 0, _g_linebytes);
+}
+
 //*****************************************
 // Constants
 //*****************************************
@@ -2832,7 +2838,7 @@ static void R_SetupFrame (player_t *player)
     else
         fixedcolormap = NULL;
 
-    validcount++;
+    P_NextValidCount();
 }
 
 

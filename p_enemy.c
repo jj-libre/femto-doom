@@ -249,7 +249,7 @@ static boolean P_AvoidDropoff(mobj_t __far* actor)
 
   // check lines
 
-  validcount++;
+  P_NextValidCount();
   for (bx=xl ; bx<=xh ; bx++)
     for (by=yl ; by<=yh ; by++)
       P_BlockLinesIterator(bx, by, PIT_AvoidDropoff);  // all contacted lines

@@ -73,7 +73,6 @@ const mapsubsector_t *_g_mapsubsectors;
 
 
 int16_t      _g_numlines;
-linedata_t   __far* _g_lines;
 const uint16_t __far* _g_seclinefirst;
 const int16_t  __far* _g_seclines;
 uint8_t      __far* _g_linebits;
@@ -315,7 +314,6 @@ static void P_LoadLineDefs (int16_t lump)
 {
 	_g_numlines = W_MapLumpLength(lump) / sizeof(line_t);
 	_g_maplines = W_GetMapLumpByNum(lump);
-	_g_lines    = Z_CallocLevel(_g_numlines * sizeof(linedata_t));
 
 	_g_linebytes   = (_g_numlines + 7) / 8;
 	_g_linebits    = Z_CallocLevel(LB_PLANES * _g_linebytes);

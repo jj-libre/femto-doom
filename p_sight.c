@@ -120,14 +120,13 @@ static boolean P_CrossSubsector(int16_t num)
         const seg_t* seg = &segcopy;
         int16_t linenum = seg->linenum;
 
-        linedata_t __far* line = &_g_lines[linenum];
         divline_t divl;
 
         // allready checked other side?
-        if(line->validcount == validcount)
+        if(LN_BIT(LB_CHECKED, linenum))
             continue;
 
-        line->validcount = validcount;
+        LN_SETBIT(LB_CHECKED, linenum);
 
         line_t maplinecopy;
         W_Fetch(&_g_maplines[linenum], &maplinecopy, sizeof(maplinecopy));
@@ -322,7 +321,7 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   // An unobstructed LOS is possible.
   // Now look from eyes of t1 to any part of t2.
 
-  validcount++;
+  P_NextValidCount();
 
   los.topslope = (los.bottomslope = t2->z - (los.sightzstart =
                                              t1->z + t1->height -

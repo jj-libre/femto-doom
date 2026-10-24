@@ -150,7 +150,6 @@ extern const mapsubsector_t *_g_mapsubsectors;
 
 
 extern int16_t      _g_numlines;
-extern linedata_t   __far* _g_lines;
 extern const uint16_t __far* _g_seclinefirst;
 extern const int16_t  __far* _g_seclines;
 extern uint8_t      __far* _g_linebits;
@@ -240,6 +239,7 @@ extern int16_t showMessages;    // Show messages has default, 0 = off, 1 = on
 
 
 extern uint16_t validcount;         // increment every time a check is made
+void P_NextValidCount(void);
 
 
 //

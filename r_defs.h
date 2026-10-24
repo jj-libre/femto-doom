@@ -181,14 +181,10 @@ typedef enum
 } flags_e;
 
 
-typedef struct linedata_s
-{
-    uint16_t validcount;        // if == validcount, already checked
-} linedata_t;
-
-// What else play and rendering change about a line: a bit per line in each plane of
+// What play and rendering change about a line: a bit per line in each plane of
 // _g_linebits. LB_DONE says LB_CLOSED and LB_IGNORE are this tic's; at load every line
-// is done with neither, as an r_validcount of 0 was.
+// is done with neither, as an r_validcount of 0 was. LB_CHECKED is a line's validcount
+// matching, so each step of validcount clears it.
 enum
 {
     LB_MAPPED,   // seen, for the automap
@@ -196,6 +192,7 @@ enum
     LB_DONE,
     LB_CLOSED,
     LB_IGNORE,
+    LB_CHECKED,
     LB_PLANES
 };
 

@@ -953,17 +953,14 @@ boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __f
 
     list++;     // skip 0 starting delimiter                      // phares
 
-    const uint16_t vcount = validcount;
-
     for (int16_t lineno; (lineno = W_FetchInt16(list)) != -1 ; list++)  // phares
     {
-        linedata_t __far* ld = &_g_lines[lineno];
         const line_t *mld = &_g_maplines[lineno];
 
-        if (ld->validcount == vcount)
+        if (LN_BIT(LB_CHECKED, lineno))
             continue;       // line has already been checked
 
-        ld->validcount = vcount;
+        LN_SETBIT(LB_CHECKED, lineno);
 
         if (!func(mld))
             return false;
@@ -1166,7 +1163,7 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
   int16_t     mapxstep, mapystep;
   int16_t     count;
 
-  validcount++;
+  P_NextValidCount();
   intercept_p = intercepts;
 
   if (!((x1-_g_bmaporgx)&(MAPBLOCKSIZE-1)))
