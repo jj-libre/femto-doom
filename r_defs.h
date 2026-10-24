@@ -136,6 +136,7 @@ enum
   SB_CHECKED,  // since validcount last stepped
   SB_SECRET,   // jff 2/16/98 remembers if sector WAS secret (automap)
   SB_SOUND2,   // the sound that flooded it last crossed a sound-blocking line
+  SB_SPREAD,   // the sound still has to spread from it
   SB_PLANES
 };
 

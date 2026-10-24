@@ -364,47 +364,68 @@ boolean P_CheckAmmo(player_t *player)
 
 //
 // Called by P_NoiseAlert.
-// Recursively traverse adjacent sectors,
+// Traverse adjacent sectors,
 // sound blocking lines cut off traversal.
 //
+// A sector the sound reaches keeps the fewest sound-blocking lines it crossed, whatever the
+// order, so instead of recursing once per sector the flood sweeps the sectors it still has to
+// spread from.
+//
 
-static void P_RecursiveSound(sector_t __far* sec, int16_t soundblocks, mobj_t __far* soundtarget)
+static boolean P_FloodSector(sector_t __far* sec, int16_t soundblocks, mobj_t __far* soundtarget)
 {
-  int16_t i;
-
   // wake up all monsters in this sector
   const int16_t s = sec - _g_sectors;
   if (SEC_BIT(SB_CHECKED, s) && (SEC_BIT(SB_SOUND2, s) ? 2 : 1) <= soundblocks+1)
-    return;             // already flooded
+    return false;       // already flooded
 
   SEC_SETBIT(SB_CHECKED, s);
   if (soundblocks)
     SEC_SETBIT(SB_SOUND2, s);
   else
     SEC_CLRBIT(SB_SOUND2, s);
+  SEC_SETBIT(SB_SPREAD, s);
   sec->soundtarget    = Z_Ref(soundtarget);
+  return true;
+}
 
-  for (i=0; i<SEC_LINECOUNT(sec); i++)
+static void P_RecursiveSound(sector_t __far* sec, mobj_t __far* soundtarget)
+{
+  boolean flooded = P_FloodSector(sec, 0, soundtarget);
+  while (flooded)
+  {
+    flooded = false;
+    for (int16_t s = 0; s < _g_numsectors; s++)
     {
-      sector_t __far* other;
-      const line_t __far* check = SEC_LINE(sec, i);
-
-      if (!(LN_FLAGS(check) & ML_TWOSIDED))
+      if (!SEC_BIT(SB_SPREAD, s))
         continue;
+      SEC_CLRBIT(SB_SPREAD, s);
+      sec = &_g_sectors[s];
+      const int16_t soundblocks = SEC_BIT(SB_SOUND2, s) != 0;
 
-      P_LineOpening(check);
+      for (int16_t i=0; i<SEC_LINECOUNT(sec); i++)
+        {
+          sector_t __far* other;
+          const line_t __far* check = SEC_LINE(sec, i);
 
-      if (_g_openrange <= 0)
-        continue;       // closed door
+          if (!(LN_FLAGS(check) & ML_TWOSIDED))
+            continue;
 
-      other=SIDE_SECTOR(LN_SIDENUM(check, SIDE_SECTOR(LN_SIDENUM(check, 0))==sec));
+          P_LineOpening(check);
 
-      if (!(LN_FLAGS(check) & ML_SOUNDBLOCK))
-        P_RecursiveSound(other, soundblocks, soundtarget);
-      else
-        if (!soundblocks)
-          P_RecursiveSound(other, 1, soundtarget);
+          if (_g_openrange <= 0)
+            continue;       // closed door
+
+          other=SIDE_SECTOR(LN_SIDENUM(check, SIDE_SECTOR(LN_SIDENUM(check, 0))==sec));
+
+          if (!(LN_FLAGS(check) & ML_SOUNDBLOCK))
+            flooded |= P_FloodSector(other, soundblocks, soundtarget);
+          else
+            if (!soundblocks)
+              flooded |= P_FloodSector(other, 1, soundtarget);
+        }
     }
+  }
 }
 
 //
@@ -415,7 +436,7 @@ static void P_RecursiveSound(sector_t __far* sec, int16_t soundblocks, mobj_t __
 static void P_NoiseAlert(mobj_t __far* emitter)
 {
   P_NextValidCount();
-  P_RecursiveSound(P_SubsectorSector(emitter->subsector), 0, emitter);
+  P_RecursiveSound(P_SubsectorSector(emitter->subsector), emitter);
 }
 
 
