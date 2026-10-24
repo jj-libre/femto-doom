@@ -128,8 +128,7 @@ const byte __far* _g_rejectmatrix;
 mobjext_t __far*   _g_thingPool;
 int16_t _g_thingPoolSize;
 
-mobj_t __far*      _g_staticPool;
-int16_t _g_staticPoolSize;
+staticchunk_t __far* _g_staticchunks;
 
 
 // Lump order in a map WAD: each map needs a couple of lumps
@@ -284,10 +283,10 @@ static void P_LoadThings(int16_t lump, int16_t map)
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
 	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
 
-	// Map statics need no pool; it is for the items map monsters drop. Map monsters and barrels
-	// spawn asleep, without a mobj.
+	// Map statics need no pool, and items monsters drop take _g_staticchunks. Map monsters and
+	// barrels spawn asleep, without a mobj.
 	_g_thingPoolSize  = THING_POOL_RESERVE;
-	_g_staticPoolSize = 0;
+	_g_staticchunks   = NULL;
 	for (int16_t i = 0; i < mapThingCount; i++)
 	{
 		mapthing_t mt;
@@ -296,17 +295,11 @@ static void P_LoadThings(int16_t lump, int16_t map)
 			continue;
 		if (mt.type == 1 || mt.type == mobjinfo[MT_TELEPORTMAN].doomednum)
 			_g_thingPoolSize++;
-		if (mt.type == mobjinfo[MT_POSSESSED].doomednum || mt.type == mobjinfo[MT_SHOTGUY].doomednum)
-			_g_staticPoolSize++;
 	}
 
 	_g_thingPool = P_CallocPool(_g_thingPoolSize, sizeof(mobjext_t));
 	for (int16_t i = 0; i < _g_thingPoolSize; i++)
 		_g_thingPool[i].mo.type = MT_NOTHING;
-
-	_g_staticPool = P_CallocPool(_g_staticPoolSize, sizeof(mobj_t));
-	for (int16_t i = 0; i < _g_staticPoolSize; i++)
-		_g_staticPool[i].type = MT_NOTHING;
 
 	P_BeginLoadThings(map);
 }

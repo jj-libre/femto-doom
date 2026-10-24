@@ -810,18 +810,19 @@ static void P_MobjBrainlessThinker(thinker_t __far* th)
 
 void P_RunStatics(void)
 {
-    for (int16_t i = 0; i < _g_staticPoolSize; i++)
-    {
-        mobj_t __far* mobj = &_g_staticPool[i];
+    for (staticchunk_t __far* c = _g_staticchunks; c; c = c->next)
+        for (int16_t i = 0; i < STATICCHUNK; i++)
+        {
+            mobj_t __far* mobj = &c->mobj[i];
 
-        if (mobj->type == MT_NOTHING)
-            continue;
+            if (mobj->type == MT_NOTHING)
+                continue;
 
-        if (mobj->flags & MF_REMOVED)
-            mobj->type = MT_NOTHING;
-        else
-            P_CycleState(mobj);
-    }
+            if (mobj->flags & MF_REMOVED)
+                mobj->type = MT_NOTHING;
+            else
+                P_CycleState(mobj);
+        }
 
     P_RunLoadStatics();
 }
@@ -852,17 +853,28 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
 
     if (type >= MT_MISC0)
     {
-        for (int16_t i = _g_staticPoolSize-1; i >= 0; i--)
-        {
-            if (_g_staticPool[i].type == MT_NOTHING)
-            {
-                mobj_t __far* mobj = &_g_staticPool[i];
-                _fmemset (mobj, 0, sizeof (*mobj));
+        mobj_t __far* mobj = NULL;
+        for (staticchunk_t __far* c = _g_staticchunks; c && !mobj; c = c->next)
+            for (int16_t i = STATICCHUNK-1; i >= 0; i--)
+                if (c->mobj[i].type == MT_NOTHING)
+                {
+                    mobj = &c->mobj[i];
+                    break;
+                }
 
-                mobj->flags = MF_STATIC;
-                return mobj;
-            }
+        if (!mobj)
+        {
+            staticchunk_t __far* c = Z_MallocLevel(sizeof(*c), NULL);
+            for (int16_t i = 0; i < STATICCHUNK; i++)
+                c->mobj[i].type = MT_NOTHING;
+            c->next = _g_staticchunks;
+            _g_staticchunks = c;
+            mobj = &c->mobj[STATICCHUNK-1];
         }
+
+        _fmemset (mobj, 0, sizeof (*mobj));
+        mobj->flags = MF_STATIC;
+        return mobj;
     }
 
     for(int16_t i = _g_thingPoolSize-1; i >= 0; i--)

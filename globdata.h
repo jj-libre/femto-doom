@@ -199,8 +199,15 @@ extern const byte __far* _g_rejectmatrix;
 extern mobjext_t __far*   _g_thingPool;
 extern int16_t _g_thingPoolSize;
 
-extern mobj_t __far*      _g_staticPool;
-extern int16_t _g_staticPoolSize;
+// Items dropped in play, in chunks allocated as they drop.
+#define STATICCHUNK 4
+typedef struct staticchunk_s
+{
+  mobj_t mobj[STATICCHUNK];
+  struct staticchunk_s __far* next;
+} staticchunk_t;
+
+extern staticchunk_t __far* _g_staticchunks;
 
 
 //******************************************************************************
