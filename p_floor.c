@@ -404,7 +404,7 @@ static void T_MoveFloor(floormove_t __far* floor)
   res = T_MovePlaneFloor(floor->sector, floor->speed, floor->floordestheight, floor->direction);
 
   if (!((int16_t)_g_leveltime&7))     // make the floormove sound
-    S_StartSound2(&floor->sector->soundorg, sfx_stnmov);
+    S_StartSound2(floor->sector, sfx_stnmov);
 
   if (res == pastdest)    // if destination height is reached
   {
@@ -421,11 +421,11 @@ static void T_MoveFloor(floormove_t __far* floor)
       }
     }
 
-    floor->sector->floordata = NULL; //jff 2/22/98
+    floor->sector->floordata = Z_Ref(0); //jff 2/22/98
     P_RemoveThinker(&floor->thinker);//remove this floor from list of movers
 
     // make floor stop sound
-    S_StartSound2(&floor->sector->soundorg, sfx_pstop);
+    S_StartSound2(floor->sector, sfx_pstop);
   }
 }
 
@@ -446,12 +446,12 @@ fixed_t P_FindNextHighestFloor(sector_t __far* sec)
   sector_t __far* other;
   int16_t i;
 
-  for (i=0 ;i < sec->linecount ; i++)
+  for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
     if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
          other->floorheight > currentheight)
     {
       fixed_t height = other->floorheight;
-      while (++i < sec->linecount)
+      while (++i < SEC_LINECOUNT(sec))
         if ((other = getNextSector(SEC_LINE(sec, i),sec)) &&
             other->floorheight < height &&
             other->floorheight > currentheight)
@@ -495,14 +495,14 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
     sec = &_g_sectors[secnum];
 
     // Don't start a second thinker on the same floor
-    if (sec->floordata != NULL)
+    if (sec->floordata != 0)
       continue;
 
     // new floor thinker
     rtn = true;
     floor = Z_CallocLevSpec(sizeof(*floor));
     P_AddThinker (&floor->thinker);
-    sec->floordata = floor; //jff 2/22/98
+    sec->floordata = Z_Ref(floor); //jff 2/22/98
     floor->thinker.function = T_MoveFloor;
     floor->type = floortype;
 
@@ -605,7 +605,7 @@ boolean EV_BuildStairs(const line_t __far* line)
    sector_t __far*     sec = &_g_sectors[secnum];
 
     // don't start a stair if the first step's floor is already moving
-   if (sec->floordata == NULL) {
+   if (sec->floordata == 0) {
     floormove_t __far*  floor;
     int16_t       texture;
     fixed_t       height;
@@ -617,7 +617,7 @@ boolean EV_BuildStairs(const line_t __far* line)
     rtn = true;
     floor = Z_CallocLevSpec(sizeof(*floor));
     P_AddThinker (&floor->thinker);
-    sec->floordata = floor;
+    sec->floordata = Z_Ref(floor);
     floor->thinker.function = T_MoveFloor;
     floor->direction = 1;
     floor->sector = sec;
@@ -641,7 +641,7 @@ boolean EV_BuildStairs(const line_t __far* line)
       int16_t i;
       ok = false;
 
-      for (i = 0;i < sec->linecount;i++)
+      for (i = 0;i < SEC_LINECOUNT(sec);i++)
       {          
         sector_t __far* tsec = LN_FRONTSECTOR((SEC_LINE(sec, i)));
         int16_t newsecnum;
@@ -662,7 +662,7 @@ boolean EV_BuildStairs(const line_t __far* line)
           continue;
 
         // if sector's floor already moving, look for another
-        if (tsec->floordata != NULL)
+        if (tsec->floordata != 0)
           continue;
 
         height += stairsize;
@@ -674,7 +674,7 @@ boolean EV_BuildStairs(const line_t __far* line)
         floor = Z_CallocLevSpec(sizeof(*floor));
         P_AddThinker (&floor->thinker);
 
-        sec->floordata = floor; //jff 2/22/98
+        sec->floordata = Z_Ref(floor); //jff 2/22/98
         floor->thinker.function = T_MoveFloor;
         floor->direction = 1;
         floor->sector = sec;
@@ -718,7 +718,7 @@ boolean EV_DoDonut(const line_t __far* line)
     s1 = &_g_sectors[secnum];                // s1 is pillar's sector
 
     // do not start the donut if the pillar is already moving
-    if (s1->floordata != NULL)
+    if (s1->floordata != 0)
       continue;
 
     s2 = getNextSector(SEC_LINE(s1, 0),s1);  // s2 is pool's sector
@@ -727,11 +727,11 @@ boolean EV_DoDonut(const line_t __far* line)
 
     /* do not start the donut if the pool is already moving
      * cph - DEMOSYNC - was !compatibility */
-    if (s2->floordata != NULL)
+    if (s2->floordata != 0)
       continue;                           //jff 5/7/98
 
     // find a two sided line around the pool whose other side isn't the pillar
-    for (i = 0;i < s2->linecount;i++)
+    for (i = 0;i < SEC_LINECOUNT(s2);i++)
     {
 
 
@@ -745,7 +745,7 @@ boolean EV_DoDonut(const line_t __far* line)
       //  Spawn rising slime
       floor = Z_CallocLevSpec(sizeof(*floor));
       P_AddThinker (&floor->thinker);
-      s2->floordata = floor; //jff 2/22/98
+      s2->floordata = Z_Ref(floor); //jff 2/22/98
       floor->thinker.function = T_MoveFloor;
       floor->type = donutRaise;
       floor->direction = 1;
@@ -757,7 +757,7 @@ boolean EV_DoDonut(const line_t __far* line)
       //  Spawn lowering donut-hole pillar
       floor = Z_CallocLevSpec(sizeof(*floor));
       P_AddThinker (&floor->thinker);
-      s1->floordata = floor; //jff 2/22/98
+      s1->floordata = Z_Ref(floor); //jff 2/22/98
       floor->thinker.function = T_MoveFloor;
       floor->type = lowerFloor;
       floor->direction = -1;

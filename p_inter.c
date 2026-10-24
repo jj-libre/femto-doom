@@ -636,7 +636,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
   if (player)
     {
       // end of game hell hack
-      if (P_Subsector(target->subsector)->sector->special == 11 && damage >= P_Ext(target)->health)
+      if (P_SubsectorSector(target->subsector)->special == 11 && damage >= P_Ext(target)->health)
         damage = P_Ext(target)->health - 1;
 
       // Below certain threshold,

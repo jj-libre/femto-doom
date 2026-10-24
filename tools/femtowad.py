@@ -5,7 +5,8 @@ R_DrawColumnWall samples, so a wall column costs no patch, directory or column o
 
 In the map WAD, E1MxTL holds per map what spawning the map's things leaves behind, so it
 needs no memory: each thing's spawn data and slot per skill, and, in reverse load order, the
-things in each sector and block and the sectors each thing touches.
+things in each sector and block and the sectors each thing touches. E1MxGL holds what
+P_GroupLines would build: the lines of each sector and the sector of each subsector.
 
 usage: python -I tools/femtowad.py <in.wad> <out.wad> [--texshift=N] [--high-detail]
 """
@@ -351,6 +352,28 @@ def thing_lists(mp, info, misc0, flags):
     return header + b"".join(arrays)
 
 
+
+def geometry_lists(mp):
+    lists = [[] for _ in range(mp.numsectors)]
+    for i, line in enumerate(mp.lines):
+        front = mp.sides[line[7]][5]
+        lists[front].append(i)
+        if line[8] != 0xFFFF and mp.sides[line[8]][5] != front:
+            lists[mp.sides[line[8]][5]].append(i)
+    first = [0]
+    for l in lists:
+        first.append(first[-1] + len(l))
+    lines = [i for l in lists for i in l]
+    sectors = [0xFF if s is None else s for s in mp.subsector_sector]
+    arrays = [struct.pack(f"<{len(first)}H", *first), struct.pack(f"<{len(lines)}H", *lines), bytes(sectors)]
+    offsets, at = [], 8 + 4 * len(arrays)
+    for a in arrays:
+        offsets.append(at)
+        at += len(a)
+    header = struct.pack("<4H", 2, mp.numsectors, len(sectors), 0) + struct.pack(f"<{len(offsets)}I", *offsets)
+    return header + b"".join(arrays)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = dict((a[2:].split("=") + ["1"])[:2] for a in sys.argv[1:] if a.startswith("--"))
@@ -359,7 +382,7 @@ def main():
     wad = open(args[0], "rb").read()
     directory = lumps(wad)
     names = [name for name, _, _ in directory]
-    if b"TEXCOLS" in names or any(len(name) == 6 and name[2:3] == b"M" and name.endswith(b"TL") for name in names):
+    if b"TEXCOLS" in names or any(len(name) == 6 and name[2:3] == b"M" and name[4:] in (b"TL", b"GL") for name in names):
         sys.exit("already converted")
     if b"TEXTURE1" in names:
         texcols = texture_columns(wad, directory, int(flags.get("texshift", 0)), "high-detail" in flags)
@@ -367,8 +390,11 @@ def main():
         return
     info, misc0, mflags = engine_info(Path(__file__).resolve().parents[1])
     maps = [name for name in names if len(name) == 4 and name[0:1] == b"E" and name[2:3] == b"M"]
-    extra = [(name + b"TL", thing_lists(Map(wad, directory, name), info, misc0, mflags)) for name in maps]
-    print(f"thing lists: {len(maps)} maps, {sum(len(d) for _, d in extra)} B")
+    extra = []
+    for name in maps:
+        mp = Map(wad, directory, name)
+        extra += [(name + b"TL", thing_lists(mp, info, misc0, mflags)), (name + b"GL", geometry_lists(mp))]
+    print(f"thing and geometry lists: {len(maps)} maps, {sum(len(d) for _, d in extra)} B")
     write(args[1], wad, extra)
 
 

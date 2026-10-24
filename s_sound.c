@@ -41,6 +41,7 @@
 
 #include "d_player.h"
 #include "s_sound.h"
+#include "p_setup.h"
 #include "i_sound.h"
 #include "i_system.h"
 #include "d_main.h"
@@ -232,7 +233,7 @@ void S_StartSound(mobj_t __far* origin, sfxenum_t sfx_id)
     S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
 }
 
-void S_StartSound2(degenmobj_t __far* origin, sfxenum_t sfx_id)
+void S_StartSound2(const sector_t __far* sector, sfxenum_t sfx_id)
 {
     //Look at this mess.
 
@@ -254,8 +255,7 @@ void S_StartSound2(degenmobj_t __far* origin, sfxenum_t sfx_id)
         degenmobj_t origin;
     } __far fm;
 
-    fm.origin.x = origin->x;
-    fm.origin.y = origin->y;
+    P_SectorSoundOrg(sector, &fm.origin.x, &fm.origin.y);
 
     S_StartSoundAtVolume((mobj_t __far*)&fm, sfx_id, snd_SfxVolume);
 }

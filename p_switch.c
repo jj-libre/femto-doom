@@ -151,7 +151,7 @@ static void P_StartButton(const line_t __far* line, bwhere_e w, int16_t texture,
       _g_buttonlist[i].btimer = time;
       /* use sound origin of line itself - no need to compatibility-wrap
        * as the popout code gets it wrong whatever its value */
-      _g_buttonlist[i].soundorg = &LN_FRONTSECTOR(line)->soundorg;
+      _g_buttonlist[i].soundorg = LN_FRONTSECTOR(line);
       return;
     }
 
@@ -185,7 +185,7 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
 
     /* don't zero line->special until after exit switch test */
     if (!useAgain)
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
 
     /* search for a texture to change */
     texture = NULL;
@@ -233,7 +233,7 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
             break;
     }
 
-    S_StartSound2(&LN_FRONTSECTOR(line)->soundorg, sfx_swtchn);
+    S_StartSound2(LN_FRONTSECTOR(line), sfx_swtchn);
 
     if (useAgain)
         P_StartButton(line, position, switchlist[i], BUTTONTIME);
@@ -306,9 +306,9 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   }
 
   // get the sector on the second side of activating linedef
-  sec = _g_sides[LN_SIDENUM(line, 1)].sector;
+  sec = SIDE_SECTOR(LN_SIDENUM(line, 1));
 
-  door = sec->ceilingdata;
+  door = Z_Ptr(sec->ceilingdata);
 
   /* If this is a repeatable line, and the door is already moving, then we can just reverse the current action. Note that in prboom 2.3.0 I erroneously removed the if-this-is-repeatable check, hence the prboom_4_compatibility clause below (foolishly assumed that already moving implies repeatable - but it could be moving due to another switch, e.g. lv19-509) */
   if (door &&
@@ -338,12 +338,12 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
   }
 
   // emit proper sound
-  S_StartSound2(&sec->soundorg,sfx_doropn); // normal or locked door sound
+  S_StartSound2(sec,sfx_doropn); // normal or locked door sound
 
   // new door thinker
   door = Z_CallocLevSpec(sizeof(*door));
   P_AddThinker (&door->thinker);
-  sec->ceilingdata = door; //jff 2/22/98
+  sec->ceilingdata = Z_Ref(door); //jff 2/22/98
   door->thinker.function = T_VerticalDoor;
   door->sector = sec;
   door->direction = 1;
@@ -368,7 +368,7 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
     case 33:
     case 34:
       door->type = dopen;
-      LN_SPECIAL(line) = 0;
+      LN_CLEARSPECIAL(line);
       break;
 
     default:

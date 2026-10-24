@@ -88,18 +88,15 @@ typedef char assertDegenmobjSize[sizeof(degenmobj_t) == 8 ? 1 : -1];
 // Stores things/mobjs.
 //
 
+// Its lines are in the map WAD's E1MxGL; P_SectorSoundOrg finds its sound origin.
 typedef struct
 {
   fixed_t floorheight;
   fixed_t ceilingheight;
 
-  degenmobj_t soundorg;  // origin for any sounds played by the sector
-
   // thinker_t for reversable actions
-  void __far* floordata;    // jff 2/22/98 make thinkers on
-  void __far* ceilingdata;  // floors, ceilings, lighting,
-
-  int16_t __far* lines;
+  zref_t floordata;    // jff 2/22/98 make thinkers on
+  zref_t ceilingdata;  // floors, ceilings, lighting,
 
   zref_t soundtarget;   // mobj_t that made a sound (or null)
   zref_t thinglist;     // list of mobjs in sector
@@ -109,20 +106,19 @@ typedef struct
   zref_t touching_thinglist;    // msecnode_t
 
   uint16_t validcount;        // if == validcount, already checked
-  int16_t linecount;
 
   int16_t floorpic;
   int16_t ceilingpic;
 
   int16_t lightlevel;
-  int16_t special;
-  int16_t oldspecial;      //jff 2/16/98 remembers if sector WAS secret (automap)
+  int8_t special;
+  int8_t oldspecial;      //jff 2/16/98 remembers if sector WAS secret (automap)
 
-  int16_t soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
+  uint8_t soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
 
 } sector_t;
 
-typedef char assertSectorSize[sizeof(sector_t) == 52 ? 1 : -1];
+typedef char assertSectorSize[sizeof(sector_t) == 32 ? 1 : -1];
 
 
 typedef struct {
@@ -143,10 +139,9 @@ typedef char assertMapsectorSize[sizeof(mapsector_t) == 12 ? 1 : -1];
 // by setting textures and offsets.
 //
 
+// The sector it faces is in the map WAD's SIDEDEFS: SIDE_SECTOR.
 typedef struct
 {
-    sector_t __far* sector;      // Sector the SideDef is facing.
-
     uint8_t textureoffset; // add this to the calculated texture column
 
     int8_t toptexture;
@@ -154,7 +149,7 @@ typedef struct
     int8_t midtexture;
 } side_t;
 
-typedef char assertSideSize[sizeof(side_t) == 8 ? 1 : -1];
+typedef char assertSideSize[sizeof(side_t) == 4 ? 1 : -1];
 
 
 typedef PACKEDATTR_PRE struct {
@@ -189,11 +184,24 @@ typedef enum
 typedef struct linedata_s
 {
     uint16_t validcount;        // if == validcount, already checked
-    uint16_t r_validcount;      // cph: if == gametic, r_flags already done
-
-    int16_t r_flags;
-    int16_t special;
 } linedata_t;
+
+// What else play and rendering change about a line: a bit per line in each plane of
+// _g_linebits. LB_DONE says LB_CLOSED and LB_IGNORE are this tic's; at load every line
+// is done with neither, as an r_validcount of 0 was.
+enum
+{
+    LB_MAPPED,   // seen, for the automap
+    LB_CLEARED,  // its special has been used up
+    LB_DONE,
+    LB_CLOSED,
+    LB_IGNORE,
+    LB_PLANES
+};
+
+#define LN_BIT(p, i)    (_g_linebits[(p) * _g_linebytes + ((i) >> 3)] & (1 << ((i) & 7)))
+#define LN_SETBIT(p, i) (_g_linebits[(p) * _g_linebytes + ((i) >> 3)] |= (1 << ((i) & 7)))
+#define LN_CLRBIT(p, i) (_g_linebits[(p) * _g_linebytes + ((i) >> 3)] &= ~(1 << ((i) & 7)))
 
 typedef PACKEDATTR_PRE struct line_s
 {
@@ -221,12 +229,17 @@ typedef char assertLineSize[sizeof(line_t) == 32 ? 1 : -1];
 
 sector_t __far* LN_BackSector(const line_t __far* l);
 
-#define LN_FRONTSECTOR(l) (_g_sides[LN_SIDENUM(l, 0)].sector)
+#define LN_FRONTSECTOR(l) (SIDE_SECTOR(LN_SIDENUM(l, 0)))
 #define LN_BACKSECTOR(l) LN_BackSector(l)
 
-#define LN_SPECIAL(l) (_g_lines[LN_LINENO(l)].special)
+#define LN_SPECIAL(l) (LN_BIT(LB_CLEARED, LN_LINENO(l)) ? 0 : W_FetchInt16(&(l)->const_special))
+#define LN_CLEARSPECIAL(l) LN_SETBIT(LB_CLEARED, LN_LINENO(l))
 
-#define SEC_LINE(s, i) (&_g_maplines[(s)->lines[i]])
+#define SIDE_SECTOR(n) (&_g_sectors[W_FetchUInt8(&_g_mapsides[n].sector)])
+
+#define SEC_LINEFIRST(s) W_FetchUInt16(&_g_seclinefirst[(s) - _g_sectors])
+#define SEC_LINECOUNT(s) (W_FetchUInt16(&_g_seclinefirst[(s) - _g_sectors + 1]) - SEC_LINEFIRST(s))
+#define SEC_LINE(s, i) (&_g_maplines[W_FetchInt16(&_g_seclines[SEC_LINEFIRST(s) + (i)])])
 
 
 // phares 3/14/98
@@ -319,17 +332,8 @@ typedef char assertSegSize[sizeof(seg_t) == 18 ? 1 : -1];
 //  (all or some) sides of a convex BSP leaf.
 //
 
-typedef struct subsector_s
-{
-  sector_t __far* sector;
-} subsector_t;
-
-typedef char assertSubsectorSize[sizeof(subsector_t) == 4 ? 1 : -1];
-
-static inline subsector_t __far* P_Subsector(zref_t ref)
-{
-  return Z_Ptr(ref);
-}
+// Its sector is in the map WAD's E1MxGL.
+#define P_SubsectorSector(ss) (&_g_sectors[W_FetchUInt8(&_g_subsecsector[ss])])
 
 
 typedef struct {

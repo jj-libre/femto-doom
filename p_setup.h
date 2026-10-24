@@ -37,8 +37,10 @@
 #define __P_SETUP__
 
 #include "p_mobj.h"
+#include "r_defs.h"
 
 
+void P_SectorSoundOrg(const sector_t __far* sector, fixed_t* x, fixed_t* y);
 void P_SetupLevel(int16_t map);
 void P_Init(void);               /* Called by startup code. */
 

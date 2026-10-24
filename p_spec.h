@@ -176,7 +176,7 @@ typedef struct
   bwhere_e where;
   int8_t   btexture;
   int16_t   btimer;
-  degenmobj_t __far* soundorg;
+  const sector_t __far* soundorg;
 
 } button_t;
 

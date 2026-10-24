@@ -223,7 +223,7 @@ typedef struct mobj_s
     zref_t              bnext;  // mobj_t
     zref_t              bprev;  // the zref_t that points here
 
-    zref_t              subsector;
+    int16_t             subsector;
 
                                        // phares 3/17/98
     // a linked list of sectors where this object appears

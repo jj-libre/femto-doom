@@ -72,7 +72,7 @@ static void EV_LightTurnOnPartway(const line_t __far* line, fixed_t level)
       sector_t __far* sector = _g_sectors+i;
       int16_t j, bright = 0, min = sector->lightlevel;
 
-      for (j = 0; j < sector->linecount; j++)
+      for (j = 0; j < SEC_LINECOUNT(sector); j++)
   if ((temp = getNextSector(SEC_LINE(sector, j),sector)))
     {
       if (temp->lightlevel > bright)
@@ -116,12 +116,12 @@ void T_VerticalDoor(vldoor_t __far* door)
         {
           case normal:
             door->direction = -1; // time to go back down
-            S_StartSound2(&door->sector->soundorg,sfx_dorcls);
+            S_StartSound2(door->sector,sfx_dorcls);
             break;
 
           case close30ThenOpen:
             door->direction = 1;  // time to go back up
-            S_StartSound2(&door->sector->soundorg,sfx_doropn);
+            S_StartSound2(door->sector,sfx_doropn);
             break;
 
           default:
@@ -152,7 +152,7 @@ void T_VerticalDoor(vldoor_t __far* door)
         {
           // regular open and close doors are all done, remove them
           case normal:
-            door->sector->ceilingdata = NULL; //jff 2/22/98
+            door->sector->ceilingdata = Z_Ref(0); //jff 2/22/98
             P_RemoveThinker (&door->thinker);  // unlink and free
             break;
 
@@ -173,7 +173,7 @@ void T_VerticalDoor(vldoor_t __far* door)
       {
         // other types bounce off the obstruction
         door->direction = 1;
-        S_StartSound2(&door->sector->soundorg,sfx_doropn);
+        S_StartSound2(door->sector,sfx_doropn);
       }
       break;
 
@@ -204,7 +204,7 @@ void T_VerticalDoor(vldoor_t __far* door)
 
           case close30ThenOpen:  // close and close/open doors are done
           case dopen:
-            door->sector->ceilingdata = NULL; //jff 2/22/98
+            door->sector->ceilingdata = Z_Ref(0); //jff 2/22/98
             P_RemoveThinker (&door->thinker); // unlink and free
             break;
 
@@ -245,14 +245,14 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
   {
     sec = &_g_sectors[secnum];
     // if the ceiling already moving, don't start the door action
-    if (sec->ceilingdata != NULL)
+    if (sec->ceilingdata != 0)
         continue;
 
     // new door thinker
     rtn = true;
     door = Z_CallocLevSpec(sizeof(*door));
     P_AddThinker (&door->thinker);
-    sec->ceilingdata = door; //jff 2/22/98
+    sec->ceilingdata = Z_Ref(door); //jff 2/22/98
 
     door->thinker.function = T_VerticalDoor;
     door->sector = sec;
@@ -267,7 +267,7 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
       case close30ThenOpen:
         door->topheight = sec->ceilingheight;
         door->direction = -1;
-        S_StartSound2(&door->sector->soundorg,sfx_dorcls);
+        S_StartSound2(door->sector,sfx_dorcls);
         break;
 
       case normal:
@@ -276,7 +276,7 @@ boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
         door->topheight = P_FindLowestCeilingSurrounding(sec);
         door->topheight -= 4*FRACUNIT;
         if (door->topheight != sec->ceilingheight)
-          S_StartSound2(&door->sector->soundorg,sfx_doropn);
+          S_StartSound2(door->sector,sfx_doropn);
         break;
 
       default:

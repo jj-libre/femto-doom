@@ -67,13 +67,18 @@ const mapsector_t *_g_mapsectors;
 
 
 static int16_t      numsubsectors;
-subsector_t __far* _g_subsectors;
+const uint8_t __far* _g_subsecsector;
 const mapsubsector_t *_g_mapsubsectors;
 
 
 
 int16_t      _g_numlines;
 linedata_t   __far* _g_lines;
+const uint16_t __far* _g_seclinefirst;
+const int16_t  __far* _g_seclines;
+uint8_t      __far* _g_linebits;
+int16_t      _g_linebytes;
+uint16_t     _g_linedonetic;
 const line_t *_g_maplines;
 
 
@@ -156,7 +161,6 @@ static void P_LoadSubsectors (int16_t lump)
 {
   numsubsectors = W_MapLumpLength (lump) / sizeof(mapsubsector_t);
   _g_mapsubsectors = W_GetMapLumpByNum(lump);
-  _g_subsectors = Z_CallocLevel(numsubsectors * sizeof(subsector_t));
 }
 
 //
@@ -311,15 +315,12 @@ static void P_LoadLineDefs (int16_t lump)
 {
 	_g_numlines = W_MapLumpLength(lump) / sizeof(line_t);
 	_g_maplines = W_GetMapLumpByNum(lump);
-	_g_lines    = Z_MallocLevel(_g_numlines * sizeof(linedata_t), NULL);
+	_g_lines    = Z_CallocLevel(_g_numlines * sizeof(linedata_t));
 
-	for (int16_t i = 0; i < _g_numlines; i++)
-	{
-		_g_lines[i].validcount   = 0;
-		_g_lines[i].r_validcount = 0;
-		_g_lines[i].r_flags      = 0;
-		_g_lines[i].special      = W_FetchInt16(&_g_maplines[i].const_special);
-	}
+	_g_linebytes   = (_g_numlines + 7) / 8;
+	_g_linebits    = Z_CallocLevel(LB_PLANES * _g_linebytes);
+	_g_linedonetic = 0;
+	_fmemset(&_g_linebits[LB_DONE * _g_linebytes], 0xff, _g_linebytes);
 }
 
 
@@ -340,7 +341,6 @@ static void P_LoadSideDefs (int16_t lump)
         side_t __far* sd = _g_sides + i;
 
         sd->textureoffset = msd.textureoffset;
-        sd->sector        = &_g_sectors[msd.sector];
         sd->midtexture    = msd.midtexture;
         sd->toptexture    = msd.toptexture;
         sd->bottomtexture = msd.bottomtexture;
@@ -401,11 +401,6 @@ static void P_LoadReject(int16_t lump)
 // figgi 09/18/00 -- adapted for gl-nodes
 
 // cph - convenient sub-function
-static void P_AddLineToSector(const line_t __far* li, sector_t __far* sector)
-{
-  sector->lines[sector->linecount++] = li - _g_maplines;
-}
-
 static void M_ClearBox (fixed_t *box)
 {
     box[BOXTOP]    = box[BOXRIGHT] = INT32_MIN;
@@ -425,79 +420,48 @@ static void M_AddToBox(fixed_t* box,fixed_t x,fixed_t y)
         box[BOXTOP]    = y;
 }
 
-static void P_GroupLines (void)
+static void P_GroupLines (int16_t map)
 {
     const line_t __far* li;
     sector_t __far* sector;
     int16_t i, total = _g_numlines;
     int16_t j;
 
-    // figgi
-    for (i=0 ; i<numsubsectors ; i++)
+
+    // the lines of each sector, from the map WAD's E1MxGL
     {
-        mapsubsector_t mapsub;
-        W_Fetch(&_g_mapsubsectors[i], &mapsub, sizeof(mapsub));
+        char name[9];
+        sprintf(name, "E1M%dGL", map);
+        const byte __far* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
-        const seg_t __far* seg = &_g_segs[mapsub.firstseg];
-        _g_subsectors[i].sector = NULL;
-        for(j=0; j<mapsub.numsegs; j++)
-        {
-            const uint16_t sidenum = W_FetchUInt16(&seg->sidenum);
-            if(sidenum != NO_INDEX)
-            {
-                _g_subsectors[i].sector = _g_sides[sidenum].sector;
-                break;
-            }
-            seg++;
-        }
+        struct { uint16_t version, numsectors, numsubsectors, pad; uint32_t first, lines, subsecsector; } h;
+        W_Fetch(gl, &h, sizeof(h));
+        if (h.version != 2 || h.numsectors != _g_numsectors || h.numsubsectors != numsubsectors)
+            I_Error("P_GroupLines: %s does not fit the map", name);
+
+        _g_seclinefirst = (const uint16_t __far*)(gl + h.first);
+        _g_seclines     = (const int16_t __far*)(gl + h.lines);
+        _g_subsecsector = gl + h.subsecsector;
     }
+}
 
-    // count number of lines in each sector
-    for (i=0,li=_g_maplines; i<_g_numlines; i++, li++)
+
+// What P_GroupLines computed for every sector, now only for one making a sound.
+void P_SectorSoundOrg(const sector_t __far* sector, fixed_t* x, fixed_t* y)
+{
+    fixed_t bbox[4];
+    M_ClearBox(bbox);
+
+    for(int16_t l = 0; l < SEC_LINECOUNT(sector); l++)
     {
-        LN_FRONTSECTOR(li)->linecount++;
-        if (LN_BACKSECTOR(li) && LN_BACKSECTOR(li) != LN_FRONTSECTOR(li))
-        {
-            LN_BACKSECTOR(li)->linecount++;
-            total++;
-        }
+        vertex16_t v[2];
+        W_Fetch(SEC_LINE(sector, l), v, sizeof(v));
+        M_AddToBox (bbox, (fixed_t)v[0].x<<FRACBITS, (fixed_t)v[0].y<<FRACBITS);
+        M_AddToBox (bbox, (fixed_t)v[1].x<<FRACBITS, (fixed_t)v[1].y<<FRACBITS);
     }
 
-    {  // allocate line tables for each sector
-        int16_t __far* linebuffer = Z_MallocLevel(total*sizeof(int16_t), NULL);
-
-        for (i=0, sector = _g_sectors; i<_g_numsectors; i++, sector++)
-        {
-            sector->lines = linebuffer;
-            linebuffer += sector->linecount;
-            sector->linecount = 0;
-        }
-    }
-
-    // Enter those lines
-    for (i=0,li=_g_maplines; i<_g_numlines; i++, li++)
-    {
-        P_AddLineToSector(li, LN_FRONTSECTOR(li));
-        if (LN_BACKSECTOR(li) && LN_BACKSECTOR(li) != LN_FRONTSECTOR(li))
-            P_AddLineToSector(li, LN_BACKSECTOR(li));
-    }
-
-    for (i=0, sector = _g_sectors; i<_g_numsectors; i++, sector++)
-    {
-        fixed_t bbox[4];
-        M_ClearBox(bbox);
-
-        for(int16_t l = 0; l < sector->linecount; l++)
-        {
-            vertex16_t v[2];
-            W_Fetch(SEC_LINE(sector, l), v, sizeof(v));
-            M_AddToBox (bbox, (fixed_t)v[0].x<<FRACBITS, (fixed_t)v[0].y<<FRACBITS);
-            M_AddToBox (bbox, (fixed_t)v[1].x<<FRACBITS, (fixed_t)v[1].y<<FRACBITS);
-        }
-
-        sector->soundorg.x = bbox[BOXRIGHT]/2+bbox[BOXLEFT]/2;
-        sector->soundorg.y = bbox[BOXTOP]/2+bbox[BOXBOTTOM]/2;
-    }
+    *x = bbox[BOXRIGHT]/2+bbox[BOXLEFT]/2;
+    *y = bbox[BOXTOP]/2+bbox[BOXBOTTOM]/2;
 }
 
 
@@ -558,7 +522,7 @@ void P_SetupLevel(int16_t map)
     P_LoadReject    (lumpnum + ML_REJECT);
     P_LoadSubsectors(lumpnum + ML_SSECTORS);
 
-    P_GroupLines();
+    P_GroupLines(map);
 
     // Note: you don't need to clear player queue slots
     // a much simpler fix is in g_game.c

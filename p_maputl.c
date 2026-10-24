@@ -256,7 +256,7 @@ static fixed_t PUREFUNC P_InterceptVector3(const divline_t *v2, const divline_t 
 sector_t __far* LN_BackSector(const line_t __far* l)
 {
     const uint16_t side = LN_SIDENUM(l, 1);
-    return side != NO_INDEX ? _g_sides[side].sector : NULL;
+    return side != NO_INDEX ? SIDE_SECTOR(side) : NULL;
 }
 
 void P_LineOpening(const line_t __far* linedef)
@@ -328,7 +328,7 @@ typedef struct
 {
   int16_t thing;
   int16_t state, tics;
-  zref_t subsector;
+  int16_t subsector;
   fixed_t z, floorz, ceilingz;
 } loadstatic_t;
 
@@ -467,7 +467,7 @@ boolean P_SpawnLoadStatic(fixed_t x, fixed_t y, mobjtype_t type)
 
   P_SetThingPosition(&mobj);
 
-  const sector_t __far* sector = P_Subsector(mobj.subsector)->sector;
+  const sector_t __far* sector = P_SubsectorSector(mobj.subsector);
   loadstatic_t __far* s = &loadstatics[P_LoadSlot(loadingthing)];
   s->thing     = loadingthing;
   s->state     = mobj.state;
@@ -726,8 +726,8 @@ void P_UnsetThingPosition(mobj_t __far* thing)
 
 void P_SetThingPosition(mobj_t __far* thing)
 {                                                      // link into subsector
-  subsector_t __far* ss = R_PointInSubsector(thing->x, thing->y);
-  thing->subsector = Z_Ref(ss);
+  int16_t ss = R_PointInSubsector(thing->x, thing->y);
+  thing->subsector = ss;
   if (loadingthings)
     {
       P_PlaceLoadThing(thing);
@@ -740,7 +740,7 @@ void P_SetThingPosition(mobj_t __far* thing)
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
 
-      zref_t __far* link = &ss->sector->thinglist;
+      zref_t __far* link = &P_SubsectorSector(ss)->thinglist;
       zref_t snext = *link;
       if ((thing->snext = snext))
         P_Mobj(snext)->sprev = Z_Ref(&thing->snext);

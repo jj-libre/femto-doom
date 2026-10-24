@@ -145,12 +145,17 @@ extern sector_t __far* _g_sectors;
 extern const mapsector_t *_g_mapsectors;
 
 
-extern subsector_t __far* _g_subsectors;
+extern const uint8_t __far* _g_subsecsector;
 extern const mapsubsector_t *_g_mapsubsectors;
 
 
 extern int16_t      _g_numlines;
 extern linedata_t   __far* _g_lines;
+extern const uint16_t __far* _g_seclinefirst;
+extern const int16_t  __far* _g_seclines;
+extern uint8_t      __far* _g_linebits;
+extern int16_t      _g_linebytes;
+extern uint16_t     _g_linedonetic;
 extern const line_t *_g_maplines;
 
 

@@ -486,7 +486,6 @@ static byte solidcol[VIEWWINDOWWIDTH];
 
 static const seg_t     __far* curline;
 static seg_t curseg;
-static linedata_t    __far* linedef;
 static uint8_t maplineflags;
 static sector_t  __far* frontsector;
 static sector_t  __far* backsector;
@@ -789,11 +788,11 @@ static PUREFUNC int16_t R_PointOnSide(fixed_t x, fixed_t y, const mapnode_t __fa
 // R_PointInSubsector
 //
 
-subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y)
+int16_t R_PointInSubsector(fixed_t x, fixed_t y)
 {
 	static fixed_t prevx;
 	static fixed_t prevy;
-	static subsector_t __far* prevr;
+	static int16_t prevr;
 
 	if (prevx == x && prevy == y)
 		return prevr;
@@ -806,7 +805,7 @@ subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y)
 	// special case for trivial maps (single subsector, no nodes)
 	if (numnodes == 0)
 	{
-		prevr = _g_subsectors;
+		prevr = 0;
 		return prevr;
 	}
 
@@ -817,7 +816,7 @@ subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y)
 		nodenum = node.children[R_PointOnSide(x, y, &node)];
 	}
 
-	prevr = &_g_subsectors[(int16_t)(nodenum & ~NF_SUBSECTOR)];
+	prevr = (int16_t)(nodenum & ~NF_SUBSECTOR);
 	return prevr;
 }
 
@@ -1519,7 +1518,7 @@ static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
 static void R_DrawPlayerSprites(void)
 {
 
-  int16_t i, lightlevel = P_Subsector(_g_player.mo->subsector)->sector->lightlevel;
+  int16_t i, lightlevel = P_SubsectorSector(_g_player.mo->subsector)->lightlevel;
   pspdef_t *psp;
 
   // clip to screen bounds
@@ -1807,9 +1806,9 @@ static boolean R_ProjectLoadThing(mobj_t __far* thing)
   return true;
 }
 
-static void R_AddSprites(subsector_t __far* subsec, int16_t lightlevel)
+static void R_AddSprites(int16_t subsec, int16_t lightlevel)
 {
-  sector_t __far* sec=subsec->sector;
+  sector_t __far* sec=P_SubsectorSector(subsec);
   mobj_t __far* thing;
 
   // BSP is traversed by subsector.
@@ -2107,10 +2106,8 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     side_t    __far* sidedef = &_g_sides[curseg.sidenum];
     const uint8_t rowoffset = W_FetchUInt8(&_g_mapsides[curseg.sidenum].rowoffset);
-    linedef = &_g_lines[curseg.linenum];
-
     // mark the segment as visible for auto map
-    linedef->r_flags |= ML_MAPPED;
+    LN_SETBIT(LB_MAPPED, curseg.linenum);
 
     // calculate rw_distance for scale calculation
     rw_normalangle = curseg.angle;
@@ -2190,7 +2187,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
         ds_p->silhouette = SIL_NONE;
 
-        if(linedef->r_flags & RF_CLOSED)
+        if(LN_BIT(LB_CLOSED, curseg.linenum))
         { /* cph - closed 2S line e.g. door */
             // cph - killough's (outdated) comment follows - this deals with both
             // "automap fixes", his and mine
@@ -2416,11 +2413,13 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 // cph - converted to R_RecalcLineFlags. This recalculates all the flags for
 // a line, including closure and texture tiling.
 
-static void R_RecalcLineFlags(void)
+static void R_RecalcLineFlags(int16_t n)
 {
     const side_t __far* side = &_g_sides[curseg.sidenum];
 
-    linedef->r_validcount = _g_gametic;
+    LN_SETBIT(LB_DONE, n);
+    LN_CLRBIT(LB_CLOSED, n);
+    LN_CLRBIT(LB_IGNORE, n);
 
     /* First decide if the line is closed, normal, or invisible */
     if (!(maplineflags & ML_TWOSIDED)
@@ -2442,7 +2441,7 @@ static void R_RecalcLineFlags(void)
                     frontsector->ceilingpic!= skyflatnum)
                 )
             )
-        linedef->r_flags = (RF_CLOSED | (linedef->r_flags & ML_MAPPED));
+        LN_SETBIT(LB_CLOSED, n);
     else
     {
         // Reject empty lines used for triggers
@@ -2458,9 +2457,8 @@ static void R_RecalcLineFlags(void)
                 || backsector->floorpic != frontsector->floorpic
                 || backsector->lightlevel != frontsector->lightlevel)
         {
-            linedef->r_flags = (linedef->r_flags & ML_MAPPED);
         } else
-            linedef->r_flags = (RF_IGNORE | (linedef->r_flags & ML_MAPPED));
+            LN_SETBIT(LB_IGNORE, n);
     }
 }
 
@@ -2570,15 +2568,20 @@ static void R_AddLine(const seg_t __far* line)
     backsector = curseg.backsectornum != NO_INDEX8 ? &_g_sectors[curseg.backsectornum] : NULL;
 
     /* cph - roll up linedef properties in flags */
-    linedef = &_g_lines[curseg.linenum];
     maplineflags = W_FetchUInt8(&_g_maplines[curseg.linenum].flags);
 
-    if (linedef->r_validcount != (uint16_t)_g_gametic)
-        R_RecalcLineFlags();
-
-    if (!(linedef->r_flags & RF_IGNORE))
+    if (_g_linedonetic != (uint16_t)_g_gametic)
     {
-        R_ClipWallSegment (x1, x2, linedef->r_flags & RF_CLOSED);
+        _fmemset(&_g_linebits[LB_DONE * _g_linebytes], 0, _g_linebytes);
+        _g_linedonetic = _g_gametic;
+    }
+
+    if (!LN_BIT(LB_DONE, curseg.linenum))
+        R_RecalcLineFlags(curseg.linenum);
+
+    if (!LN_BIT(LB_IGNORE, curseg.linenum))
+    {
+        R_ClipWallSegment (x1, x2, LN_BIT(LB_CLOSED, curseg.linenum) != 0);
     }
 }
 
@@ -2593,13 +2596,10 @@ static void R_Subsector(int16_t num)
 {
     int16_t         count;
     const seg_t       __far* line;
-    subsector_t __far* sub;
-
     mapsubsector_t mapsub;
     W_Fetch(&_g_mapsubsectors[num], &mapsub, sizeof(mapsub));
 
-    sub = &_g_subsectors[num];
-    frontsector = sub->sector;
+    frontsector = P_SubsectorSector(num);
     count = mapsub.numsegs;
     line = &_g_segs[mapsub.firstseg];
 
@@ -2645,7 +2645,7 @@ static void R_Subsector(int16_t num)
     }
 #endif
 
-    R_AddSprites(sub, frontsector->lightlevel);
+    R_AddSprites(num, frontsector->lightlevel);
     while (count--)
     {
         R_AddLine (line);

@@ -77,7 +77,7 @@ extern const int16_t   __far* textureheight; //needed for texture pegging (and T
 
 angle_t R_PointToAngle3(fixed_t x, fixed_t y);
 #define R_PointToAngle2(x1,y1,x2,y2) R_PointToAngle3((x2)-(x1),(y2)-(y1))
-subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y);
+int16_t R_PointInSubsector(fixed_t x, fixed_t y);
 
 void R_InitColormaps(void);
 const uint8_t* R_LoadColorMap(int16_t lightlevel);

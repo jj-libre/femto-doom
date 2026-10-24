@@ -55,7 +55,7 @@ static mobj_t __far* P_TeleportDestination(const line_t __far* line)
       if (th->function == P_MobjThinker) {
         mobj_t __far* m = P_MobjOfThinker(th);
         if (m->type == MT_TELEPORTMAN  &&
-            P_Subsector(m->subsector)->sector-_g_sectors == i)
+            P_SubsectorSector(m->subsector)-_g_sectors == i)
             return m;
       }
   }

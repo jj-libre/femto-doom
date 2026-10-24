@@ -295,8 +295,8 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   prevlat1 = linearAddress(t1);
   prevlat2 = linearAddress(t2);
 
-  const sector_t __far* s1 = P_Subsector(t1->subsector)->sector;
-  const sector_t __far* s2 = P_Subsector(t2->subsector)->sector;
+  const sector_t __far* s1 = P_SubsectorSector(t1->subsector);
+  const sector_t __far* s2 = P_SubsectorSector(t2->subsector);
   int16_t pnum = (s1-_g_sectors)*_g_numsectors + (s2-_g_sectors);
 
   // First check for trivial rejection.

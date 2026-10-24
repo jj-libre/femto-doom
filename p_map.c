@@ -167,7 +167,7 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
   int16_t     bx;
   int16_t     by;
 
-  subsector_t __far*  newsubsec;
+  int16_t  newsubsec;
 
   /* killough 8/9/98: make telefragging more consistent, preserve compatibility */
   telefrag = P_MobjIsPlayer(thing) || boss;
@@ -192,8 +192,8 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
   // Any contacted lines the step closer together
   // will adjust them.
 
-  _g_tmfloorz = _g_tmdropoffz = newsubsec->sector->floorheight;
-  _g_tmceilingz = newsubsec->sector->ceilingheight;
+  _g_tmfloorz = _g_tmdropoffz = P_SubsectorSector(newsubsec)->floorheight;
+  _g_tmceilingz = P_SubsectorSector(newsubsec)->ceilingheight;
 
   validcount++;
   _g_numspechit = 0;
@@ -446,7 +446,7 @@ boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y)
   int16_t     yh;
   int16_t     bx;
   int16_t     by;
-  subsector_t __far*  newsubsec;
+  int16_t  newsubsec;
 
   tmthing = thing;
 
@@ -467,8 +467,8 @@ boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y)
   // Any contacted lines the step closer together
   // will adjust them.
 
-  _g_tmfloorz = _g_tmdropoffz = newsubsec->sector->floorheight;
-  _g_tmceilingz = newsubsec->sector->ceilingheight;
+  _g_tmfloorz = _g_tmdropoffz = P_SubsectorSector(newsubsec)->floorheight;
+  _g_tmceilingz = P_SubsectorSector(newsubsec)->ceilingheight;
   validcount++;
   _g_numspechit = 0;
 
@@ -567,43 +567,43 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
     case 2:
       // Open Door
       if (EV_DoDoor(line,dopen))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
     case 5:
       // Raise Floor
       if (EV_DoFloor(LN_TAG(line),raiseFloor))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
     case 8:
       // Build Stairs
       if (EV_BuildStairs(line))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
     case 16:
       // Close Door 30
       if (EV_DoDoor(line,close30ThenOpen))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
     case 22:
       // Raise floor to nearest height and change texture
       if (EV_DoPlat(line,raiseToNearestAndChange))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
     case 35:
       // Lights Very Dark
       EV_LightTurnOn(line,35);
-      LN_SPECIAL(line) = 0;
+      LN_CLEARSPECIAL(line);
       break;
 
     case 36:
       // Lower Floor (TURBO)
       if (EV_DoFloor(LN_TAG(line),turboLower))
-        LN_SPECIAL(line) = 0;
+        LN_CLEARSPECIAL(line);
       break;
 
       // Regular walk many retriggerable
@@ -1439,7 +1439,7 @@ void P_CreateSecNodeList(mobj_t __far* thing)
   // Add the sector of the (x,y) point to sector_list.
 
   if (!marklinesonly)
-    P_AddSecnode(P_Subsector(thing->subsector)->sector,thing);
+    P_AddSecnode(P_SubsectorSector(thing->subsector),thing);
 
   // Now delete any nodes that won't be used. These are the ones where
   // m_thing is still NULL.
