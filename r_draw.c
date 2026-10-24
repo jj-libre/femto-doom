@@ -75,19 +75,30 @@ typedef int16_t height_t;
 
 typedef struct drawseg_s
 {
-  const seg_t __far* curline;
-  int16_t x1, x2;
   fixed_t scale1, scale2, scalestep;
-  int16_t silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
-  fixed_t bsilheight;                   // do not clip sprites above this
-  fixed_t tsilheight;                   // do not clip sprites below this
+  uint16_t curline;                     // index in _g_segs
+  int16_t bsilheight;                   // do not clip sprites above this, R_SilHeight
+  int16_t tsilheight;                   // do not clip sprites below this
 
-  // Pointers to lists for sprite clipping,
+  // Lists for sprite clipping, R_Clip,
   // all three adjusted so [x1] is first value.
 
-  height_t *sprtopclip, *sprbottomclip;
-  height_t *maskedtexturecol; // dropoff overflow
+  int16_t sprtopclip, sprbottomclip;
+  int16_t maskedtexturecol; // dropoff overflow
+  uint8_t x1, x2;
+  uint8_t silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
 } drawseg_t;
+
+typedef char assertViewWidth[VIEWWINDOWWIDTH <= 256 ? 1 : -1];
+
+// Silhouette heights are plane heights in quarter units, which stay within 8191 units.
+#define SIL_ALWAYS INT16_MAX   // bsilheight that clips sprites at any height
+#define SIL_NEVER  INT16_MIN   // tsilheight that clips sprites at any height
+
+static fixed_t R_SilHeight(int16_t h)
+{
+  return h == SIL_ALWAYS ? INT32_MAX : h == SIL_NEVER ? INT32_MIN : (fixed_t)h << (FRACBITS - 2);
+}
 
 
 #if defined MAXDRAWSEGS
@@ -100,7 +111,9 @@ typedef struct drawseg_s
 static drawseg_t _s_drawsegs[MAXDRAWSEGS];
 
 
+#if !defined MAXOPENINGS
 #define MAXOPENINGS (VIEWWINDOWWIDTH*16)
+#endif
 
 static height_t openings[MAXOPENINGS];
 static height_t* lastopening;
@@ -462,6 +475,16 @@ static height_t negonearray[VIEWWINDOWWIDTH] =
 #error unsupported VIEWWINDOWWIDTH value
 #endif
 };
+
+// A drawseg's clip list: an offset into openings, or one of these.
+#define CLIP_NONE   INT16_MIN
+#define CLIP_SCREEN (INT16_MIN + 1)
+#define CLIP_NEGONE (INT16_MIN + 2)
+
+static height_t* R_Clip(int16_t c)
+{
+  return c == CLIP_NONE ? NULL : c == CLIP_SCREEN ? screenheightarray : c == CLIP_NEGONE ? negonearray : openings + c;
+}
 
 
 //*****************************************
@@ -1243,7 +1266,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	// Use different light tables
 	//   for horizontal / vertical / diagonal. Diagonal?
 
-	curline = ds->curline;  // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
+	curline = _g_segs + ds->curline;  // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
 	W_Fetch(curline, &curseg, sizeof(curseg));
 
 	frontsector = &_g_sectors[curseg.frontsectornum];
@@ -1256,11 +1279,11 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	// killough 4/13/98: get correct lightlevel for 2s normal textures
 	rw_lightlevel = frontsector->lightlevel;
 
-	maskedtexturecol = ds->maskedtexturecol;
+	maskedtexturecol = R_Clip(ds->maskedtexturecol);
 	rw_scalestep     = ds->scalestep;
 	spryscale        = ds->scale1 + (x1 - ds->x1) * rw_scalestep;
-	mfloorclip       = ds->sprbottomclip;
-	mceilingclip     = ds->sprtopclip;
+	mfloorclip       = R_Clip(ds->sprbottomclip);
+	mceilingclip     = R_Clip(ds->sprtopclip);
 
 	// find positioning
 	if (W_FetchUInt8(&_g_maplines[curseg.linenum].flags) & ML_DONTPEGBOTTOM)
@@ -1369,7 +1392,7 @@ static void R_DrawSprite (const vissprite_t* spr)
     for (const drawseg_t* ds = ds_p; ds-- > drawsegs; )  // new -- killough
     {
         // determine if the drawseg obscures the sprite
-        if (ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && !ds->maskedtexturecol))
+        if (ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && ds->maskedtexturecol == CLIP_NONE))
             continue;      // does not cover sprite
 
         const int16_t r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
@@ -1386,9 +1409,9 @@ static void R_DrawSprite (const vissprite_t* spr)
             scale    = ds->scale2;
         }
 
-        if (scale < spr->scale || (lowscale < spr->scale && !R_PointOnSegSide (spr->gx, spr->gy, ds->curline)))
+        if (scale < spr->scale || (lowscale < spr->scale && !R_PointOnSegSide (spr->gx, spr->gy, _g_segs + ds->curline)))
         {
-            if (ds->maskedtexturecol)       // masked mid texture?
+            if (ds->maskedtexturecol != CLIP_NONE)       // masked mid texture?
                 R_RenderMaskedSegRange(ds, r1, r2);
 
             continue;               // seg is behind sprite
@@ -1398,33 +1421,35 @@ static void R_DrawSprite (const vissprite_t* spr)
         // killough 3/27/98: optimized and made much shorter
 
         fixed_t gzt = spr->gz + (((int32_t)spr->patch_topoffset) << FRACBITS);
+        const height_t* sprbottomclip = R_Clip(ds->sprbottomclip);
+        const height_t* sprtopclip    = R_Clip(ds->sprtopclip);
 
-        if ((ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)  // bottom sil
-         && (ds->silhouette & SIL_TOP    && gzt     > ds->tsilheight)) // top sil
+        if ((ds->silhouette & SIL_BOTTOM && spr->gz < R_SilHeight(ds->bsilheight))  // bottom sil
+         && (ds->silhouette & SIL_TOP    && gzt     > R_SilHeight(ds->tsilheight))) // top sil
         {
             for (int16_t x = r1; x <= r2; x++)
             {
                 if (clipbot[x] == VIEWWINDOWHEIGHT)
-                    clipbot[x] = ds->sprbottomclip[x];
+                    clipbot[x] = sprbottomclip[x];
 
                 if (cliptop[x] == -1)
-                    cliptop[x] = ds->sprtopclip[x];
+                    cliptop[x] = sprtopclip[x];
             }
         }
-        else if (ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight) // bottom sil
+        else if (ds->silhouette & SIL_BOTTOM && spr->gz < R_SilHeight(ds->bsilheight)) // bottom sil
         {
             for (int16_t x = r1; x <= r2; x++)
             {
                 if (clipbot[x] == VIEWWINDOWHEIGHT)
-                    clipbot[x] = ds->sprbottomclip[x];
+                    clipbot[x] = sprbottomclip[x];
             }
         }
-        else if (ds->silhouette & SIL_TOP && gzt > ds->tsilheight) // top sil
+        else if (ds->silhouette & SIL_TOP && gzt > R_SilHeight(ds->tsilheight)) // top sil
         {
             for (int16_t x = r1; x <= r2; x++)
             {
                 if (cliptop[x] == -1)
-                    cliptop[x] = ds->sprtopclip[x];
+                    cliptop[x] = sprtopclip[x];
             }
         }
     }
@@ -1596,7 +1621,7 @@ static void R_DrawMasked(void)
     // render any remaining masked mid textures
 
     for (ds=ds_p ; ds-- > drawsegs ; )
-        if (ds->maskedtexturecol)
+        if (ds->maskedtexturecol != CLIP_NONE)
             R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
 
     R_DrawPlayerSprites ();
@@ -2136,7 +2161,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     int16_t rw_x = ds_p->x1 = start;
     ds_p->x2 = stop;
-    ds_p->curline = curline;
+    ds_p->curline = curline - _g_segs;
     rw_stopx = stop+1;
 
     //Openings overflow. Nevermind.
@@ -2161,7 +2186,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     worldbottom = SEC_FLOORHEIGHT(frontsector) - viewz;
 
     midtexture = toptexture = bottomtexture = maskedtexture = 0;
-    ds_p->maskedtexturecol = NULL;
+    ds_p->maskedtexturecol = CLIP_NONE;
 
     boolean markfloor, markceiling;
 
@@ -2185,14 +2210,14 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         rw_midtexturemid += ((int32_t)Mod(rowoffset, (W_FetchInt16(&textureheight[midtexture]) << TEXSHIFT))) << FRACBITS;
 
         ds_p->silhouette = SIL_BOTH;
-        ds_p->sprtopclip = screenheightarray;
-        ds_p->sprbottomclip = negonearray;
-        ds_p->bsilheight = INT32_MAX;
-        ds_p->tsilheight = INT32_MIN;
+        ds_p->sprtopclip = CLIP_SCREEN;
+        ds_p->sprbottomclip = CLIP_NEGONE;
+        ds_p->bsilheight = SIL_ALWAYS;
+        ds_p->tsilheight = SIL_NEVER;
     }
     else      // two sided line
     {
-        ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
+        ds_p->sprtopclip = ds_p->sprbottomclip = CLIP_NONE;
         ds_p->silhouette = SIL_NONE;
 
         if(LN_BIT(LB_CLOSED, curseg.linenum))
@@ -2206,10 +2231,10 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
             // from being displayed on the automap.
 
             ds_p->silhouette = SIL_BOTH;
-            ds_p->sprtopclip = screenheightarray;
-            ds_p->sprbottomclip = negonearray;
-            ds_p->bsilheight = INT32_MAX;
-            ds_p->tsilheight = INT32_MIN;
+            ds_p->sprtopclip = CLIP_SCREEN;
+            ds_p->sprbottomclip = CLIP_NEGONE;
+            ds_p->bsilheight = SIL_ALWAYS;
+            ds_p->tsilheight = SIL_NEVER;
 
         }
         else
@@ -2218,25 +2243,25 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
             if (SEC_FLOORHEIGHT(frontsector) > SEC_FLOORHEIGHT(backsector))
             {
                 ds_p->silhouette = SIL_BOTTOM;
-                ds_p->bsilheight = SEC_FLOORHEIGHT(frontsector);
+                ds_p->bsilheight = frontsector->floorheight;
             }
             else
                 if (SEC_FLOORHEIGHT(backsector) > viewz)
                 {
                     ds_p->silhouette = SIL_BOTTOM;
-                    ds_p->bsilheight = INT32_MAX;
+                    ds_p->bsilheight = SIL_ALWAYS;
                 }
 
             if (SEC_CEILINGHEIGHT(frontsector) < SEC_CEILINGHEIGHT(backsector))
             {
                 ds_p->silhouette |= SIL_TOP;
-                ds_p->tsilheight = SEC_CEILINGHEIGHT(frontsector);
+                ds_p->tsilheight = frontsector->ceilingheight;
             }
             else
                 if (SEC_CEILINGHEIGHT(backsector) < viewz)
                 {
                     ds_p->silhouette |= SIL_TOP;
-                    ds_p->tsilheight = INT32_MIN;
+                    ds_p->tsilheight = SIL_NEVER;
                 }
         }
 
@@ -2282,7 +2307,8 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         if (sidedef->midtexture)    // masked midtexture
         {
             maskedtexture = true;
-            ds_p->maskedtexturecol = maskedtexturecol = lastopening - rw_x;
+            maskedtexturecol = lastopening - rw_x;
+            ds_p->maskedtexturecol = maskedtexturecol - openings;
             lastopening += rw_stopx - rw_x;
         }
     }
@@ -2375,40 +2401,40 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         if (!(ds_p->silhouette & SIL_BOTTOM))
         {
             ds_p->silhouette |= SIL_BOTTOM;
-            ds_p->bsilheight = SEC_FLOORHEIGHT(backsector);
+            ds_p->bsilheight = backsector->floorheight;
         }
         if (!(ds_p->silhouette & SIL_TOP))
         {
             ds_p->silhouette |= SIL_TOP;
-            ds_p->tsilheight = SEC_CEILINGHEIGHT(backsector);
+            ds_p->tsilheight = backsector->ceilingheight;
         }
     }
 
     // save sprite clipping info
-    if ((ds_p->silhouette & SIL_TOP || maskedtexture) && !ds_p->sprtopclip)
+    if ((ds_p->silhouette & SIL_TOP || maskedtexture) && ds_p->sprtopclip == CLIP_NONE)
     {
         memcpy((byte*)lastopening, (const byte*)(ceilingclip+start), sizeof(height_t)*(rw_stopx-start));
-        ds_p->sprtopclip = lastopening - start;
+        ds_p->sprtopclip = (lastopening - openings) - start;
         lastopening += rw_stopx - start;
     }
 
-    if ((ds_p->silhouette & SIL_BOTTOM || maskedtexture) && !ds_p->sprbottomclip)
+    if ((ds_p->silhouette & SIL_BOTTOM || maskedtexture) && ds_p->sprbottomclip == CLIP_NONE)
     {
         memcpy((byte*)lastopening, (const byte*)(floorclip+start), sizeof(height_t)*(rw_stopx-start));
-        ds_p->sprbottomclip = lastopening - start;
+        ds_p->sprbottomclip = (lastopening - openings) - start;
         lastopening += rw_stopx - start;
     }
 
     if (maskedtexture && !(ds_p->silhouette & SIL_TOP))
     {
         ds_p->silhouette |= SIL_TOP;
-        ds_p->tsilheight = INT32_MIN;
+        ds_p->tsilheight = SIL_NEVER;
     }
 
     if (maskedtexture && !(ds_p->silhouette & SIL_BOTTOM))
     {
         ds_p->silhouette |= SIL_BOTTOM;
-        ds_p->bsilheight = INT32_MAX;
+        ds_p->bsilheight = SIL_ALWAYS;
     }
 
     ds_p++;

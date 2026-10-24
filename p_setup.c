@@ -418,7 +418,7 @@ zref_t SEC_CEILINGDATA(const sector_t __far* s)
 
 int16_t P_PlaneHeight(fixed_t height)
 {
-  if ((height & ((FRACUNIT >> 2) - 1)) || height < -(8192 << FRACBITS) || height >= (8192 << FRACBITS))
+  if ((height & ((FRACUNIT >> 2) - 1)) || height <= -(8191 << FRACBITS) || height >= (8191 << FRACBITS))
     I_Error("P_PlaneHeight: %li", (long)height);
   return height >> (FRACBITS - 2);
 }

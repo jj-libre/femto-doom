@@ -109,7 +109,7 @@ typedef struct
 } sector_t;
 
 // Planes move by quarter units between heights that are whole or quarter units, so a
-// quarter unit is exact. P_PlaneHeight refuses any other height.
+// quarter unit is exact. P_PlaneHeight refuses any other height and any beyond 8191 units.
 #define SEC_FLOORHEIGHT(s)   ((fixed_t)(s)->floorheight << (FRACBITS - 2))
 #define SEC_CEILINGHEIGHT(s) ((fixed_t)(s)->ceilingheight << (FRACBITS - 2))
 int16_t P_PlaneHeight(fixed_t height);
