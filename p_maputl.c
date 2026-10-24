@@ -905,7 +905,7 @@ void P_SetThingPosition(mobj_t __far* thing)
         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
         // pointers, allows head nodes to be treated like everything else
 
-        zref_t __far* link = &_g_blocklinks[blocky*_g_bmapwidth+blockx];
+        zref_t __far* link = &_g_blocklinks[(blocky*_g_bmapwidth+blockx) & (BLOCKBUCKETS - 1)];
         zref_t bnext = *link;
         if ((thing->bnext = bnext))
           P_Mobj(bnext)->bprev = Z_Ref(&thing->bnext);
@@ -974,7 +974,16 @@ boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __f
 
 //
 // P_BlockThingsIterator
+// Blocks share chains, each still in the order of its block's links. A linked thing only
+// moves between unlinking and linking again, so its position tells its block.
 //
+
+static int16_t P_ThingBlock(const mobj_t __far* thing)
+{
+  int16_t blockx = (thing->x - _g_bmaporgx)>>MAPBLOCKSHIFT;
+  int16_t blocky = (thing->y - _g_bmaporgy)>>MAPBLOCKSHIFT;
+  return blocky*_g_bmapwidth+blockx;
+}
 
 boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*))
 {
@@ -982,8 +991,8 @@ boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*))
   if (0 <= x && x < _g_bmapwidth && 0 <= y && y < _g_bmapheight)
     {
     const int16_t b = y*_g_bmapwidth+x;
-    for (mobj = P_Mobj(_g_blocklinks[b]); mobj; mobj = P_Mobj(mobj->bnext))
-      if (!func(mobj))
+    for (mobj = P_Mobj(_g_blocklinks[b & (BLOCKBUCKETS - 1)]); mobj; mobj = P_Mobj(mobj->bnext))
+      if (P_ThingBlock(mobj) == b && !func(mobj))
         return false;
     return P_LoadListThings(&tlblockfirst[b], func);
     }

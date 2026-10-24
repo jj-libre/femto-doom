@@ -376,7 +376,7 @@ static void P_LoadBlockMap (int16_t lump)
 
 
     // clear out mobj chains - CPhipps - use calloc
-    _g_blocklinks = Z_CallocLevel(_g_bmapwidth * _g_bmapheight * sizeof(*_g_blocklinks));
+    _g_blocklinks = Z_CallocLevel(BLOCKBUCKETS * sizeof(*_g_blocklinks));
 
     _g_blockmap = _g_blockmaplump+4;
 }
