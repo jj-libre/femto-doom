@@ -280,6 +280,8 @@ static uint32_t P_SightKey(const mobj_t __far* t)
 {
   if (!(t->flags & MF_STATIC) && P_Ext(t)->loadthing)
     return 0xffff0000UL | (uint16_t)P_Ext(t)->loadthing;
+  if ((t->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE))
+    return 0xffff0000UL | (uint16_t)(t->sprev + 1);
   return linearAddress(t);
 }
 

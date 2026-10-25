@@ -702,7 +702,7 @@ void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* s
        * killough 9/9/98: cleaned up, made more consistent:
        */
 
-      if (!P_Ext(target)->lastenemy || P_Ext(P_Mobj(P_Ext(target)->lastenemy))->health <= 0 || P_Ext(target)->target != Z_Ref(source)) // remember last enemy - killough
+      if (!P_Ext(target)->lastenemy || P_Health(P_Mobj(P_Ext(target)->lastenemy)) <= 0 || P_Ext(target)->target != Z_Ref(source)) // remember last enemy - killough
        P_Ext(target)->lastenemy = P_Ext(target)->target;
 
       P_Ext(target)->target    = Z_Ref(source);

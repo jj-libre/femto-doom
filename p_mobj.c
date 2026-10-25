@@ -721,6 +721,55 @@ mobj_t __far* P_MobjOfThinker(thinker_t __far* th)
 }
 
 
+int16_t P_Health(mobj_t __far* mobj)
+{
+    return mobj->flags & MF_STATIC ? 0 : P_Ext(mobj)->health;
+}
+
+// A corpse at rest only ever changes again through its sector, so it goes on as a static:
+// the same mobj_t in a static slot, and everything that referred to it refers to that.
+static void P_SettleCorpse(mobjext_t __far* ext)
+{
+    mobj_t __far* old = &ext->mo;
+    mobj_t __far* mobj = P_NewMobj(MT_MISC0);
+    *mobj = *old;
+    mobj->flags = (old->flags & ~MF_POOLED) | MF_STATIC;
+    const zref_t from = Z_Ref(old), to = Z_Ref(mobj);
+
+    if (!(mobj->flags & MF_INPLACE))
+    {
+        if (!(mobj->flags & MF_NOSECTOR))
+        {
+            *(zref_t __far*)Z_Ptr(mobj->sprev) = to;
+            if (mobj->snext)
+                P_Mobj(mobj->snext)->sprev = Z_Ref(&mobj->snext);
+        }
+        if (!(mobj->flags & MF_NOBLOCKMAP) && mobj->bprev)
+        {
+            *(zref_t __far*)Z_Ptr(mobj->bprev) = to;
+            if (mobj->bnext)
+                P_Mobj(mobj->bnext)->bprev = Z_Ref(&mobj->bnext);
+        }
+    }
+    for (msecnode_t __far* n = P_Node(mobj->touching_sectorlist); n; n = P_Node(n->m_tnext))
+        n->m_thing = to;
+    P_MoveLoadRef(ext->loadthing, mobj);
+
+    for (thinker_t __far* th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
+        if (th->function == P_MobjThinker)
+        {
+            mobjext_t __far* e = (mobjext_t __far*)th;
+            if (e->target == from)
+                e->target = to;
+            if (e->lastenemy == from)
+                e->lastenemy = to;
+        }
+    if (_g_player.attacker == old)
+        _g_player.attacker = mobj;
+
+    P_RemoveThing(old);
+}
+
 void P_MobjThinker (thinker_t __far* th)
 {
     mobjext_t __far* ext = (mobjext_t __far*)th;
@@ -763,7 +812,11 @@ void P_MobjThinker (thinker_t __far* th)
             return;
 
         if (!_g_respawnmonsters)
+        {
+            if ((mobj->flags & MF_CORPSE) && !ext->momz && mobj->z == mobj->floorz && !(ext->momx | ext->momy))
+                P_SettleCorpse(ext);
             return;
+        }
 
         ext->movecount++;
 

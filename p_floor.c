@@ -125,7 +125,7 @@ static void PIT_ChangeSector(mobj_t __far* thing)
 
   // crunch bodies to giblets
 
-  if (!(thing->flags & MF_STATIC) && P_Ext(thing)->health <= 0)
+  if (thing->flags & MF_STATIC ? (thing->flags & MF_CORPSE) : P_Ext(thing)->health <= 0)
     {
     P_SetMobjState (thing, S_GIBS);
 

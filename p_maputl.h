@@ -99,6 +99,7 @@ int16_t P_RunSleepers(int16_t slot, int16_t t);
 void    P_SleepIfUnchanged(mobjext_t __far* ext);
 void    P_SleepAtLoad(mobj_t __far* mobj);
 boolean P_SleeperOfType(mobjtype_t type);
+void    P_MoveLoadRef(int16_t loadthing, mobj_t __far* mobj);
 boolean P_BlockLinesIterator (int16_t x, int16_t y, boolean func(const line_t __far*));
 boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*));
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,

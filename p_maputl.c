@@ -806,6 +806,13 @@ void P_SleepAtLoad(mobj_t __far* mobj)
   }
 }
 
+// A map thing's mobj now lives at mobj.
+void P_MoveLoadRef(int16_t loadthing, mobj_t __far* mobj)
+{
+  if (loadthing)
+    loadrefs[P_LoadSlot(loadthing - 1)] = Z_Ref(mobj);
+}
+
 boolean P_SleeperOfType(mobjtype_t type)
 {
   for (int16_t slot = 0; slot < numthinking; slot++)

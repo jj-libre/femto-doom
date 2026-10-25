@@ -260,7 +260,7 @@ void A_Chase(mobj_t __far* actor)
 
     if (P_Ext(actor)->threshold)
     { /* modify target threshold */
-        if (!P_Ext(actor)->target || P_Ext(P_Mobj(P_Ext(actor)->target))->health <= 0)
+        if (!P_Ext(actor)->target || P_Health(P_Mobj(P_Ext(actor)->target)) <= 0)
             P_Ext(actor)->threshold = 0;
         else
             P_Ext(actor)->threshold--;
@@ -338,7 +338,7 @@ void A_Chase(mobj_t __far* actor)
            *         and we can see it)
            *  try to find a new one; return if sucessful */
 
-            if (!(P_Ext(actor)->target && P_Ext(P_Mobj(P_Ext(actor)->target))->health > 0 && P_CheckSight(actor, P_Mobj(P_Ext(actor)->target))) && P_LookForTargets(actor, true))
+            if (!(P_Ext(actor)->target && P_Health(P_Mobj(P_Ext(actor)->target)) > 0 && P_CheckSight(actor, P_Mobj(P_Ext(actor)->target))) && P_LookForTargets(actor, true))
                 return;
         }
     }
