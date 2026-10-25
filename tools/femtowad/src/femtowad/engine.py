@@ -24,8 +24,6 @@ class Engine:
     sprites: tuple[str, ...]
     """info.c's sprnames, in the order SPRITES is indexed by."""
     sprite_frames: int
-    sounds: tuple[str, ...]
-    """The sound effects after sfx_None, in the order the engine numbers them."""
 
     @classmethod
     def read(cls, root: Path) -> Engine:
@@ -49,8 +47,7 @@ class Engine:
             )
         sprnames = re.search(r"sprnames\[NUMSPRITES\]\s*=\s*\{(.*?)\}", info, re.S)
         frames = re.search(r"#define\s+MAX_SPRITE_FRAMES\s+(\d+)", source("r_things.h"))
-        sfx = re.search(r"\bsfx_None,(.*?)\bNUMSFX", source("sounds.h"), re.S)
-        if sprnames is None or frames is None or sfx is None:
+        if sprnames is None or frames is None:
             raise ValueError(f"{root} does not look like a femto-doom checkout")
         return cls(
             mobjs,
@@ -58,7 +55,6 @@ class Engine:
             flags,
             tuple(re.findall(r'"(\w+)"', sprnames[1])),
             int(frames[1]),
-            tuple(name.upper() for name in re.findall(r"\bsfx_(\w+)", sfx[1])),
         )
 
     def mobj_by_doomednum(self) -> dict[int, int]:

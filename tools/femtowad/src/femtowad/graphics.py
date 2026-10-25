@@ -18,7 +18,7 @@ from .texcols import texture_columns
 from .wad import Lump, Wad, name8
 
 NAMED_LUMPS = (
-    "PLAYPAL", "COLORMAP", "ENDOOM", "DEMO3", "TEXTURE1", "TITLEPIC", "HELP2", "STBAR", "WIMAP0", "FLOOR4_8",
+    "PLAYPAL", "COLORMAP", "DEMO3", "TEXTURE1", "TITLEPIC", "HELP2", "STBAR", "WIMAP0", "FLOOR4_8",
     "STFGOD0", "STFDEAD0",
     "M_DOOM", "M_NGAME", "M_OPTION", "M_LOADG", "M_SAVEG", "M_QUITG", "M_NEWG", "M_SKILL", "M_JKILL", "M_ROUGH",
     "M_HURT", "M_ULTRA", "M_NMARE", "M_OPTTTL", "M_ENDGAM", "M_MESSG", "M_MSGON", "M_MSGOFF", "M_SVOL", "M_SFXVOL",
@@ -35,18 +35,6 @@ RAW_PICTURES = {"STBAR", "WIMAP0", "TITLEPIC", "HELP2"}
 PICTURE_PREFIXES = ("ST", "M_", "WI")
 PLAYER_SPRITES_KEPT = {"PLAYN0", "PLAYW0", "PLAYV0"}
 SPRITE_FRAME = struct.Struct("<8hBB")
-
-PC_SPEAKER_DIVISORS = (
-    0,
-    6818, 6628, 6449, 6279, 6087, 5906, 5736, 5575, 5423, 5279, 5120, 4971, 4830, 4697, 4554, 4435,
-    4307, 4186, 4058, 3950, 3836, 3728, 3615, 3519, 3418, 3323, 3224, 3131, 3043, 2960, 2875, 2794,
-    2711, 2633, 2560, 2485, 2415, 2348, 2281, 2213, 2153, 2089, 2032, 1975, 1918, 1864, 1810, 1757,
-    1709, 1659, 1612, 1565, 1521, 1478, 1435, 1395, 1355, 1316, 1280, 1242, 1207, 1173, 1140, 1107,
-    1075, 1045, 1015, 986, 959, 931, 905, 879, 854, 829, 806, 783, 760, 739, 718, 697,
-    677, 658, 640, 621, 604, 586, 570, 553, 538, 522, 507, 493, 479, 465, 452, 439,
-    427, 415, 403, 391, 380, 369, 359, 348, 339, 329, 319, 310, 302, 293, 285, 276,
-    269, 261, 253, 246, 239, 232, 226, 219, 213, 207, 201, 195, 190, 184, 179,
-)  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -89,7 +77,6 @@ def lumps_read_by_name(engine: Engine) -> set[str]:
     for pain in range(PAIN_FACES):
         names |= {f"STFST{pain}{straight}" for straight in range(STRAIGHT_FACES)}
         names |= {f"STFTR{pain}0", f"STFTL{pain}0", f"STFOUCH{pain}", f"STFEVL{pain}", f"STFKILL{pain}"}
-    names |= {"DP" + sound for sound in engine.sounds}
     return names
 
 
@@ -112,7 +99,6 @@ def build_graphics(iwad: Wad, art: Mapping[str, bytes], engine: Engine, texshift
         raise ValueError(f"the IWAD lacks lumps the engine reads: {' '.join(missing)}")
 
     use_zombieman_for_player(wad)
-    convert_sounds(wad)
     shrink_pictures(wad, sprites, patches)
     wad["TEXTURE1"] = pack_textures(textures)
     wad["TEXHEIGH"] = struct.pack(f"<{len(textures)}h", *(t.height for t in textures))
@@ -149,14 +135,6 @@ def use_zombieman_for_player(wad: Wad) -> None:
         suffix = lump.name[4:]
         wad[lump.name] = next(z.data for z in zombieman if z.name.endswith(suffix))
     wad["PLAYV0"] = wad["POSSU0"]
-
-
-def convert_sounds(wad: Wad) -> None:
-    """PC speaker effects keep one timer divisor per sample."""
-    for lump in wad.with_prefix("DP"):
-        length = struct.unpack_from("<h", lump.data, 2)[0]
-        divisors = [PC_SPEAKER_DIVISORS[b] for b in lump.data[4 : 4 + length]]
-        wad[lump.name] = struct.pack(f"<h{length}h", length, *divisors)
 
 
 def shrink_pictures(wad: Wad, sprites: set[str], walls: set[str]) -> None:
