@@ -864,7 +864,7 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
 
         if (!mobj)
         {
-            staticchunk_t __far* c = Z_MallocLevel(sizeof(*c), NULL);
+            staticchunk_t __far* c = Z_MallocLevel(sizeof(*c));
             for (int16_t i = 0; i < STATICCHUNK; i++)
                 c->mobj[i].type = MT_NOTHING;
             c->next = _g_staticchunks;
@@ -889,7 +889,7 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
         }
     }
 
-    ext = Z_MallocLevel(sizeof(*ext), NULL);
+    ext = Z_MallocLevel(sizeof(*ext));
     _fmemset (ext, 0, sizeof (*ext));
     return &ext->mo;
 }

@@ -260,7 +260,7 @@ static void P_AddActivePlat(plat_t __far* plat)
 {
     platlist_t __far* old_head = activeplats;
 
-    platlist_t __far* list = activeplats = Z_MallocLevel(sizeof *list, (void __far*__far*)&activeplats);
+    platlist_t __far* list = activeplats = Z_MallocLevel(sizeof *list);
     list->plat = plat;
     plat->list = list;
     if ((list->next = old_head))
@@ -287,7 +287,9 @@ static void P_RemoveActivePlat(plat_t __far* plat)
   if (list->prev && (*list->prev = list->next))
     list->next->prev = list->prev;
 
+  // Every node used to name activeplats as its zone user, so freeing one cleared it.
   Z_Free(list);
+  activeplats = NULL;
 }
 
 //
@@ -299,10 +301,6 @@ static void P_RemoveActivePlat(plat_t __far* plat)
 //
 void P_RemoveAllActivePlats(void)
 {
-  while (activeplats)
-  {
-    platlist_t __far* next = activeplats->next;
-    Z_Free(activeplats);
-    activeplats = next;
-  }
+  // The level's nodes went with its zone blocks.
+  activeplats = NULL;
 }
