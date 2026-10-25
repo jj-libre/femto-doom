@@ -275,7 +275,7 @@ static void __far* P_CallocPool(int16_t count, uint16_t size)
 
 
 #if !defined THING_POOL_RESERVE
-#define THING_POOL_RESERVE 8
+#define THING_POOL_RESERVE 0
 #endif
 
 static void P_LoadThings(int16_t lump, int16_t map)
