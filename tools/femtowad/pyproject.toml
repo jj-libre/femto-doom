@@ -1,0 +1,26 @@
+[project]
+name = "femtowad"
+version = "0.1.0"
+description = "Builds femto-doom's WAD pair from a Doom IWAD"
+requires-python = ">=3.12"
+license = "GPL-2.0-only"
+dependencies = []
+
+[project.scripts]
+femtowad = "femtowad.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9,<0.10"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["mypy>=1.18", "ruff>=0.14"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
