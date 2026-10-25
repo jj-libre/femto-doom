@@ -37,7 +37,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "compiler.h"
 #include "doomdef.h"
 #include "d_player.h"
 #include "m_random.h"
@@ -907,7 +906,7 @@ static void ST_loadData(void)
     // Load the numbers, tall and short
     for (i=0;i<10;i++)
     {
-		sprintf(namebuf, "STGANUM%d", i); //Special GBA Doom II Red Numbers ~Kippykip
+		sprintf(namebuf, "STGANUM%d", i);
         tallnum[i] = W_GetNumForName(namebuf);
 
         sprintf(namebuf, "STYSNUM%d", i);

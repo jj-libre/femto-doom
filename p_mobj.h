@@ -303,7 +303,7 @@ typedef struct
 
 typedef char assertMobjExtSize[sizeof(mobjext_t) == 100 ? 1 : -1];
 
-static inline mobj_t __far* P_Mobj(zref_t ref)
+static inline mobj_t* P_Mobj(zref_t ref)
 {
     return Z_Ptr(ref);
 }
@@ -319,27 +319,27 @@ static inline mobj_t __far* P_Mobj(zref_t ref)
 #define ONCEILINGZ      INT32_MAX
 
 
-mobj_t __far* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-void    P_RemoveMobj(mobj_t __far* th);
-boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state);
+mobj_t* P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+void    P_RemoveMobj(mobj_t* th);
+boolean P_SetMobjState(mobj_t* mobj, statenum_t state);
 
-void    P_MobjThinker(thinker_t __far* th);
-mobj_t __far* P_NewMobj(mobjtype_t type);
+void    P_MobjThinker(thinker_t* th);
+mobj_t* P_NewMobj(mobjtype_t type);
 
-mobjext_t __far* P_Ext(mobj_t __far* mobj);
-int16_t P_Health(mobj_t __far* mobj);
-mobj_t __far* P_MobjOfThinker(thinker_t __far* th);
+mobjext_t* P_Ext(mobj_t* mobj);
+int16_t P_Health(mobj_t* mobj);
+mobj_t* P_MobjOfThinker(thinker_t* th);
 void    P_RunStatics(void);
 
 void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z);
 void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, int16_t damage);
-mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_t type);
-void    P_SpawnPlayerMissile(mobj_t __far* source);
+mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type);
+void    P_SpawnPlayerMissile(mobj_t* source);
 boolean P_MapThingSpawns(const mapthing_t* mthing);
 boolean P_MapThingIsStatic(const mapthing_t* mthing);
 void    P_SpawnMapThing (const mapthing_t* mthing);
 
-struct player_s* P_MobjIsPlayer(const mobj_t __far* mobj);
+struct player_s* P_MobjIsPlayer(const mobj_t* mobj);
 
 #endif
 

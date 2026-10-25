@@ -25,7 +25,6 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "i_video.h"
@@ -39,16 +38,16 @@ static int16_t nukage;
 #else
 static int16_t firstflat;
 static int16_t  animated_flat_basepic;
-static int16_t __far* flattranslation;             // for global animation
+static int16_t* flattranslation;             // for global animation
 
 static fixed_t planeheight;
 static fixed_t basexscale, baseyscale;
 
 #define MAXVISPLANES 32    /* must be a power of 2 */
 
-static visplane_t __far* visplanes[MAXVISPLANES];
-static visplane_t __far* freetail;
-static visplane_t __far*__far* freehead;
+static visplane_t* visplanes[MAXVISPLANES];
+static visplane_t* freetail;
+static visplane_t** freehead;
 #endif
 
 
@@ -154,7 +153,7 @@ static void R_MakeSpans(int16_t x, uint16_t t1, uint16_t b1, uint16_t t2, uint16
 }
 
 
-static void R_DoDrawPlane(visplane_t __far* pl)
+static void R_DoDrawPlane(visplane_t* pl)
 {
     if (pl->minx <= pl->maxx)
     {
@@ -200,7 +199,7 @@ void R_DrawPlanes (void)
 
     for (int8_t i = 0; i < MAXVISPLANES; i++)
     {
-        visplane_t __far* pl = visplanes[i];
+        visplane_t* pl = visplanes[i];
 
         while(pl)
         {
@@ -236,9 +235,9 @@ void R_ClearPlanes(void)
 }
 
 
-static visplane_t __far* new_visplane(uint16_t hash)
+static visplane_t* new_visplane(uint16_t hash)
 {
-    visplane_t __far* check = freetail;
+    visplane_t* check = freetail;
 
     if (!check)
         check = Z_CallocLevel(sizeof(visplane_t));
@@ -266,9 +265,9 @@ static visplane_t __far* new_visplane(uint16_t hash)
 // R_FindPlane
 //
 
-visplane_t __far* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel)
+visplane_t* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel)
 {
-    visplane_t __far* check;
+    visplane_t* check;
     uint16_t hash;
 
     if (picnum == skyflatnum)
@@ -291,7 +290,7 @@ visplane_t __far* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel
     check->minx = VIEWWINDOWWIDTH;
     check->maxx = -1;
 
-    _fmemset(check->top, -1, sizeof(check->top));
+    memset(check->top, -1, sizeof(check->top));
 
     check->modified = false;
 
@@ -304,10 +303,10 @@ visplane_t __far* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel
  *
  * create duplicate of existing visplane and set initial range
  */
-visplane_t __far* R_DupPlane(const visplane_t __far* pl, int16_t start, int16_t stop)
+visplane_t* R_DupPlane(const visplane_t* pl, int16_t start, int16_t stop)
 {
     uint16_t hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height);
-    visplane_t __far* new_pl = new_visplane(hash);
+    visplane_t* new_pl = new_visplane(hash);
 
     new_pl->height = pl->height;
     new_pl->picnum = pl->picnum;
@@ -315,7 +314,7 @@ visplane_t __far* R_DupPlane(const visplane_t __far* pl, int16_t start, int16_t 
     new_pl->minx = start;
     new_pl->maxx = stop;
 
-    _fmemset(new_pl->top, -1, sizeof(new_pl->top));
+    memset(new_pl->top, -1, sizeof(new_pl->top));
 
     new_pl->modified = false;
 
@@ -326,7 +325,7 @@ visplane_t __far* R_DupPlane(const visplane_t __far* pl, int16_t start, int16_t 
 //
 // R_CheckPlane
 //
-visplane_t __far* R_CheckPlane(visplane_t __far* pl, int16_t start, int16_t stop)
+visplane_t* R_CheckPlane(visplane_t* pl, int16_t start, int16_t stop)
 {
     int16_t intrl, intrh, unionl, unionh, x;
 

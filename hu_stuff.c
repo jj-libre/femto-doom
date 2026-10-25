@@ -165,7 +165,7 @@ static void HUlib_drawTextLine(hu_textline_t* textline)
 
 		if (HU_FONTSTART <= c && c <= HU_FONTEND)
 		{
-			const patch_t __far* patch = W_GetLumpByNum(c + font_lump_offset);
+			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);
 			int16_t w = W_FetchInt16(&patch->width);
 			if (x + w > SCREENWIDTH)
 			{

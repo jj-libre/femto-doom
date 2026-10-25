@@ -40,37 +40,27 @@
 #include <string.h>
 
 #include "doomtype.h"
-#include "compiler.h"
 #include "z_zone.h"
 #include "z_bmallo.h"
 #include "i_system.h"
 
 
 typedef struct bmalpool_s {
-	struct bmalpool_s __far* nextpool;
+	struct bmalpool_s* nextpool;
 	uint32_t               used;
 } bmalpool_t;
 
 typedef char assertBmalpoolSize[sizeof(bmalpool_t) == 8 ? 1 : -1];
 
 
-inline static void __far* getelem(bmalpool_t __far* p, size_t size, size_t n)
+inline static void* getelem(bmalpool_t* p, size_t size, size_t n)
 {
-	return ((byte __far*)p) + sizeof(bmalpool_t) + size * n;
+	return ((byte*)p) + sizeof(bmalpool_t) + size * n;
 }
 
 
-inline static PUREFUNC int16_t iselem(const bmalpool_t __far* pool, size_t size, const void __far* p)
+inline static PUREFUNC int16_t iselem(const bmalpool_t* pool, size_t size, const void* p)
 {
-#if defined _M_I86
-	if (D_FP_SEG(p) != D_FP_SEG(pool))
-		return -1;
-
-	uint16_t dif = D_FP_OFF(p) - D_FP_OFF(pool);
-	dif -= sizeof(bmalpool_t);
-	dif /= size;
-	return dif;
-#else
 	int32_t dif = (const char*)p - (const char*)pool;
 	if (dif < 0)
 		return -1;
@@ -78,7 +68,6 @@ inline static PUREFUNC int16_t iselem(const bmalpool_t __far* pool, size_t size,
 	dif -= sizeof(bmalpool_t);
 	dif /= size;
 	return dif >= CHAR_BIT * sizeof(uint32_t) ? -1 : dif;
-#endif
 }
 
 
@@ -98,9 +87,9 @@ static size_t __builtin_ctzl(uint32_t v)
 #endif
 
 
-void __far* Z_BMalloc(struct block_memory_alloc_s *pzone)
+void* Z_BMalloc(struct block_memory_alloc_s *pzone)
 {
-	bmalpool_t __far*__far* pool = (bmalpool_t __far*__far*)&(pzone->firstpool);
+	bmalpool_t** pool = (bmalpool_t**)&(pzone->firstpool);
 	while (*pool != NULL) {
 		if ((*pool)->used == 0xffffffff) {
 			pool = &((*pool)->nextpool);
@@ -112,7 +101,7 @@ void __far* Z_BMalloc(struct block_memory_alloc_s *pzone)
 	}
 
 	// Nothing available, must allocate a new pool
-	bmalpool_t __far* newpool;
+	bmalpool_t* newpool;
 
 	// CPhipps: Allocate new memory, initialised to 0
 
@@ -124,9 +113,9 @@ void __far* Z_BMalloc(struct block_memory_alloc_s *pzone)
 }
 
 
-void Z_BFree(struct block_memory_alloc_s *pzone, void __far* p)
+void Z_BFree(struct block_memory_alloc_s *pzone, void* p)
 {
-	bmalpool_t __far*__far* pool = (bmalpool_t __far*__far*)&(pzone->firstpool);
+	bmalpool_t** pool = (bmalpool_t**)&(pzone->firstpool);
 
 	while (*pool != NULL) {
 		int16_t n = iselem(*pool, pzone->size, p);
@@ -134,7 +123,7 @@ void Z_BFree(struct block_memory_alloc_s *pzone, void __far* p)
 			(*pool)->used &= ~(1UL << n);
 			if ((*pool)->used == 0) {
 				// Block is all unused, can be freed
-				bmalpool_t __far* oldpool = *pool;
+				bmalpool_t* oldpool = *pool;
 				*pool = (*pool)->nextpool;
 				Z_Free(oldpool);
 			}

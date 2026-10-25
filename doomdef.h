@@ -165,7 +165,7 @@ typedef enum {
 } powerduration_t;
 
 
-//GBA Keys
+// Keys
 #define KEYD_A              0
 #define KEYD_B              1
 #define KEYD_L              2

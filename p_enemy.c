@@ -68,9 +68,9 @@ static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 // P_CheckMeleeRange
 //
 
-boolean P_CheckMeleeRange(mobj_t __far* actor)
+boolean P_CheckMeleeRange(mobj_t* actor)
 {
-  mobj_t __far* pl = P_Mobj(P_Ext(actor)->target);
+  mobj_t* pl = P_Mobj(P_Ext(actor)->target);
 
   return
     pl &&
@@ -83,7 +83,7 @@ boolean P_CheckMeleeRange(mobj_t __far* actor)
 //
 // P_CheckMissileRange
 //
-boolean P_CheckMissileRange(mobj_t __far* actor)
+boolean P_CheckMissileRange(mobj_t* actor)
 {
   fixed_t dist;
 
@@ -128,7 +128,7 @@ boolean P_CheckMissileRange(mobj_t __far* actor)
 // determines the new direction to take
 //
 
-static void P_DoNewChaseDir(mobj_t __far* actor, fixed_t deltax, fixed_t deltay)
+static void P_DoNewChaseDir(mobj_t* actor, fixed_t deltax, fixed_t deltay)
 {
   int16_t xdir, ydir, tdir;
   uint8_t olddir = P_Ext(actor)->movedir;
@@ -196,7 +196,7 @@ static void P_DoNewChaseDir(mobj_t __far* actor, fixed_t deltax, fixed_t deltay)
 // monsters to free themselves without making them tend to
 // hang over dropoffs.
 
-static boolean PIT_AvoidDropoff(const line_t __far* line)
+static boolean PIT_AvoidDropoff(const line_t* line)
 {
   line_t l;
   W_Fetch(line, &l, sizeof(l));
@@ -235,7 +235,7 @@ static boolean PIT_AvoidDropoff(const line_t __far* line)
 // Driver for above
 //
 
-static boolean P_AvoidDropoff(mobj_t __far* actor)
+static boolean P_AvoidDropoff(mobj_t* actor)
 {
   int16_t yh=((_g_tmbbox[BOXTOP]   = actor->y+actor->radius)-_g_bmaporgy)>>MAPBLOCKSHIFT;
   int16_t yl=((_g_tmbbox[BOXBOTTOM]= actor->y-actor->radius)-_g_bmaporgy)>>MAPBLOCKSHIFT;
@@ -264,9 +264,9 @@ static boolean P_AvoidDropoff(mobj_t __far* actor)
 // killough 9/8/98: Split into two functions
 //
 
-void P_NewChaseDir(mobj_t __far* actor)
+void P_NewChaseDir(mobj_t* actor)
 {
-    mobj_t __far* target = P_Mobj(P_Ext(actor)->target);
+    mobj_t* target = P_Mobj(P_Ext(actor)->target);
     fixed_t deltax = target->x - actor->x;
     fixed_t deltay = target->y - actor->y;
 
@@ -298,7 +298,7 @@ void P_NewChaseDir(mobj_t __far* actor)
 //
 // A_FaceTarget
 //
-void A_FaceTarget(mobj_t __far* actor)
+void A_FaceTarget(mobj_t* actor)
 {
   if (!P_Ext(actor)->target)
     return;
@@ -316,7 +316,7 @@ void A_FaceTarget(mobj_t __far* actor)
 // A_PosAttack
 //
 
-void A_PosAttack(mobj_t __far* actor)
+void A_PosAttack(mobj_t* actor)
 {
   angle_t angle;
   int16_t damage;
@@ -337,7 +337,7 @@ void A_PosAttack(mobj_t __far* actor)
   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
-void A_SPosAttack(mobj_t __far* actor)
+void A_SPosAttack(mobj_t* actor)
 {
   int16_t i;
   angle_t bangle;
@@ -363,7 +363,7 @@ void A_SPosAttack(mobj_t __far* actor)
 // A_TroopAttack
 //
 
-void A_TroopAttack(mobj_t __far* actor)
+void A_TroopAttack(mobj_t* actor)
 {
   if (!P_Ext(actor)->target)
     return;
@@ -379,7 +379,7 @@ void A_TroopAttack(mobj_t __far* actor)
   P_SpawnMissile(actor, P_Mobj(P_Ext(actor)->target), MT_TROOPSHOT);  // launch a missile
 }
 
-void A_SargAttack(mobj_t __far* actor)
+void A_SargAttack(mobj_t* actor)
 {
   if (!P_Ext(actor)->target)
     return;
@@ -392,7 +392,7 @@ void A_SargAttack(mobj_t __far* actor)
 }
 
 
-void A_BruisAttack(mobj_t __far* actor)
+void A_BruisAttack(mobj_t* actor)
 {
   if (!P_Ext(actor)->target)
     return;
@@ -408,7 +408,7 @@ void A_BruisAttack(mobj_t __far* actor)
 }
 
 
-void A_Scream(mobj_t __far* actor)
+void A_Scream(mobj_t* actor)
 {
   sfxenum_t sound;
 
@@ -436,18 +436,18 @@ void A_Scream(mobj_t __far* actor)
   S_StartSound(actor, sound);
 }
 
-void A_XScream(mobj_t __far* actor)
+void A_XScream(mobj_t* actor)
 {
   S_StartSound(actor, sfx_slop);
 }
 
-void A_Pain(mobj_t __far* actor)
+void A_Pain(mobj_t* actor)
 {
   if (mobjinfo[actor->type].painsound)
     S_StartSound(actor, mobjinfo[actor->type].painsound);
 }
 
-void A_Fall(mobj_t __far* actor)
+void A_Fall(mobj_t* actor)
 {
   // actor is on ground, it can be walked over
   actor->flags &= ~MF_SOLID;
@@ -456,7 +456,7 @@ void A_Fall(mobj_t __far* actor)
 //
 // A_Explode
 //
-void A_Explode(mobj_t __far* thingy)
+void A_Explode(mobj_t* thingy)
 {
   P_RadiusAttack( thingy, P_Mobj(P_Ext(thingy)->target), 128 );
 }
@@ -467,9 +467,9 @@ void A_Explode(mobj_t __far* thingy)
 // if on first boss level
 //
 
-void A_BossDeath(mobj_t __far* mo)
+void A_BossDeath(mobj_t* mo)
 {
-    thinker_t __far* th;
+    thinker_t* th;
 
     if (_g_gamemap != 8)
         return;
@@ -487,7 +487,7 @@ void A_BossDeath(mobj_t __far* mo)
     for (th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
         if (th->function == P_MobjThinker)
         {
-            mobj_t __far* mo2 = P_MobjOfThinker(th);
+            mobj_t* mo2 = P_MobjOfThinker(th);
             if (mo2 != mo && mo2->type == mo->type && P_Ext(mo2)->health > 0)
                 return;         // other boss not dead
         }
@@ -497,7 +497,7 @@ void A_BossDeath(mobj_t __far* mo)
 }
 
 
-void A_PlayerScream(mobj_t __far* mo)
+void A_PlayerScream(mobj_t* mo)
 {
   sfxenum_t sound = sfx_pldeth;  // Default death sound.
   S_StartSound(mo, sound);

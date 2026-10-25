@@ -97,7 +97,7 @@ void P_InitPicAnims (void)
 //
 // Note: returns NULL if not two-sided line, or both sides refer to sector
 //
-sector_t __far* getNextSector(const line_t __far* line, sector_t __far* sec)
+sector_t* getNextSector(const line_t* line, sector_t* sec)
 {
 
 
@@ -118,11 +118,11 @@ sector_t __far* getNextSector(const line_t __far* line, sector_t __far* sec)
 // Returns the fixed point value of the lowest floor height
 // in the sector passed or its surrounding sectors.
 //
-fixed_t P_FindLowestFloorSurrounding(sector_t __far* sec)
+fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
 {
   int16_t                 i;
-  const line_t __far*             check;
-  sector_t __far*           other;
+  const line_t*             check;
+  sector_t*           other;
   fixed_t             floor = SEC_FLOORHEIGHT(sec);
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
@@ -146,11 +146,11 @@ fixed_t P_FindLowestFloorSurrounding(sector_t __far* sec)
 // Passed a sector, returns the fixed point value of the largest
 // floor height in the surrounding sectors, not including that passed
 //
-fixed_t P_FindHighestFloorSurrounding(sector_t __far* sec)
+fixed_t P_FindHighestFloorSurrounding(sector_t* sec)
 {
   int16_t i;
-  const line_t __far* check;
-  sector_t __far* other;
+  const line_t* check;
+  sector_t* other;
   fixed_t floor = -32000*FRACUNIT;
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
@@ -174,11 +174,11 @@ fixed_t P_FindHighestFloorSurrounding(sector_t __far* sec)
 // Passed a sector, returns the fixed point value of the smallest
 // ceiling height in the surrounding sectors, not including that passed
 //
-fixed_t P_FindLowestCeilingSurrounding(sector_t __far* sec)
+fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
 {
   int16_t                 i;
-  const line_t __far*             check;
-  sector_t __far*           other;
+  const line_t*             check;
+  sector_t*           other;
   fixed_t             height = 32000*FRACUNIT;
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
@@ -225,7 +225,7 @@ int16_t P_FindSectorFromLineTag(int16_t line_tag, int16_t start)
 //
 // jff 2/27/98 Added to check for zero tag allowed for regular special types
 //
-boolean P_CheckTag(const line_t __far* line)
+boolean P_CheckTag(const line_t* line)
 {
   /* tag not zero, allowed, or
    * killough 11/98: compatibility option */
@@ -349,7 +349,7 @@ static void P_SpawnScrollers(void);
 
 void P_SpawnSpecials (void)
 {
-  sector_t __far*   sector;
+  sector_t*   sector;
   int16_t         i;
 
   //  Init special sectors.
@@ -425,13 +425,13 @@ void P_SpawnSpecials (void)
 
 typedef struct {
 	thinker_t thinker;				// Thinker structure for scrolling
-	uint8_t __far* textureoffset;	// Affected textureoffset
+	uint8_t* textureoffset;	// Affected textureoffset
 } scroll_t;
 
 typedef char assertScrollSize[sizeof(scroll_t) == 16 ? 1 : -1];
 
 
-static void T_Scroll(scroll_t __far* s)
+static void T_Scroll(scroll_t* s)
 {
 	(*s->textureoffset)++;
 }
@@ -447,7 +447,7 @@ static void T_Scroll(scroll_t __far* s)
 
 static void Add_Scroller(int16_t affectee)
 {
-	scroll_t __far* s = Z_CallocLevSpec(sizeof *s);
+	scroll_t* s = Z_CallocLevSpec(sizeof *s);
 	s->thinker.function = T_Scroll;
 	s->textureoffset = &P_ChangeableSide(affectee)->textureoffset;
 	P_AddThinker(&s->thinker);
@@ -457,7 +457,7 @@ static void Add_Scroller(int16_t affectee)
 // Initialize the scrollers
 static void P_SpawnScrollers(void)
 {
-	const line_t __far* line = _g_maplines;
+	const line_t* line = _g_maplines;
 
 	for (int16_t i = 0; i < _g_numlines; i++)
 	{

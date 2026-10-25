@@ -62,7 +62,7 @@ static boolean nofit;
 // and false will be returned.
 //
 
-static boolean P_ThingHeightClip(mobj_t __far* thing)
+static boolean P_ThingHeightClip(mobj_t* thing)
 {
   boolean   onfloor;
 
@@ -118,7 +118,7 @@ static boolean P_ThingHeightClip(mobj_t __far* thing)
 // PIT_ChangeSector
 //
 
-static void PIT_ChangeSector(mobj_t __far* thing)
+static void PIT_ChangeSector(mobj_t* thing)
   {
   if (P_ThingHeightClip (thing))
     return;
@@ -161,9 +161,9 @@ static void PIT_ChangeSector(mobj_t __far* thing)
 // sector. Both more accurate and faster.
 //
 
-static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t oldceiling)
+static boolean P_CheckSector(sector_t* sector, fixed_t oldfloor, fixed_t oldceiling)
   {
-  msecnode_t __far* n;
+  msecnode_t* n;
 
   nofit = false;
 
@@ -204,14 +204,14 @@ static boolean P_CheckSector(sector_t __far* sector, fixed_t oldfloor, fixed_t o
   return nofit;
   }
 
-static boolean P_SetFloor(sector_t __far* sector, fixed_t height)
+static boolean P_SetFloor(sector_t* sector, fixed_t height)
 {
   const fixed_t old = SEC_FLOORHEIGHT(sector);
   sector->floorheight = P_PlaneHeight(height);
   return P_CheckSector(sector, old, SEC_CEILINGHEIGHT(sector));
 }
 
-static boolean P_SetCeiling(sector_t __far* sector, fixed_t height)
+static boolean P_SetCeiling(sector_t* sector, fixed_t height)
 {
   const fixed_t old = SEC_CEILINGHEIGHT(sector);
   sector->ceilingheight = P_PlaneHeight(height);
@@ -241,7 +241,7 @@ static boolean P_SetCeiling(sector_t __far* sector, fixed_t height)
 //  pastdest - plane moved normally and is now at destination height
 //  crushed - plane encountered an obstacle, is holding until removed
 //
-result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, int8_t direction)
+result_e T_MovePlaneFloor(sector_t* sector, fixed_t speed, fixed_t dest, int8_t direction)
 {
   boolean       flag;
   fixed_t       lastpos;
@@ -307,7 +307,7 @@ result_e T_MovePlaneFloor(sector_t __far* sector, fixed_t speed, fixed_t dest, i
 }
 
 
-result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest, int8_t direction)
+result_e T_MovePlaneCeiling(sector_t* sector, fixed_t speed, fixed_t dest, int8_t direction)
 {
   boolean       flag;
   fixed_t       lastpos;
@@ -387,7 +387,7 @@ result_e T_MovePlaneCeiling(sector_t __far* sector, fixed_t speed, fixed_t dest,
 typedef struct
 {
   thinker_t thinker;
-  sector_t __far* sector;
+  sector_t* sector;
   fixed_t floordestheight;
   fixed_t speed;
   int16_t texture;
@@ -398,7 +398,7 @@ typedef struct
 typedef char assertFloormoveSize[sizeof(floormove_t) == 28 ? 1 : -1];
 
 
-static void T_MoveFloor(floormove_t __far* floor)
+static void T_MoveFloor(floormove_t* floor)
 {
   result_e      res;
 
@@ -442,10 +442,10 @@ static void T_MoveFloor(floormove_t __far* floor)
 //
 // Rewritten by Lee Killough to avoid fixed array and to be faster
 //
-fixed_t P_FindNextHighestFloor(sector_t __far* sec)
+fixed_t P_FindNextHighestFloor(sector_t* sec)
 {
   fixed_t currentheight = SEC_FLOORHEIGHT(sec);
-  sector_t __far* other;
+  sector_t* other;
   int16_t i;
 
   for (i=0 ;i < SEC_LINECOUNT(sec) ; i++)
@@ -486,8 +486,8 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
 {
   int16_t           secnum;
   boolean           rtn;
-  sector_t __far*     sec;
-  floormove_t __far*  floor;
+  sector_t*     sec;
+  floormove_t*  floor;
 
   secnum = -1;
   rtn = false;
@@ -581,7 +581,7 @@ boolean EV_DoFloor(int16_t line_tag, floor_e floortype)
  * stairs
  * - Boom fixed the bug, and MBF/PrBoom without comp_stairs work right
  */
-static inline int16_t P_FindSectorFromLineTagWithLowerBound(const line_t __far* l, int16_t start, int16_t min)
+static inline int16_t P_FindSectorFromLineTagWithLowerBound(const line_t* l, int16_t start, int16_t min)
 {
   /* Emulate original Doom's linear lower-bounded P_FindSectorFromLineTag
    * as needed */
@@ -591,7 +591,7 @@ static inline int16_t P_FindSectorFromLineTagWithLowerBound(const line_t __far* 
   return start;
 }
 
-boolean EV_BuildStairs(const line_t __far* line)
+boolean EV_BuildStairs(const line_t* line)
 {
   /* cph 2001/09/22 - cleaned up this function to save my sanity. A separate
    * outer loop index makes the logic much cleared, and local variables moved
@@ -604,11 +604,11 @@ boolean EV_BuildStairs(const line_t __far* line)
   while ((ssec = P_FindSectorFromLineTagWithLowerBound(line,ssec,minssec)) >= 0)
   {
    int16_t           secnum = ssec;
-   sector_t __far*     sec = &_g_sectors[secnum];
+   sector_t*     sec = &_g_sectors[secnum];
 
     // don't start a stair if the first step's floor is already moving
    if (SEC_FLOORDATA(sec) == 0) {
-    floormove_t __far*  floor;
+    floormove_t*  floor;
     int16_t       texture;
     fixed_t       height;
     fixed_t       stairsize;
@@ -645,7 +645,7 @@ boolean EV_BuildStairs(const line_t __far* line)
 
       for (i = 0;i < SEC_LINECOUNT(sec);i++)
       {          
-        sector_t __far* tsec = LN_FRONTSECTOR((SEC_LINE(sec, i)));
+        sector_t* tsec = LN_FRONTSECTOR((SEC_LINE(sec, i)));
         int16_t newsecnum;
         if ( !(LN_FLAGS(SEC_LINE(sec, i)) & ML_TWOSIDED) )
           continue;
@@ -702,15 +702,15 @@ boolean EV_BuildStairs(const line_t __far* line)
 // Passed the linedef that triggered the donut
 // Returns whether a thinker was created
 //
-boolean EV_DoDonut(const line_t __far* line)
+boolean EV_DoDonut(const line_t* line)
 {
-  sector_t __far* s1;
-  sector_t __far* s2;
-  sector_t __far* s3;
+  sector_t* s1;
+  sector_t* s2;
+  sector_t* s3;
   int16_t       secnum;
   boolean       rtn;
   int16_t       i;
-  floormove_t __far* floor;
+  floormove_t* floor;
 
   secnum = -1;
   rtn = false;

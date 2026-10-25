@@ -40,49 +40,52 @@
 #include "doomtype.h"
 
 
+// The graphics WAD and the map WAD, as the platform maps them. With W_FETCH defined, the platform
+// also supplies W_Fetch and every read goes through it.
+void W_SetWads(const uint8_t* iwad, const uint8_t* maps);
 void W_Init(void);
 
 int16_t           PUREFUNC W_GetNumForName(const char *name);
-const char __far* PUREFUNC W_GetNameForNum(int16_t num);
+const char* PUREFUNC W_GetNameForNum(int16_t num);
 uint16_t          PUREFUNC W_LumpLength(   int16_t num);
-const void __far* PUREFUNC W_GetLumpByNum( int16_t num);
-void                       W_ReadLumpByNum(int16_t num, void __far* ptr);
+const void* PUREFUNC W_GetLumpByNum( int16_t num);
+void                       W_ReadLumpByNum(int16_t num, void* ptr);
 
 int16_t           PUREFUNC W_GetMapNumForName(const char *name);
 uint16_t          PUREFUNC W_MapLumpLength(   int16_t num);
-const void __far* PUREFUNC W_GetMapLumpByNum( int16_t num);
+const void* PUREFUNC W_GetMapLumpByNum( int16_t num);
 
 #define W_GetLumpByName(x)    W_GetLumpByNum(W_GetNumForName(x))
 
 #if defined W_FETCH
-void W_Fetch(const void __far* src, void __far* dst, uint16_t len);
+void W_Fetch(const void* src, void* dst, uint16_t len);
 #else
 #include <string.h>
-#define W_Fetch(src, dst, len) _fmemcpy(dst, src, len)
+#define W_Fetch(src, dst, len) memcpy(dst, src, len)
 #endif
 
-static inline uint8_t W_FetchUInt8(const void __far* src)
+static inline uint8_t W_FetchUInt8(const void* src)
 {
 	uint8_t v;
 	W_Fetch(src, &v, sizeof(v));
 	return v;
 }
 
-static inline int16_t W_FetchInt16(const void __far* src)
+static inline int16_t W_FetchInt16(const void* src)
 {
 	int16_t v;
 	W_Fetch(src, &v, sizeof(v));
 	return v;
 }
 
-static inline uint16_t W_FetchUInt16(const void __far* src)
+static inline uint16_t W_FetchUInt16(const void* src)
 {
 	uint16_t v;
 	W_Fetch(src, &v, sizeof(v));
 	return v;
 }
 
-static inline int32_t W_FetchInt32(const void __far* src)
+static inline int32_t W_FetchInt32(const void* src)
 {
 	int32_t v;
 	W_Fetch(src, &v, sizeof(v));

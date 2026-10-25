@@ -42,7 +42,6 @@
 #include "config.h"
 #endif
 
-#include "compiler.h"
 #include "d_player.h"
 #include "w_wad.h"
 #include "r_main.h"
@@ -163,11 +162,10 @@ static uint8_t viewangletox(int16_t va)
 
 static const angle_t tantoangleTable[2049];
 
-#if BYTE_ORDER == LITTLE_ENDIAN
-static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]) + 1;
-#endif
-#if BYTE_ORDER == BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]);
+#else
+static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]) + 1;
 #endif
 
 #define tantoangle(t) tantoangleTable[t]
@@ -492,7 +490,7 @@ static height_t* R_Clip(int16_t c)
 //*****************************************
 
 int16_t numnodes;
-const mapnode_t __far* nodes;
+const mapnode_t* nodes;
 
 #if defined FLAT_SPAN
 static fixed_t  viewx, viewy, viewz;
@@ -507,19 +505,19 @@ static angle16_t viewangle16;
 
 static byte solidcol[VIEWWINDOWWIDTH];
 
-static const seg_t     __far* curline;
+static const seg_t    * curline;
 static seg_t curseg;
 static uint8_t maplineflags;
-static sector_t  __far* frontsector;
-static sector_t  __far* backsector;
+static sector_t * frontsector;
+static sector_t * backsector;
 static drawseg_t *ds_p;
 
 #if defined FLAT_SPAN
 static int16_t floorplane_color;
 static int16_t ceilingplane_color;
 #else
-static visplane_t __far* floorplane;
-static visplane_t __far* ceilingplane;
+static visplane_t* floorplane;
+static visplane_t* ceilingplane;
 #endif
 
 static angle16_t             rw_angle1;
@@ -566,7 +564,7 @@ static int16_t      rw_lightlevel;
 
 static height_t      *maskedtexturecol; // dropoff overflow
 
-const int16_t   __far* textureheight; //needed for texture pegging (and TFE fix - killough)
+const int16_t  * textureheight; //needed for texture pegging (and TFE fix - killough)
 
 
 static fixed_t  topfrac;
@@ -589,8 +587,8 @@ uint16_t validcount = 1;         // increment every time a check is made
 void P_NextValidCount(void)
 {
   ++validcount;
-  _fmemset(&_g_linebits[LB_CHECKED * _g_linebytes], 0, _g_linebytes);
-  _fmemset(_g_secbits, 0, _g_secbytes);
+  memset(&_g_linebits[LB_CHECKED * _g_linebytes], 0, _g_linebytes);
+  memset(_g_secbits, 0, _g_secbytes);
 }
 
 //*****************************************
@@ -613,27 +611,12 @@ static const uint16_t PSPRITEYFRACSTEP = (FRACUNIT * SCREENHEIGHT_VGA / (VIEWWIN
 static const angle16_t clipangle = 0x2008; // = xtoviewangleTable[0]
 
 
-// Emits a mulu.w instruction. It's quite difficult to get gcc to do that :-)
 static uint32_t mulu(uint16_t a, uint16_t b) {
-#if defined C_ONLY
 	return (uint32_t)a * b;
-#else
-	uint32_t result = a;
-	__asm__ (
-		"mulu.w %1, %0"
-		: "+d" (result)
-		: "d" (b)
-	);
-	return result;
-#endif
 }
 
 
-#if defined __WATCOMC__
-//
-#else
 inline
-#endif
 fixed_t CONSTFUNC FixedMul(fixed_t a, fixed_t b)
 {
 	// Is the result a negative number?
@@ -707,11 +690,7 @@ inline static fixed_t CONSTFUNC FixedMul3232(fixed_t a, fixed_t b)
 // FixedMulAngle
 // b should be coming from finesine() or finecosine(), so its high word is either 0x0000 or 0xffff
 //
-#if defined __WATCOMC__
-//
-#else
 inline
-#endif
 fixed_t CONSTFUNC FixedMulAngle(fixed_t a, fixed_t b)
 {
 	// Is the result a negative number?
@@ -740,11 +719,7 @@ fixed_t CONSTFUNC FixedMulAngle(fixed_t a, fixed_t b)
 }
 
 
-#if defined __WATCOMC__
-//
-#else
 inline
-#endif
 fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 {
 	boolean neg = a < 0;
@@ -767,11 +742,7 @@ fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 
 
 //Approx fixed point divide of a/b using reciprocal. -> a * (1/b).
-#if defined __WATCOMC__
-//
-#else
 inline
-#endif
 fixed_t CONSTFUNC FixedApproxDiv(fixed_t a, fixed_t b)
 {
 	if (b <= 0xffffu)
@@ -788,7 +759,7 @@ fixed_t CONSTFUNC FixedApproxDiv(fixed_t a, fixed_t b)
 // Returns side 0 (front) or 1 (back).
 //
 
-static PUREFUNC int16_t R_PointOnSide(fixed_t x, fixed_t y, const mapnode_t __far* node)
+static PUREFUNC int16_t R_PointOnSide(fixed_t x, fixed_t y, const mapnode_t* node)
 {
 	int16_t ix = x >> FRACBITS;
 
@@ -1122,7 +1093,7 @@ const uint8_t* R_LoadColorMap(int16_t lightlevel)
 
 typedef void (*R_DrawColumn_f)(const draw_column_vars_t *dcvars);
 
-static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvars, const column_t __far* column, int16_t shift)
+static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvars, const column_t* column, int16_t shift)
 {
     const fixed_t basetexturemid = dcvars->texturemid;
 
@@ -1150,7 +1121,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
         if (yl <= yh && yh < VIEWWINDOWHEIGHT)
         {
-            dcvars->source =  (const byte __far*)column + 3;
+            dcvars->source =  (const byte*)column + 3;
 
             dcvars->texturemid = basetexturemid - (((int32_t)post.topdelta << shift)<<FRACBITS);
 
@@ -1161,7 +1132,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
             colfunc (dcvars);
         }
 
-        column = (const column_t __far*)((const byte __far*)column + post.length + 4);
+        column = (const column_t*)((const byte*)column + post.length + 4);
         W_Fetch(column, &post, sizeof(post));
     }
 
@@ -1234,14 +1205,14 @@ static void R_DrawVisSprite(const vissprite_t *vis)
     sprtopscreen = CENTERY * FRACUNIT - FixedMul(dcvars.texturemid, spryscale);
 
 
-    const patch_t __far* patch = W_GetLumpByNum(vis->lump_num);
+    const patch_t* patch = W_GetLumpByNum(vis->lump_num);
     const int16_t width = W_FetchInt16(&patch->width);
 
     dcvars.x = vis->x1;
 
     while (dcvars.x < VIEWWINDOWWIDTH)
     {
-        const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[frac >> FRACBITS]));
+        const column_t* column = (const column_t*) ((const byte*)patch + W_FetchInt32(&patch->columnofs[frac >> FRACBITS]));
         R_DrawMaskedColumn(colfunc, &dcvars, column, SPRSHIFT);
 
         frac += vis->xiscale;
@@ -1308,7 +1279,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 
 	// draw the columns
 	// simple texture == 1 patch
-	const patch_t __far* patch = W_GetLumpByNum(texture.patches[0].patch_num);
+	const patch_t* patch = W_GetLumpByNum(texture.patches[0].patch_num);
 
 	for (dcvars.x = x1 ; dcvars.x <= x2 ; dcvars.x++, spryscale += rw_scalestep)
 	{
@@ -1323,7 +1294,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 			dcvars.fracstep = FixedReciprocal((uint32_t)spryscale) >> COLEXTRABITS;
 
 			// draw the texture
-			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[xc]));
+			const column_t* column = (const column_t*) ((const byte*)patch + W_FetchInt32(&patch->columnofs[xc]));
 
 			R_DrawMaskedColumn(R_DrawColumnWall, &dcvars, column, TEXSHIFT);
 			maskedtexturecol[dcvars.x] = DROPOFF_OVERFLOW; // dropoff overflow
@@ -1334,7 +1305,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 }
 
 
-static boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t __far* line)
+static boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t* line)
 {
     vertex16_t v[2];
     W_Fetch(line, v, sizeof(v));
@@ -1691,7 +1662,7 @@ static fixed_t R_ScaleFromGlobalAngle(int16_t x)
 
 #define SPR_FLIPPED(s, r) (s->flipmask & (1 << r))
 
-static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
+static void R_ProjectSprite (mobj_t* thing, int16_t lightlevel)
 {
     const fixed_t fx = thing->x;
     const fixed_t fy = thing->y;
@@ -1832,7 +1803,7 @@ static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 static int16_t spritelight;
 
-static boolean R_ProjectLoadThing(mobj_t __far* thing)
+static boolean R_ProjectLoadThing(mobj_t* thing)
 {
   R_ProjectSprite(thing, spritelight);
   return true;
@@ -1840,8 +1811,8 @@ static boolean R_ProjectLoadThing(mobj_t __far* thing)
 
 static void R_AddSprites(int16_t subsec, int16_t lightlevel)
 {
-  sector_t __far* sec=P_SubsectorSector(subsec);
-  mobj_t __far* thing;
+  sector_t* sec=P_SubsectorSector(subsec);
+  mobj_t* thing;
 
   // BSP is traversed by subsector.
   // A sector might have been split into several
@@ -2148,13 +2119,8 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     angle16_t offsetangle = rw_normalangle - rw_angle1;
 
-#if defined _M_I86
-    if (abs(offsetangle) > ANG90_16)
-        offsetangle = ANG90_16;
-#else
     if (D_abs((angle_t)offsetangle << FRACBITS) > ANG90)
         offsetangle = ANG90_16;
-#endif
 
     int16_t hyp = R_PointToDist(curseg.v1.x, curseg.v1.y);
 
@@ -2548,7 +2514,7 @@ static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
 // and adds any visible pieces to the line list.
 //
 
-static void R_AddLine(const seg_t __far* line)
+static void R_AddLine(const seg_t* line)
 {
     curline = line;
     W_Fetch(line, &curseg, sizeof(curseg));
@@ -2609,7 +2575,7 @@ static void R_AddLine(const seg_t __far* line)
 
     if (_g_linedonetic != (uint16_t)_g_gametic)
     {
-        _fmemset(&_g_linebits[LB_DONE * _g_linebytes], 0, _g_linebytes);
+        memset(&_g_linebits[LB_DONE * _g_linebytes], 0, _g_linebytes);
         _g_linedonetic = _g_gametic;
     }
 
@@ -2632,7 +2598,7 @@ static void R_AddLine(const seg_t __far* line)
 static void R_Subsector(int16_t num)
 {
     int16_t         count;
-    const seg_t       __far* line;
+    const seg_t      * line;
     mapsubsector_t mapsub;
     W_Fetch(&_g_mapsubsectors[num], &mapsub, sizeof(mapsub));
 
@@ -2714,7 +2680,7 @@ static const byte checkcoord[12][4] =
 };
 
 
-static boolean R_CheckBBox(const int16_t __far* bspcoord)
+static boolean R_CheckBBox(const int16_t* bspcoord)
 {
     // Find the corners of the box
     // that define the edges from current viewpoint.

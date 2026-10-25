@@ -104,9 +104,6 @@
 /* Define for high resolution support */
 //#define HIGHRES 1
 
-/* Define on targets supporting 386 assembly */
-//#define I386_ASM 1
-
 /* Define this to see real-time memory allocation statistics, and enable extra
    debugging features */
 /* #undef INSTRUMENTED */
@@ -137,18 +134,8 @@
 
 
 /* Set to the attribute to apply to struct definitions to make them packed */
-#if defined __WATCOMC__
-	#define PACKEDATTR_PRE	_Packed
-	#define PACKEDATTR_POST
-#else
-	#define PACKEDATTR_PRE
-	#define PACKEDATTR_POST __attribute__((packed))
-#endif
-
-
-#if defined __WATCOMC__
-	#define _Noreturn __declspec(aborts)
-#endif
+#define PACKEDATTR_PRE
+#define PACKEDATTR_POST __attribute__((packed))
 
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -190,11 +177,7 @@
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
-#if defined __WATCOMC__
-	#define inline __inline
-#else
-	#define inline __inline__
-#endif
+#define inline __inline__
 
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */

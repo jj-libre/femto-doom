@@ -97,7 +97,7 @@ static int16_t PUREFUNC P_PointOnLineCopySide(fixed_t x, fixed_t y, const line_t
     ((y - ((fixed_t)line->v1.y<<FRACBITS) >> 8)) * line->dx >= line->dy * ((x - ((fixed_t)line->v1.x<<FRACBITS)) >> 8);
 }
 
-int16_t P_PointOnLineSide(fixed_t x, fixed_t y, const line_t __far* line)
+int16_t P_PointOnLineSide(fixed_t x, fixed_t y, const line_t* line)
 {
   line_t l;
   W_Fetch(line, &l, sizeof(l));
@@ -137,7 +137,7 @@ static int16_t PUREFUNC P_BoxOnLineCopySide(const fixed_t *tmbox, const line_t* 
     }
 }
 
-int16_t P_BoxOnLineSide(const fixed_t *tmbox, const line_t __far* ld)
+int16_t P_BoxOnLineSide(const fixed_t *tmbox, const line_t* ld)
 {
     line_t l;
     W_Fetch(ld, &l, sizeof(l));
@@ -254,19 +254,19 @@ static fixed_t PUREFUNC P_InterceptVector3(const divline_t *v2, const divline_t 
 // OPTIMIZE: keep this precalculated
 //
 
-sector_t __far* LN_BackSector(const line_t __far* l)
+sector_t* LN_BackSector(const line_t* l)
 {
     const uint16_t side = LN_SIDENUM(l, 1);
     return side != NO_INDEX ? SIDE_SECTOR(side) : NULL;
 }
 
-void P_LineOpening(const line_t __far* linedef)
+void P_LineOpening(const line_t* linedef)
 {
     // moved front and back outside P-LineOpening and changed
     // them to these so we can pick up the new friction value
     // in PIT_CheckLine()
-    sector_t __far* openfrontsector;
-    sector_t __far* openbacksector;
+    sector_t* openfrontsector;
+    sector_t* openbacksector;
 
     if (LN_SIDENUM(linedef, 1) == NO_INDEX)      // single sided line
     {
@@ -336,36 +336,36 @@ typedef struct
   fixed_t z[STATICZCHUNK], floorz[STATICZCHUNK], ceilingz[STATICZCHUNK];
 } staticz_t;
 
-static const byte __far* tl;
-static const loadthing_t __far* tlthings;
-static const int16_t __far* tlsectorfirst;
-static const int16_t __far* tlblockfirst;
-static const int16_t __far* tllist;
-static const int16_t __far* tlnodefirst;
-static const int16_t __far* tlnodesector;
-static const int16_t __far* tlnodething;
-static const int16_t __far* tlsecnodefirst;
-static const int16_t __far* tlsecnodes;
+static const byte* tl;
+static const loadthing_t* tlthings;
+static const int16_t* tlsectorfirst;
+static const int16_t* tlblockfirst;
+static const int16_t* tllist;
+static const int16_t* tlnodefirst;
+static const int16_t* tlnodesector;
+static const int16_t* tlnodething;
+static const int16_t* tlsecnodefirst;
+static const int16_t* tlsecnodes;
 
 static boolean loadingthings;
 static int16_t loadingthing;
 static int16_t skillgroup;
 static int16_t numloadthings, numloadnodes, numloadstatics;
 static uint16_t numloadsectors, numloadblocks;
-static zref_t __far* loadrefs;
+static zref_t* loadrefs;
 static int16_t numthinking;
-static int16_t __far* slotthing;
-static uint8_t __far* sleeprec;
-static uint8_t __far* statictics;
-static uint8_t __far* staticmoved;
+static int16_t* slotthing;
+static uint8_t* sleeprec;
+static uint8_t* statictics;
+static uint8_t* staticmoved;
 static zref_t staticz;
 static int16_t numstaticz;
 static uint32_t staticclock;
 static int16_t changesector = -1;
 static fixed_t changefloor, changeceiling;
-static uint8_t __far* inplace;
-static uint8_t __far* nodealive;
-static uint8_t __far* nodevisited;
+static uint8_t* inplace;
+static uint8_t* nodealive;
+static uint8_t* nodevisited;
 
 #define BIT(bits, i)    ((bits)[(i) >> 3] & (1 << ((i) & 7)))
 #define SETBIT(bits, i) ((bits)[(i) >> 3] |= (1 << ((i) & 7)))
@@ -384,15 +384,15 @@ void P_BeginLoadThings(int16_t map)
   if (h.version != 3)
     I_Error("P_BeginLoadThings: %s version %i", name, h.version);
 
-  tlthings       = (const loadthing_t __far*)(tl + h.things);
-  tlsectorfirst  = (const int16_t __far*)(tl + h.sectorfirst);
-  tlblockfirst   = (const int16_t __far*)(tl + h.blockfirst);
-  tllist         = (const int16_t __far*)(tl + h.list);
-  tlnodefirst    = (const int16_t __far*)(tl + h.nodefirst);
-  tlnodesector   = (const int16_t __far*)(tl + h.nodesector);
-  tlnodething    = (const int16_t __far*)(tl + h.nodething);
-  tlsecnodefirst = (const int16_t __far*)(tl + h.secnodefirst);
-  tlsecnodes     = (const int16_t __far*)(tl + h.secnodes);
+  tlthings       = (const loadthing_t*)(tl + h.things);
+  tlsectorfirst  = (const int16_t*)(tl + h.sectorfirst);
+  tlblockfirst   = (const int16_t*)(tl + h.blockfirst);
+  tllist         = (const int16_t*)(tl + h.list);
+  tlnodefirst    = (const int16_t*)(tl + h.nodefirst);
+  tlnodesector   = (const int16_t*)(tl + h.nodesector);
+  tlnodething    = (const int16_t*)(tl + h.nodething);
+  tlsecnodefirst = (const int16_t*)(tl + h.secnodefirst);
+  tlsecnodes     = (const int16_t*)(tl + h.secnodes);
 
   if (_g_gameskill == sk_baby || _g_gameskill == sk_easy)
     skillgroup = 0;
@@ -449,7 +449,7 @@ static int16_t P_LoadSlot(int16_t thing)
 }
 
 // The part of P_SetThingPosition loading does.
-static void P_PlaceLoadThing(mobj_t __far* thing)
+static void P_PlaceLoadThing(mobj_t* thing)
 {
   const int16_t t = loadingthing;
   thing->flags |= MF_INPLACE;
@@ -477,7 +477,7 @@ boolean P_SpawnLoadStatic(fixed_t x, fixed_t y, mobjtype_t type)
   // what P_SpawnMobj and P_SpawnMapThing do for it
   const mobjinfo_t* info = &mobjinfo[type];
   mobj_t mobj;
-  _fmemset(&mobj, 0, sizeof(mobj));
+  memset(&mobj, 0, sizeof(mobj));
   mobj.type   = type;
   mobj.x      = x;
   mobj.y      = y;
@@ -520,7 +520,7 @@ static int16_t P_NextStaticState(int16_t state)
 
 // Where P_CycleState, once per P_RunLoadStatics, has taken a map static by now; none of their
 // states has an action or ends them.
-static void P_StaticPhase(int16_t slot, mobj_t __far* mobj)
+static void P_StaticPhase(int16_t slot, mobj_t* mobj)
 {
   int16_t state = mobj->state;
   int16_t tics  = states[state].tics;
@@ -575,7 +575,7 @@ static boolean P_OwnNodeVisited(int16_t t, int16_t sector)
 }
 
 // The heights of a map thing that no moving sector changed yet.
-static void P_LoadThingHeights(int16_t t, int16_t subsector, mobj_t __far* mobj)
+static void P_LoadThingHeights(int16_t t, int16_t subsector, mobj_t* mobj)
 {
   if (P_SubsectorSector(subsector) - _g_sectors == changesector && !P_OwnNodeVisited(t, changesector))
   {
@@ -585,26 +585,26 @@ static void P_LoadThingHeights(int16_t t, int16_t subsector, mobj_t __far* mobj)
   }
   else
   {
-    const sector_t __far* sector = P_SubsectorSector(subsector);
+    const sector_t* sector = P_SubsectorSector(subsector);
     mobj->z        = SEC_FLOORHEIGHT(sector);
     mobj->floorz   = SEC_FLOORHEIGHT(sector);
     mobj->ceilingz = SEC_CEILINGHEIGHT(sector);
   }
 }
 
-static staticz_t __far* P_StaticZ(int16_t slot, int16_t* i)
+static staticz_t* P_StaticZ(int16_t slot, int16_t* i)
 {
-  for (staticz_t __far* c = Z_Ptr(staticz); c; c = Z_Ptr(c->next))
+  for (staticz_t* c = Z_Ptr(staticz); c; c = Z_Ptr(c->next))
     for (*i = 0; *i < STATICZCHUNK; (*i)++)
       if (c->slot[*i] == slot)
         return c;
   return NULL;
 }
 
-static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t __far* mobj)
+static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t* mobj)
 {
   const mobjinfo_t* info = &mobjinfo[lt->type];
-  _fmemset(mobj, 0, sizeof(*mobj));
+  memset(mobj, 0, sizeof(*mobj));
   mobj->x         = (fixed_t)lt->x << FRACBITS;
   mobj->y         = (fixed_t)lt->y << FRACBITS;
   mobj->angle     = ANG45 * (lt->angle & 0x7f);
@@ -613,7 +613,7 @@ static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t 
   if (BIT(staticmoved, slot))
   {
     int16_t i;
-    const staticz_t __far* c = P_StaticZ(slot, &i);
+    const staticz_t* c = P_StaticZ(slot, &i);
     mobj->z        = c->z[i];
     mobj->floorz   = c->floorz[i];
     mobj->ceilingz = c->ceilingz[i];
@@ -629,10 +629,10 @@ static void P_StaticMobj(int16_t t, int16_t slot, const loadthing_t* lt, mobj_t 
 }
 
 // Heights a visit changed to other than the sector's, which only a moving sector does, are kept.
-static void P_KeepStaticZ(int16_t slot, const mobj_t __far* mobj, const fixed_t* old)
+static void P_KeepStaticZ(int16_t slot, const mobj_t* mobj, const fixed_t* old)
 {
   int16_t i;
-  staticz_t __far* c;
+  staticz_t* c;
   if (BIT(staticmoved, slot))
     c = P_StaticZ(slot, &i);
   else
@@ -640,7 +640,7 @@ static void P_KeepStaticZ(int16_t slot, const mobj_t __far* mobj, const fixed_t*
     if (mobj->z == old[0] && mobj->floorz == old[1] && mobj->ceilingz == old[2])
       return;
 
-    const sector_t __far* sector = P_SubsectorSector(mobj->subsector);
+    const sector_t* sector = P_SubsectorSector(mobj->subsector);
     if (mobj->z == SEC_FLOORHEIGHT(sector) && mobj->floorz == SEC_FLOORHEIGHT(sector)
         && mobj->ceilingz == SEC_CEILINGHEIGHT(sector))
       return;
@@ -678,15 +678,15 @@ static boolean P_Asleep(int16_t slot)
 }
 
 // What P_SpawnMobj, P_SpawnMapThing and the time since have made of a sleeping map thing.
-static void P_SleeperMobj(int16_t slot, uint8_t rec, mobjext_t __far* ext)
+static void P_SleeperMobj(int16_t slot, uint8_t rec, mobjext_t* ext)
 {
   const int16_t t = slotthing[slot];
   loadthing_t lt;
   W_Fetch(&tlthings[t], &lt, sizeof(lt));
   const mobjinfo_t* info = &mobjinfo[lt.type];
   const uint32_t pooled = ext->mo.flags & MF_POOLED;
-  _fmemset(ext, 0, sizeof(*ext));
-  mobj_t __far* mobj = &ext->mo;
+  memset(ext, 0, sizeof(*ext));
+  mobj_t* mobj = &ext->mo;
   mobj->x         = (fixed_t)lt.x << FRACBITS;
   mobj->y         = (fixed_t)lt.y << FRACBITS;
   mobj->angle     = ANG45 * (lt.angle & 0x7f);
@@ -708,9 +708,9 @@ static void P_SleeperMobj(int16_t slot, uint8_t rec, mobjext_t __far* ext)
 }
 
 // Whether a map thing's mobj equals its sleeping form, which rec then holds.
-static boolean P_SleepForm(int16_t slot, const mobjext_t __far* ext, uint8_t* rec)
+static boolean P_SleepForm(int16_t slot, const mobjext_t* ext, uint8_t* rec)
 {
-  const mobj_t __far* mobj = &ext->mo;
+  const mobj_t* mobj = &ext->mo;
   if (mobj->type == MT_PLAYER || mobj->type == MT_TELEPORTMAN || ext->thinker.function != P_MobjThinker
       || _g_linetarget == mobj)
     return false;
@@ -721,11 +721,11 @@ static boolean P_SleepForm(int16_t slot, const mobjext_t __far* ext, uint8_t* re
   mobjext_t form;
   form.mo.flags = mobj->flags & MF_POOLED;
   P_SleeperMobj(slot, *rec, &form);
-  return !_fmemcmp((const uint8_t*)&form + sizeof(thinker_t), (const uint8_t __far*)ext + sizeof(thinker_t),
+  return !memcmp((const uint8_t*)&form + sizeof(thinker_t), (const uint8_t*)ext + sizeof(thinker_t),
                    sizeof(form) - sizeof(thinker_t));
 }
 
-static void P_Sleep(int16_t slot, mobjext_t __far* ext, uint8_t rec)
+static void P_Sleep(int16_t slot, mobjext_t* ext, uint8_t rec)
 {
   sleeprec[slot] = rec;
   loadrefs[slot] = 0;
@@ -735,16 +735,16 @@ static void P_Sleep(int16_t slot, mobjext_t __far* ext, uint8_t rec)
     Z_Free(ext);
 }
 
-static mobjext_t __far* P_WakeMobj(int16_t slot)
+static mobjext_t* P_WakeMobj(int16_t slot)
 {
-  mobjext_t __far* ext = P_Ext(P_NewMobj(MT_POSSESSED));
+  mobjext_t* ext = P_Ext(P_NewMobj(MT_POSSESSED));
   P_SleeperMobj(slot, sleeprec[slot], ext);
   ext->thinker.function = P_MobjThinker;
   loadrefs[slot] = Z_Ref(&ext->mo);
   return ext;
 }
 
-static void P_SettleMobj(int16_t slot, mobjext_t __far* ext)
+static void P_SettleMobj(int16_t slot, mobjext_t* ext)
 {
   uint8_t rec;
   if (BIT(inplace, slotthing[slot]) && P_SleepForm(slot, ext, &rec))
@@ -757,7 +757,7 @@ static void P_SettleMobj(int16_t slot, mobjext_t __far* ext)
 // woke a later one before t.
 int16_t P_RunSleepers(int16_t slot, int16_t t)
 {
-  thinker_t __far* const next = _g_runnext;
+  thinker_t* const next = _g_runnext;
   for (; slot < numthinking && slotthing[slot] <= t; slot++)
     if (slotthing[slot] < t && P_Asleep(slot))
     {
@@ -767,7 +767,7 @@ int16_t P_RunSleepers(int16_t slot, int16_t t)
       else
       {
         _g_runlast = slotthing[slot];
-        mobjext_t __far* ext = P_WakeMobj(slot);
+        mobjext_t* ext = P_WakeMobj(slot);
         P_MobjThinker(&ext->thinker);
         P_SettleMobj(slot, ext);
         if (_g_runnext != next)
@@ -777,9 +777,9 @@ int16_t P_RunSleepers(int16_t slot, int16_t t)
   return slot;
 }
 
-void P_SleepIfUnchanged(mobjext_t __far* ext)
+void P_SleepIfUnchanged(mobjext_t* ext)
 {
-  const mobj_t __far* mobj = &ext->mo;
+  const mobj_t* mobj = &ext->mo;
   if (!(mobj->flags & MF_INPLACE) || !ext->loadthing || mobj->type == MT_PLAYER || ext->target
       || ext->health != mobjinfo[mobj->type].spawnhealth)
     return;
@@ -792,11 +792,11 @@ void P_SleepIfUnchanged(mobjext_t __far* ext)
   }
 }
 
-void P_SleepAtLoad(mobj_t __far* mobj)
+void P_SleepAtLoad(mobj_t* mobj)
 {
   if (!loadingthings || (mobj->flags & MF_STATIC))
     return;
-  mobjext_t __far* ext = P_Ext(mobj);
+  mobjext_t* ext = P_Ext(mobj);
   const int16_t slot = P_LoadSlot(loadingthing);
   uint8_t rec;
   if (P_SleepForm(slot, ext, &rec))
@@ -807,7 +807,7 @@ void P_SleepAtLoad(mobj_t __far* mobj)
 }
 
 // A map thing's mobj now lives at mobj.
-void P_MoveLoadRef(int16_t loadthing, mobj_t __far* mobj)
+void P_MoveLoadRef(int16_t loadthing, mobj_t* mobj)
 {
   if (loadthing)
     loadrefs[P_LoadSlot(loadthing - 1)] = Z_Ref(mobj);
@@ -821,7 +821,7 @@ boolean P_SleeperOfType(mobjtype_t type)
   return false;
 }
 
-static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
+static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t*))
 {
   loadthing_t lt;
   W_Fetch(&tlthings[t], &lt, sizeof(lt));
@@ -830,7 +830,7 @@ static boolean P_VisitLoadThing(int16_t t, boolean func(mobj_t __far*))
   {
     if (loadrefs[slot])
       return func(P_Mobj(loadrefs[slot]));
-    mobjext_t __far* ext = P_WakeMobj(slot);
+    mobjext_t* ext = P_WakeMobj(slot);
     const boolean r = func(&ext->mo);
     P_SettleMobj(slot, ext);
     return r;
@@ -850,11 +850,11 @@ void P_RunLoadStatics(void)
   staticclock++;
 }
 
-static void P_SetInterceptThing(intercept_t* in, mobj_t __far* thing)
+static void P_SetInterceptThing(intercept_t* in, mobj_t* thing)
 {
   in->isaline = false;
   if ((thing->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE))
-    in->d.thing = (mobj_t __far*)&staticproxy;
+    in->d.thing = (mobj_t*)&staticproxy;
   else if ((thing->flags & MF_INPLACE) && !P_Ext(thing)->thinker.next)
   {
     in->isaline     = INTERCEPT_SLEEPER;
@@ -873,14 +873,14 @@ static boolean P_TraverseSleeper(intercept_t* in, traverser_t func)
     in->d.thing = P_Mobj(loadrefs[slot]);
     return func(in);
   }
-  mobjext_t __far* ext = P_WakeMobj(slot);
+  mobjext_t* ext = P_WakeMobj(slot);
   in->d.thing = &ext->mo;
   const boolean r = func(in);
   P_SettleMobj(slot, ext);
   return r;
 }
 
-int16_t P_LoadIndex(mobj_t __far* thing)
+int16_t P_LoadIndex(mobj_t* thing)
 {
   if (loadingthings)
     return -1;
@@ -909,7 +909,7 @@ void P_KillLoadNode(int16_t k)
   CLRBIT(nodealive, k);
 }
 
-void P_KillLoadNodes(mobj_t __far* thing)
+void P_KillLoadNodes(mobj_t* thing)
 {
   int16_t i = P_LoadIndex(thing);
   if (i >= 0)
@@ -935,16 +935,16 @@ void P_EndLoadNodeChange(void)
   changesector = -1;
 }
 
-static void (*changefunc)(mobj_t __far*);
+static void (*changefunc)(mobj_t*);
 
-static boolean P_ChangeThing(mobj_t __far* thing)
+static boolean P_ChangeThing(mobj_t* thing)
 {
   if (!(thing->flags & MF_NOBLOCKMAP))
     changefunc(thing);
   return true;
 }
 
-boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*))
+boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t*))
 {
   const int16_t last = W_FetchInt16(&tlsecnodefirst[sector + 1]);
   for (int16_t j = W_FetchInt16(&tlsecnodefirst[sector]); j < last; j++)
@@ -953,7 +953,7 @@ boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*))
     if (BIT(nodealive, k) && !BIT(nodevisited, k))
     {
       SETBIT(nodevisited, k);
-      void (*saved)(mobj_t __far*) = changefunc;
+      void (*saved)(mobj_t*) = changefunc;
       changefunc = func;
       P_VisitLoadThing(W_FetchInt16(&tlnodething[k]), P_ChangeThing);
       changefunc = saved;
@@ -963,7 +963,7 @@ boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*))
   return false;
 }
 
-static boolean P_LoadListThings(const int16_t __far* first, boolean func(mobj_t __far*))
+static boolean P_LoadListThings(const int16_t* first, boolean func(mobj_t*))
 {
   int16_t range[2];
   W_Fetch(first, range, sizeof(range));
@@ -977,7 +977,7 @@ static boolean P_LoadListThings(const int16_t __far* first, boolean func(mobj_t 
   return true;
 }
 
-boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t __far*))
+boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t*))
 {
   return P_LoadListThings(&tlsectorfirst[sector], func);
 }
@@ -990,7 +990,7 @@ boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t __far*))
 // these structures need to be updated.
 //
 
-void P_UnsetThingPosition(mobj_t __far* thing)
+void P_UnsetThingPosition(mobj_t* thing)
 {
   if (thing->flags & MF_INPLACE)
     {
@@ -1013,7 +1013,7 @@ void P_UnsetThingPosition(mobj_t __far* thing)
        * pointers, allows head node pointers to be treated like everything else
        */
 
-      zref_t __far* sprev = Z_Ptr(thing->sprev);
+      zref_t* sprev = Z_Ptr(thing->sprev);
       zref_t snext = thing->snext;
       if ((*sprev = snext))  // unlink from sector list
         P_Mobj(snext)->sprev = thing->sprev;
@@ -1049,7 +1049,7 @@ void P_UnsetThingPosition(mobj_t __far* thing)
        */
 
       zref_t bnext;
-      zref_t __far* bprev = Z_Ptr(thing->bprev);
+      zref_t* bprev = Z_Ptr(thing->bprev);
       if (bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
         P_Mobj(bnext)->bprev = thing->bprev;
     }
@@ -1062,7 +1062,7 @@ void P_UnsetThingPosition(mobj_t __far* thing)
 // Sets thing->subsector properly
 //
 
-void P_SetThingPosition(mobj_t __far* thing)
+void P_SetThingPosition(mobj_t* thing)
 {                                                      // link into subsector
   int16_t ss = R_PointInSubsector(thing->x, thing->y);
   thing->subsector = ss;
@@ -1078,7 +1078,7 @@ void P_SetThingPosition(mobj_t __far* thing)
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
 
-      zref_t __far* link = &SEC_THINGS(P_SubsectorSector(ss));
+      zref_t* link = &SEC_THINGS(P_SubsectorSector(ss));
       zref_t snext = *link;
       if ((thing->snext = snext))
         P_Mobj(snext)->sprev = Z_Ref(&thing->snext);
@@ -1112,7 +1112,7 @@ void P_SetThingPosition(mobj_t __far* thing)
         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
         // pointers, allows head nodes to be treated like everything else
 
-        zref_t __far* link = &_g_blocklinks[(blocky*_g_bmapwidth+blockx) & (BLOCKBUCKETS - 1)];
+        zref_t* link = &_g_blocklinks[(blocky*_g_bmapwidth+blockx) & (BLOCKBUCKETS - 1)];
         zref_t bnext = *link;
         if ((thing->bnext = bnext))
           P_Mobj(bnext)->bprev = Z_Ref(&thing->bnext);
@@ -1142,14 +1142,14 @@ void P_SetThingPosition(mobj_t __far* thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 
-boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __far*))
+boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t*))
 {
 
     if (!(0 <= x && x < _g_bmapwidth && 0 <= y && y <_g_bmapheight))
         return true;
 
     const int16_t offset = W_FetchInt16(&_g_blockmap[y*_g_bmapwidth+x]);
-    const int16_t __far* list = _g_blockmaplump+offset;     // original was reading         // phares
+    const int16_t* list = _g_blockmaplump+offset;     // original was reading         // phares
 
 
     // delmiting 0 as linedef 0     // phares
@@ -1182,16 +1182,16 @@ boolean P_BlockLinesIterator(int16_t x, int16_t y, boolean func(const line_t __f
 // moves between unlinking and linking again, so its position tells its block.
 //
 
-static int16_t P_ThingBlock(const mobj_t __far* thing)
+static int16_t P_ThingBlock(const mobj_t* thing)
 {
   int16_t blockx = (thing->x - _g_bmaporgx)>>MAPBLOCKSHIFT;
   int16_t blocky = (thing->y - _g_bmaporgy)>>MAPBLOCKSHIFT;
   return blocky*_g_bmapwidth+blockx;
 }
 
-boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*))
+boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t*))
 {
-  mobj_t __far* mobj;
+  mobj_t* mobj;
   if (0 <= x && x < _g_bmapwidth && 0 <= y && y < _g_bmapheight)
     {
     const int16_t b = y*_g_bmapwidth+x;
@@ -1226,7 +1226,7 @@ static boolean check_intercept(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 
-static boolean PIT_AddLineIntercepts(const line_t __far* ld)
+static boolean PIT_AddLineIntercepts(const line_t* ld)
 {
   int16_t       s1;
   int16_t       s2;
@@ -1274,7 +1274,7 @@ static boolean PIT_AddLineIntercepts(const line_t __far* ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 
-static boolean PIT_AddThingIntercepts(mobj_t __far* thing)
+static boolean PIT_AddThingIntercepts(mobj_t* thing)
 {
   fixed_t   x1, y1;
   fixed_t   x2, y2;

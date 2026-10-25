@@ -24,7 +24,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include "compiler.h"
 #include "z_zone.h"
 #include "doomdef.h"
 #include "i_system.h"
@@ -84,35 +83,35 @@ typedef struct
 #endif
 
 
-uint8_t __far* _g_zonebase;
+uint8_t* _g_zonebase;
 
-static memblock_t __far* mainzone_sentinal;
+static memblock_t* mainzone_sentinal;
 static zindex_t   mainzone_rover;
 
 
-static zindex_t pointerToIndex(const void __far* ptr)
+static zindex_t pointerToIndex(const void* ptr)
 {
-	return ((const uint8_t __far*)ptr - _g_zonebase) / ZONE_UNIT;
+	return ((const uint8_t*)ptr - _g_zonebase) / ZONE_UNIT;
 }
 
-static memblock_t __far* indexToPointer(zindex_t i)
+static memblock_t* indexToPointer(zindex_t i)
 {
-	return (memblock_t __far*)(_g_zonebase + (uint32_t)i * ZONE_UNIT);
-}
-
-
-boolean Z_EqualNames(const char __far* farName, const char* nearName)
-{
-	return _fmemcmp(farName, nearName, 8) == 0;
+	return (memblock_t*)(_g_zonebase + (uint32_t)i * ZONE_UNIT);
 }
 
 
-zref_t Z_Ref(const void __far* ptr)
+boolean Z_EqualNames(const char* farName, const char* nearName)
+{
+	return memcmp(farName, nearName, 8) == 0;
+}
+
+
+zref_t Z_Ref(const void* ptr)
 {
 	if (ptr == NULL)
 		return 0;
 
-	uint32_t offset = (const uint8_t __far*)ptr - _g_zonebase;
+	uint32_t offset = (const uint8_t*)ptr - _g_zonebase;
 	if (offset == 0 || offset > ZREF_SPAN || (offset & ((1 << ZREF_SHIFT) - 1)) != 0)
 		I_Error("Z_Ref: 0x%lx is not a zone address", offset);
 
@@ -127,7 +126,7 @@ void Z_Init (void)
 {
 	// allocate all available conventional memory.
 	uint32_t heapSize;
-	static uint8_t __far* mainzone; mainzone = I_ZoneBase(&heapSize);
+	static uint8_t* mainzone; mainzone = I_ZoneBase(&heapSize);
 
 	_g_zonebase = mainzone;
 	if (heapSize > ZREF_SPAN)
@@ -135,12 +134,12 @@ void Z_Init (void)
 	heapSize &= ~(uint32_t)(ZONE_UNIT - 1);
 
 	// the sentinal heads the zone, so no object lives at offset 0
-	mainzone_sentinal = (memblock_t __far*)mainzone;
+	mainzone_sentinal = (memblock_t*)mainzone;
 	zindex_t sentinal = pointerToIndex(mainzone_sentinal);
 
 	// set the rest of the zone to one free block
 	mainzone_rover = sentinal + HEADER_UNITS;
-	memblock_t __far* block = indexToPointer(mainzone_rover);
+	memblock_t* block = indexToPointer(mainzone_rover);
 
 	mainzone_sentinal->size = HEADER_UNITS;
 	mainzone_sentinal->tag  = PU_STATIC;
@@ -159,7 +158,7 @@ void Z_Init (void)
 }
 
 
-static void Z_FreeBlock(memblock_t __far* block)
+static void Z_FreeBlock(memblock_t* block)
 {
 #if defined ZONEIDCHECK
     if (block->id != ZONEID)
@@ -175,7 +174,7 @@ static void Z_FreeBlock(memblock_t __far* block)
     I_Printf("Free: %ld\n", running_count);
 #endif
 
-    memblock_t __far* other = indexToPointer(block->prev);
+    memblock_t* other = indexToPointer(block->prev);
 
     if (!other->tag)
     {
@@ -207,7 +206,7 @@ static void Z_FreeBlock(memblock_t __far* block)
 //
 // Z_Free
 //
-void Z_Free (const void __far* ptr)
+void Z_Free (const void* ptr)
 {
 	Z_FreeBlock(indexToPointer(pointerToIndex(ptr) - HEADER_UNITS));
 }
@@ -219,7 +218,7 @@ static uint32_t Z_GetLargestFreeBlockSize(void)
 
 	uint32_t largestFreeBlockSize = 0;
 
-	for (memblock_t __far* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = indexToPointer(block->next))
+	for (memblock_t* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = indexToPointer(block->next))
 		if (!block->tag && (uint32_t)block->size * ZONE_UNIT > largestFreeBlockSize)
 			largestFreeBlockSize = (uint32_t)block->size * ZONE_UNIT;
 
@@ -232,7 +231,7 @@ static uint32_t Z_GetTotalFreeMemory(void)
 
 	uint32_t totalFreeMemory = 0;
 
-	for (memblock_t __far* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = indexToPointer(block->next))
+	for (memblock_t* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = indexToPointer(block->next))
 		if (!block->tag)
 			totalFreeMemory += (uint32_t)block->size * ZONE_UNIT;
 
@@ -243,7 +242,7 @@ static uint32_t Z_GetTotalFreeMemory(void)
 //
 // Z_TryMalloc
 //
-static void __far* Z_TryMalloc(uint16_t size, int8_t tag)
+static void* Z_TryMalloc(uint16_t size, int8_t tag)
 {
     // scan through the block list,
     // looking for the first free block
@@ -255,13 +254,13 @@ static void __far* Z_TryMalloc(uint16_t size, int8_t tag)
 
     // if there is a free block behind the rover,
     //  back up over them
-    memblock_t __far* base = indexToPointer(mainzone_rover);
+    memblock_t* base = indexToPointer(mainzone_rover);
 
-    memblock_t __far* previous_block = indexToPointer(base->prev);
+    memblock_t* previous_block = indexToPointer(base->prev);
     if (!previous_block->tag)
         base = previous_block;
 
-    memblock_t __far* rover = base;
+    memblock_t* rover = base;
     zindex_t    start_index = base->prev;
 
     do
@@ -304,7 +303,7 @@ static void __far* Z_TryMalloc(uint16_t size, int8_t tag)
         zindex_t base_index     = pointerToIndex(base);
         zindex_t newblock_index = base_index + units;
 
-        memblock_t __far* newblock = indexToPointer(newblock_index);
+        memblock_t* newblock = indexToPointer(newblock_index);
         newblock->size = newblock_units;
         newblock->tag  = 0;
         newblock->next = base->next;
@@ -335,44 +334,44 @@ static void __far* Z_TryMalloc(uint16_t size, int8_t tag)
 }
 
 
-static void __far* Z_Malloc(uint16_t size, int8_t tag) {
-	void __far* ptr = Z_TryMalloc(size, tag);
+static void* Z_Malloc(uint16_t size, int8_t tag) {
+	void* ptr = Z_TryMalloc(size, tag);
 	if (!ptr)
 		I_Error ("Z_Malloc: failed to allocate %u B, max free block %li B, total free %li", size, Z_GetLargestFreeBlockSize(), Z_GetTotalFreeMemory());
 	return ptr;
 }
 
 
-void __far* Z_TryMallocStatic(uint16_t size)
+void* Z_TryMallocStatic(uint16_t size)
 {
 	return Z_TryMalloc(size, PU_STATIC);
 }
 
 
-void __far* Z_MallocStatic(uint16_t size)
+void* Z_MallocStatic(uint16_t size)
 {
 	return Z_Malloc(size, PU_STATIC);
 }
 
 
-void __far* Z_MallocLevel(uint16_t size)
+void* Z_MallocLevel(uint16_t size)
 {
 	return Z_Malloc(size, PU_LEVEL);
 }
 
 
-void __far* Z_CallocLevel(uint16_t size)
+void* Z_CallocLevel(uint16_t size)
 {
-    void __far* ptr = Z_Malloc(size, PU_LEVEL);
-    _fmemset(ptr, 0, size);
+    void* ptr = Z_Malloc(size, PU_LEVEL);
+    memset(ptr, 0, size);
     return ptr;
 }
 
 
-void __far* Z_CallocLevSpec(uint16_t size)
+void* Z_CallocLevSpec(uint16_t size)
 {
-	void __far* ptr = Z_Malloc(size, PU_LEVSPEC);
-	_fmemset(ptr, 0, size);
+	void* ptr = Z_Malloc(size, PU_LEVSPEC);
+	memset(ptr, 0, size);
 	return ptr;
 }
 
@@ -383,9 +382,9 @@ void __far* Z_CallocLevSpec(uint16_t size)
 void Z_FreeTags(void)
 {
     zindex_t sentinal = pointerToIndex(mainzone_sentinal);
-    memblock_t __far* next;
+    memblock_t* next;
 
-    for (memblock_t __far* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = next)
+    for (memblock_t* block = indexToPointer(mainzone_sentinal->next); pointerToIndex(block) != sentinal; block = next)
     {
         // get link before freeing
         next = indexToPointer(block->next);
@@ -402,7 +401,7 @@ void Z_CheckHeap (void)
 {
     zindex_t sentinal = pointerToIndex(mainzone_sentinal);
 
-    for (memblock_t __far* block = indexToPointer(mainzone_sentinal->next); ; block = indexToPointer(block->next))
+    for (memblock_t* block = indexToPointer(mainzone_sentinal->next); ; block = indexToPointer(block->next))
     {
         if (block->next == sentinal)
         {

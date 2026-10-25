@@ -34,10 +34,10 @@
  *-----------------------------------------------------------------------------*/
 
 struct block_memory_alloc_s {
-	void  __far* firstpool;
+	void * firstpool;
 	size_t size;
 };
 
-void __far* Z_BMalloc(struct block_memory_alloc_s *pzone);
+void* Z_BMalloc(struct block_memory_alloc_s *pzone);
 
-void Z_BFree(struct block_memory_alloc_s *pzone, void __far* p);
+void Z_BFree(struct block_memory_alloc_s *pzone, void* p);

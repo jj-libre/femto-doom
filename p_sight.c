@@ -107,11 +107,11 @@ static boolean P_CrossSubsector(int16_t num)
     mapsubsector_t mapsub;
     W_Fetch(&_g_mapsubsectors[num], &mapsub, sizeof(mapsub));
 
-    const seg_t __far* segp = _g_segs + mapsub.firstseg;
+    const seg_t* segp = _g_segs + mapsub.firstseg;
     int16_t count;
     fixed_t opentop = 0, openbottom = 0;
-    const sector_t __far* front = NULL;
-    const sector_t __far* back  = NULL;
+    const sector_t* front = NULL;
+    const sector_t* back  = NULL;
 
     for (count = mapsub.numsegs; --count >= 0; segp++)
     { // check lines
@@ -261,22 +261,15 @@ static boolean P_CrossBSPNode(int16_t bspnum)
 }
 
 
-static uint32_t linearAddress(const void __far* ptr)
+static uint32_t linearAddress(const void* ptr)
 {
-#if defined _M_I86
-	uint32_t seg = D_FP_SEG(ptr);
-	uint16_t off = D_FP_OFF(ptr);
-
-	return seg * 16 + off;
-#else
-	return (uint32_t)ptr;
-#endif
+	return (uint32_t)(uintptr_t)ptr;
 }
 
 
 // Which thing the last result was for. A map thing's mobj can change while it sleeps, so it is
 // known by its load index.
-static uint32_t P_SightKey(const mobj_t __far* t)
+static uint32_t P_SightKey(const mobj_t* t)
 {
   if (!(t->flags & MF_STATIC) && P_Ext(t)->loadthing)
     return 0xffff0000UL | (uint16_t)P_Ext(t)->loadthing;
@@ -293,7 +286,7 @@ static uint32_t P_SightKey(const mobj_t __far* t)
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
 
-boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
+boolean P_CheckSight(mobj_t* t1, mobj_t* t2)
 {
   static uint32_t prevlat1;
   static uint32_t prevlat2;
@@ -305,8 +298,8 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   prevlat1 = P_SightKey(t1);
   prevlat2 = P_SightKey(t2);
 
-  const sector_t __far* s1 = P_SubsectorSector(t1->subsector);
-  const sector_t __far* s2 = P_SubsectorSector(t2->subsector);
+  const sector_t* s1 = P_SubsectorSector(t1->subsector);
+  const sector_t* s2 = P_SubsectorSector(t2->subsector);
   int16_t pnum = (s1-_g_sectors)*_g_numsectors + (s2-_g_sectors);
 
   // First check for trivial rejection.

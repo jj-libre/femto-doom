@@ -102,18 +102,18 @@ extern fixed_t   _g_tmdropoffz; // dropoff on other side of line you're crossing
 // keep track of the line that lowers the ceiling,
 // so missiles don't explode against sky hack walls
 
-extern const line_t    __far* _g_ceilingline;
+extern const line_t   * _g_ceilingline;
 
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
 
 // 1/11/98 killough: removed limit on special lines crossed
-extern const line_t __far* _g_spechit[4];
+extern const line_t* _g_spechit[4];
 
 extern int16_t _g_numspechit;
 
 
-extern mobj_t __far*   _g_linetarget; // who got hit (or NULL)
+extern mobj_t*   _g_linetarget; // who got hit (or NULL)
 
 
 //******************************************************************************
@@ -138,27 +138,27 @@ extern divline_t _g_trace;
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 
-extern const seg_t    __far* _g_segs;
+extern const seg_t   * _g_segs;
 
 extern int16_t      _g_numsectors;
-extern sector_t __far* _g_sectors;
+extern sector_t* _g_sectors;
 extern const mapsector_t *_g_mapsectors;
 
 
-extern const uint8_t __far* _g_subsecsector;
+extern const uint8_t* _g_subsecsector;
 extern const mapsubsector_t *_g_mapsubsectors;
 
 
 extern int16_t      _g_numlines;
-extern const uint16_t __far* _g_seclinefirst;
-extern const int16_t  __far* _g_seclines;
-extern uint8_t      __far* _g_linebits;
+extern const uint16_t* _g_seclinefirst;
+extern const int16_t * _g_seclines;
+extern uint8_t     * _g_linebits;
 extern int16_t      _g_linebytes;
 extern uint16_t     _g_linedonetic;
 extern const line_t *_g_maplines;
 
 
-extern side_t   __far* _g_sides;
+extern side_t  * _g_sides;
 extern const mapsidedef_t *_g_mapsides;
 
 
@@ -174,15 +174,15 @@ extern const mapsidedef_t *_g_mapsides;
 extern int16_t       _g_bmapwidth, _g_bmapheight;  // size in mapblocks
 
 // killough 3/1/98: remove blockmap limit internally:
-extern const int16_t      __far* _g_blockmap;
+extern const int16_t     * _g_blockmap;
 
 // offsets in blockmap are from here
-extern const int16_t      __far* _g_blockmaplump;
+extern const int16_t     * _g_blockmaplump;
 
 extern fixed_t   _g_bmaporgx, _g_bmaporgy;     // origin of block map
 
 #define BLOCKBUCKETS 64
-extern zref_t    __far* _g_blocklinks;           // for thing chains, BLOCKBUCKETS of them
+extern zref_t   * _g_blocklinks;           // for thing chains, BLOCKBUCKETS of them
 
 //
 // REJECT
@@ -193,10 +193,10 @@ extern zref_t    __far* _g_blocklinks;           // for thing chains, BLOCKBUCKE
 // be used as a PVS lookup as well.
 //
 
-extern const byte __far* _g_rejectmatrix;
+extern const byte* _g_rejectmatrix;
 
 
-extern mobjext_t __far*   _g_thingPool;
+extern mobjext_t*   _g_thingPool;
 extern int16_t _g_thingPoolSize;
 
 // Items dropped in play, in chunks allocated as they drop.
@@ -204,10 +204,10 @@ extern int16_t _g_thingPoolSize;
 typedef struct staticchunk_s
 {
   mobj_t mobj[STATICCHUNK];
-  struct staticchunk_s __far* next;
+  struct staticchunk_s* next;
 } staticchunk_t;
 
-extern staticchunk_t __far* _g_staticchunks;
+extern staticchunk_t* _g_staticchunks;
 
 
 //******************************************************************************

@@ -56,7 +56,7 @@
  *
  */
 
-static void EV_LightTurnOnPartway(const line_t __far* line, fixed_t level)
+static void EV_LightTurnOnPartway(const line_t* line, fixed_t level)
 {
   int16_t i;
 
@@ -68,8 +68,8 @@ static void EV_LightTurnOnPartway(const line_t __far* line, fixed_t level)
   // search all sectors for ones with same tag as activating line
   for (i = -1; (i = P_FindSectorFromLineTag(LN_TAG(line),i)) >= 0;)
     {
-      sector_t __far* temp;
-      sector_t __far* sector = _g_sectors+i;
+      sector_t* temp;
+      sector_t* sector = _g_sectors+i;
       int16_t j, bright = 0, min = sector->lightlevel;
 
       for (j = 0; j < SEC_LINECOUNT(sector); j++)
@@ -101,7 +101,7 @@ static void EV_LightTurnOnPartway(const line_t __far* line, fixed_t level)
 // Returns nothing.
 //
 
-void T_VerticalDoor(vldoor_t __far* door)
+void T_VerticalDoor(vldoor_t* door)
 {
   result_e  res;
 
@@ -230,12 +230,12 @@ void T_VerticalDoor(vldoor_t __far* door)
 // Passed the line activating the door and the type of door
 // Returns true if a thinker created
 //
-boolean EV_DoDoor(const line_t __far* line, vldoor_e type)
+boolean EV_DoDoor(const line_t* line, vldoor_e type)
 {
   int16_t   secnum;
   boolean   rtn;
-  sector_t __far* sec;
-  vldoor_t __far* door;
+  sector_t* sec;
+  vldoor_t* door;
 
   secnum = -1;
   rtn = false;

@@ -31,16 +31,16 @@
 #include "doomtype.h"
 
 void Z_Init(void);
-void __far* Z_TryMallocStatic(uint16_t size);
-void __far* Z_MallocStatic(uint16_t size);
-void __far* Z_MallocLevel(uint16_t size);
-void __far* Z_CallocLevel(uint16_t size);
-void __far* Z_CallocLevSpec(uint16_t size);
-void Z_Free(const void __far* ptr);
+void* Z_TryMallocStatic(uint16_t size);
+void* Z_MallocStatic(uint16_t size);
+void* Z_MallocLevel(uint16_t size);
+void* Z_CallocLevel(uint16_t size);
+void* Z_CallocLevSpec(uint16_t size);
+void Z_Free(const void* ptr);
 void Z_FreeTags(void);
 void Z_CheckHeap(void);
 
-boolean Z_EqualNames(const char __far* farName, const char* nearName);
+boolean Z_EqualNames(const char* farName, const char* nearName);
 
 // A zone address in units of 1 << ZREF_SHIFT bytes. 0 is NULL: the zone
 // starts with a block header, so no object lives at offset 0.
@@ -49,11 +49,11 @@ typedef uint16_t zref_t;
 #define ZREF_SHIFT	1
 #define ZREF_SPAN	((uint32_t)UINT16_MAX << ZREF_SHIFT)
 
-extern uint8_t __far* _g_zonebase;
+extern uint8_t* _g_zonebase;
 
-zref_t Z_Ref(const void __far* ptr);
+zref_t Z_Ref(const void* ptr);
 
-static inline void __far* Z_Ptr(zref_t ref)
+static inline void* Z_Ptr(zref_t ref)
 {
 	return ref ? _g_zonebase + ((uint32_t)ref << ZREF_SHIFT) : NULL;
 }

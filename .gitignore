@@ -1,7 +1,3 @@
-/DJ
-/neogeo/rom
-/neogeo/DOOM64KB.elf
-/WC
 __pycache__/
 .venv/
 .mypy_cache/

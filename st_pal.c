@@ -25,7 +25,6 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
 #include "doomdef.h"
 #include "i_system.h"
 #include "st_stuff.h"

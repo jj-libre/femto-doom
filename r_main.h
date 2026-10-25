@@ -47,7 +47,7 @@ typedef struct {
   uint16_t             fracstep;
   fixed_t              texturemid;
 
-  const byte    __far* source; // first pixel in a column
+  const byte   * source; // first pixel in a column
 
   const uint8_t* colormap;
 } draw_column_vars_t;
@@ -56,7 +56,7 @@ typedef struct {
 //Global vars.
 
 extern int16_t numnodes;
-extern const mapnode_t __far* nodes;
+extern const mapnode_t* nodes;
 
 #if !defined FLAT_SPAN
 extern fixed_t  viewx, viewy, viewz;
@@ -68,7 +68,7 @@ extern angle_t viewangle;
 extern const uint8_t *fullcolormap;
 extern const uint8_t* fixedcolormap;
 
-extern const int16_t   __far* textureheight; //needed for texture pegging (and TFE fix - killough)
+extern const int16_t  * textureheight; //needed for texture pegging (and TFE fix - killough)
 
 
 //
@@ -96,9 +96,9 @@ void R_DrawColumnWall(const draw_column_vars_t *dcvars);
 void R_DrawColumnFlat(uint8_t color, const draw_column_vars_t *dcvars);
 
 void R_DrawPlanes (void);
-visplane_t __far* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel);
-visplane_t __far* R_DupPlane(const visplane_t __far* pl, int16_t start, int16_t stop);
-visplane_t __far* R_CheckPlane(visplane_t __far* pl, int16_t start, int16_t stop);
+visplane_t* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel);
+visplane_t* R_DupPlane(const visplane_t* pl, int16_t start, int16_t stop);
+visplane_t* R_CheckPlane(visplane_t* pl, int16_t start, int16_t stop);
 byte R_GetPlaneColor(int16_t picnum, int16_t lightlevel);
 void R_ResetPlanes(void);
 void R_ClearPlanes(void);
@@ -110,7 +110,7 @@ void R_LoadSkyPatch(void);
 void R_FreeSkyPatch(void);
 void R_DrawSky(draw_column_vars_t *dcvars);
 #else
-void R_DrawSky(visplane_t __far* pl);
+void R_DrawSky(visplane_t* pl);
 #endif
 
 #endif

@@ -38,7 +38,6 @@
  */
 
 #include "doomdef.h"
-#include "compiler.h"
 #include "w_wad.h"
 #include "v_video.h"
 
@@ -53,13 +52,13 @@ void V_DrawRawFullScreen(int16_t num)
 
 void V_DrawNumPatchScaled(int16_t x, int16_t y, int16_t num)
 {
-	const patch_t __far* patch = W_GetLumpByNum(num);
+	const patch_t* patch = W_GetLumpByNum(num);
 	V_DrawPatchScaled(x, y, patch);
 }
 
 
 void V_DrawNumPatchNotScaled(int16_t x, int16_t y, int16_t num)
 {
-	const patch_t __far* patch = W_GetLumpByNum(num);
+	const patch_t* patch = W_GetLumpByNum(num);
 	V_DrawPatchNotScaled(x, y, patch);
 }

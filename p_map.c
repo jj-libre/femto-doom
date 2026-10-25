@@ -51,7 +51,7 @@
 #include "globdata.h"
 
 
-static mobj_t    __far* tmthing;
+static mobj_t   * tmthing;
 static fixed_t   tmx;
 static fixed_t   tmy;
 
@@ -67,23 +67,23 @@ fixed_t   _g_tmdropoffz; // dropoff on other side of line you're crossing
 // keep track of the line that lowers the ceiling,
 // so missiles don't explode against sky hack walls
 
-const line_t    __far* _g_ceilingline;
+const line_t   * _g_ceilingline;
 
 
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
 
 // 1/11/98 killough: removed limit on special lines crossed
-const line_t __far* _g_spechit[4];
+const line_t* _g_spechit[4];
 
 int16_t _g_numspechit;
 
 // Temporary holder for thing_sectorlist threads
-static msecnode_t __far* _s_sector_list;
+static msecnode_t* _s_sector_list;
 
 
-mobj_t __far*   _g_linetarget; // who got hit (or NULL)
-static mobj_t __far*   shootthing;
+mobj_t*   _g_linetarget; // who got hit (or NULL)
+static mobj_t*   shootthing;
 
 // Height if not aiming up or down
 static fixed_t   shootz;
@@ -96,11 +96,11 @@ static fixed_t   attackrange;
 static fixed_t  topslope;
 static fixed_t  bottomslope;
 
-static mobj_t __far* bombsource;
-static mobj_t __far* bombspot;
+static mobj_t* bombsource;
+static mobj_t* bombspot;
 static int16_t bombdamage;
 
-static mobj_t __far*   usething;
+static mobj_t*   usething;
 
 
 static boolean telefrag;   /* killough 8/9/98: whether to telefrag at exit */
@@ -125,7 +125,7 @@ boolean P_IsAttackRangeMeleeRange(void)
 //
 
 
-static boolean PIT_StompThing(mobj_t __far* thing)
+static boolean PIT_StompThing(mobj_t* thing)
   {
   fixed_t blockdist;
 
@@ -158,7 +158,7 @@ static boolean PIT_StompThing(mobj_t __far* thing)
 // P_TeleportMove
 //
 
-boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
+boolean P_TeleportMove(mobj_t* thing, fixed_t x, fixed_t y, boolean boss)
   {
   int16_t     xl;
   int16_t     xh;
@@ -242,7 +242,7 @@ boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss)
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
 
-static boolean PIT_CheckLine (const line_t __far* ld)
+static boolean PIT_CheckLine (const line_t* ld)
 {
   int16_t bbox[4];
   W_Fetch(ld->bbox, bbox, sizeof(bbox));
@@ -319,7 +319,7 @@ static boolean PIT_CheckLine (const line_t __far* ld)
 // PIT_CheckThing
 //
 
-static boolean PIT_CheckThing(mobj_t __far* thing)
+static boolean PIT_CheckThing(mobj_t* thing)
 {
   fixed_t blockdist;
   int16_t damage;
@@ -439,7 +439,7 @@ static boolean PIT_CheckThing(mobj_t __far* thing)
 //  numspeciallines
 //
 
-boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y)
+boolean P_CheckPosition(mobj_t* thing, fixed_t x, fixed_t y)
   {
   int16_t     xl;
   int16_t     xh;
@@ -521,7 +521,7 @@ boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y)
 //  crossed. Change is qualified by demo_compatibility.
 //
 // CPhipps - take a line_t pointer instead of a line number, as in MBF
-static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __far* thing)
+static void P_CrossSpecialLine(const line_t* line, int16_t side, mobj_t* thing)
 {
   boolean         ok;
 
@@ -657,7 +657,7 @@ static void P_CrossSpecialLine(const line_t __far* line, int16_t side, mobj_t __
 // Attempt to move to a new position,
 // crossing special lines.
 //
-boolean P_TryMove(mobj_t __far* thing, fixed_t x, fixed_t y)
+boolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y)
 {
     fixed_t oldx;
     fixed_t oldy;
@@ -721,8 +721,8 @@ static fixed_t  aimslope;
 //
 static boolean PTR_AimTraverse (intercept_t* in)
 {
-    const line_t __far* li;
-    mobj_t __far* th;
+    const line_t* li;
+    mobj_t* th;
     fixed_t slope;
     fixed_t thingtopslope;
     fixed_t thingbottomslope;
@@ -813,7 +813,7 @@ static boolean PTR_AimTraverse (intercept_t* in)
 // of the line, should the sector already be in motion when the line is
 // impacted. Change is qualified by demo_compatibility.
 //
-static void P_ShootSpecialLine(mobj_t __far* thing, const line_t __far* line)
+static void P_ShootSpecialLine(mobj_t* thing, const line_t* line)
 {
   // Impacts that other things can activate.
   if (!P_MobjIsPlayer(thing))
@@ -864,7 +864,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
   fixed_t z;
   fixed_t frac;
 
-  mobj_t __far* th;
+  mobj_t* th;
 
   fixed_t dist;
   fixed_t thingtopslope;
@@ -872,7 +872,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
 
   if (in->isaline)
   {
-    const line_t __far* li = in->d.line;
+    const line_t* li = in->d.line;
 
     if (LN_SPECIAL(li))
       P_ShootSpecialLine (shootthing, li);
@@ -971,7 +971,7 @@ static boolean PTR_ShootTraverse (intercept_t* in)
 //
 // P_AimLineAttack
 //
-fixed_t P_AimLineAttack(mobj_t __far* t1, angle_t angle, fixed_t distance)
+fixed_t P_AimLineAttack(mobj_t* t1, angle_t angle, fixed_t distance)
   {
   fixed_t x2;
   fixed_t y2;
@@ -1006,7 +1006,7 @@ fixed_t P_AimLineAttack(mobj_t __far* t1, angle_t angle, fixed_t distance)
 // that will leave linetarget set.
 //
 
-void P_LineAttack(mobj_t __far* t1, angle_t angle, fixed_t distance, fixed_t slope, int16_t damage)
+void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int16_t damage)
 {
   fixed_t x2;
   fixed_t y2;
@@ -1065,7 +1065,7 @@ static boolean PTR_UseTraverse (intercept_t* in)
 
 static boolean PTR_NoWayTraverse(intercept_t* in)
   {
-  const line_t __far* ld = in->d.line;
+  const line_t* ld = in->d.line;
                                            // This linedef
   return LN_SPECIAL(ld) || !(                 // Ignore specials
    LN_FLAGS(ld) & ML_BLOCKING || (            // Always blocking
@@ -1123,7 +1123,7 @@ void P_UseLines (player_t*  player)
 // that caused the explosion at "bombspot".
 //
 
-static boolean PIT_RadiusAttack (mobj_t __far* thing)
+static boolean PIT_RadiusAttack (mobj_t* thing)
   {
   fixed_t dx;
   fixed_t dy;
@@ -1162,7 +1162,7 @@ static boolean PIT_RadiusAttack (mobj_t __far* thing)
 // P_RadiusAttack
 // Source is the creature that caused the explosion at spot.
 //
-void P_RadiusAttack(mobj_t __far* spot, mobj_t __far* source, int16_t damage)
+void P_RadiusAttack(mobj_t* spot, mobj_t* source, int16_t damage)
   {
   int16_t x;
   int16_t y;
@@ -1202,14 +1202,14 @@ void P_SetSecnodeFirstpoolToNull(void)
 }
 
 
-inline static msecnode_t __far* P_GetSecnode(void)
+inline static msecnode_t* P_GetSecnode(void)
 {
-  return (msecnode_t __far*)Z_BMalloc(&secnodezone);
+  return (msecnode_t*)Z_BMalloc(&secnodezone);
 }
 
 // P_PutSecnode() returns a node to the freelist.
 
-inline static void P_PutSecnode(msecnode_t __far* node)
+inline static void P_PutSecnode(msecnode_t* node)
 {
   Z_BFree(&secnodezone, node);
 }
@@ -1225,9 +1225,9 @@ inline static void P_PutSecnode(msecnode_t __far* node)
 static int16_t loadnodes, numloadnodes;
 static uint16_t keptloadnodes;
 
-static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
+static void P_AddSecnode(sector_t* s, mobj_t* thing)
   {
-  msecnode_t __far* node;
+  msecnode_t* node;
   zref_t sref = Z_Ref(s);
 
   node = _s_sector_list;
@@ -1279,7 +1279,7 @@ static void P_AddSecnode(sector_t __far* s, mobj_t __far* thing)
 // sectors this object appears in. Returns a pointer to the next node
 // on the linked list, or NULL.
 
-static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
+static msecnode_t* P_DelSecnode(msecnode_t* node)
   {
   zref_t tp;  // prev node on thing thread
   zref_t tn;  // next node on thing thread
@@ -1323,7 +1323,7 @@ static msecnode_t __far* P_DelSecnode(msecnode_t __far* node)
 
 void P_DelSeclist(void)
 {
-	msecnode_t __far* node = _s_sector_list;
+	msecnode_t* node = _s_sector_list;
 	while (node)
 		node = P_DelSecnode(node);
 
@@ -1331,7 +1331,7 @@ void P_DelSeclist(void)
 }
 
 
-void P_SetSeclist(msecnode_t __far* sectorList)
+void P_SetSeclist(msecnode_t* sectorList)
 {
 	_s_sector_list = sectorList;
 }
@@ -1348,7 +1348,7 @@ void P_SetSeclist(msecnode_t __far* sectorList)
 // P_MarkSecNodeLines walks the lines as P_CreateSecNodeList would, adding no nodes.
 static boolean marklinesonly;
 
-static boolean PIT_GetSectors(const line_t __far* ld)
+static boolean PIT_GetSectors(const line_t* ld)
   {
   if (marklinesonly)
     return true;
@@ -1395,16 +1395,16 @@ static boolean PIT_GetSectors(const line_t __far* ld)
 // P_CreateSecNodeList alters/creates the sector_list that shows what sectors
 // the object resides in.
 
-void P_CreateSecNodeList(mobj_t __far* thing)
+void P_CreateSecNodeList(mobj_t* thing)
 {
-  mobj_t __far* saved_tmthing = tmthing; /* cph - see comment at func end */
+  mobj_t* saved_tmthing = tmthing; /* cph - see comment at func end */
 
   // First, clear out the existing m_thing fields. As each node is
   // added or verified as needed, m_thing will be set properly. When
   // finished, delete all nodes where m_thing is still NULL. These
   // represent the sectors the Thing has vacated.
 
-  msecnode_t __far* node = _s_sector_list;
+  msecnode_t* node = _s_sector_list;
   while (node)
     {
     node->m_thing = 0;
@@ -1483,7 +1483,7 @@ void P_MapEnd(void)
 }
 
 
-void P_MarkSecNodeLines(mobj_t __far* thing)
+void P_MarkSecNodeLines(mobj_t* thing)
 {
   marklinesonly = true;
   P_CreateSecNodeList(thing);

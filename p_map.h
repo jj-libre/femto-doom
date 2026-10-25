@@ -45,25 +45,25 @@
 
 boolean P_IsAttackRangeMeleeRange(void);
 
-boolean P_TryMove(mobj_t __far* thing, fixed_t x, fixed_t y);
+boolean P_TryMove(mobj_t* thing, fixed_t x, fixed_t y);
 
 // killough 8/9/98: extra argument for telefragging
-boolean P_TeleportMove(mobj_t __far* thing, fixed_t x, fixed_t y, boolean boss);
-boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2);
+boolean P_TeleportMove(mobj_t* thing, fixed_t x, fixed_t y, boolean boss);
+boolean P_CheckSight(mobj_t* t1, mobj_t* t2);
 void    P_UseLines(player_t *player);
 
-fixed_t P_AimLineAttack(mobj_t __far*t1, angle_t angle, fixed_t distance);
+fixed_t P_AimLineAttack(mobj_t*t1, angle_t angle, fixed_t distance);
 
-void    P_LineAttack(mobj_t __far* t1, angle_t angle, fixed_t distance, fixed_t slope, int16_t damage);
-void    P_RadiusAttack(mobj_t __far* spot, mobj_t __far* source, int16_t damage);
-boolean P_CheckPosition(mobj_t __far* thing, fixed_t x, fixed_t y);
+void    P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int16_t damage);
+void    P_RadiusAttack(mobj_t* spot, mobj_t* source, int16_t damage);
+boolean P_CheckPosition(mobj_t* thing, fixed_t x, fixed_t y);
 
 
 void    P_SetSecnodeFirstpoolToNull(void);
 void    P_DelSeclist(void);
-void    P_SetSeclist(msecnode_t __far* sectorList);
-void    P_CreateSecNodeList(mobj_t __far*);
-void    P_MarkSecNodeLines(mobj_t __far* thing);
+void    P_SetSeclist(msecnode_t* sectorList);
+void    P_CreateSecNodeList(mobj_t*);
+void    P_MarkSecNodeLines(mobj_t* thing);
 
 
 void	P_MapEnd(void);

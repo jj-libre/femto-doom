@@ -52,7 +52,7 @@ thinker_t _g_thinkerclasscap;
 
 // The thinker P_RunThinkers runs next, and the load index of the map thing thinking now. A map
 // thing linked right before runnext runs next if it has not had its turn yet.
-thinker_t __far* _g_runnext;
+thinker_t* _g_runnext;
 int16_t _g_runlast;
 
 
@@ -80,7 +80,7 @@ void P_InitThinkers(void)
 // Adds a new thinker at the end of the list.
 //
 
-void P_AddThinker(thinker_t __far* thinker)
+void P_AddThinker(thinker_t* thinker)
 {
   _g_thinkerclasscap.prev->next = thinker;
   thinker->next = &_g_thinkerclasscap;
@@ -88,7 +88,7 @@ void P_AddThinker(thinker_t __far* thinker)
   _g_thinkerclasscap.prev = thinker;
 }
 
-void P_UnlinkThinker(thinker_t __far* thinker)
+void P_UnlinkThinker(thinker_t* thinker)
 {
   (thinker->next->prev = thinker->prev)->next = thinker->next;
 }
@@ -111,10 +111,10 @@ void P_UnlinkThinker(thinker_t __far* thinker)
 // that the next step in P_RunThinkers() will get its successor.
 //
 
-static void P_RemoveThinkerDelayed(thinker_t __far* thinker)
+static void P_RemoveThinkerDelayed(thinker_t* thinker)
 {
 
-    thinker_t __far* next = thinker->next;
+    thinker_t* next = thinker->next;
     /* Note that currentthinker is guaranteed to point to us,
          * and since we're freeing our memory, we had better change that. So
          * point it to thinker->prev, so the iterator will correctly move on to
@@ -124,17 +124,17 @@ static void P_RemoveThinkerDelayed(thinker_t __far* thinker)
     Z_Free(thinker);
 }
 
-static void P_RemoveThingDelayed(thinker_t __far* thinker)
+static void P_RemoveThingDelayed(thinker_t* thinker)
 {
 
-    thinker_t __far* next = thinker->next;
+    thinker_t* next = thinker->next;
     /* Note that currentthinker is guaranteed to point to us,
          * and since we're freeing our memory, we had better change that. So
          * point it to thinker->prev, so the iterator will correctly move on to
          * thinker->prev->next = thinker->next */
     (next->prev = thinker->prev)->next = next;
 
-    mobj_t __far* thing = P_MobjOfThinker(thinker);
+    mobj_t* thing = P_MobjOfThinker(thinker);
 
     if(thing->flags & MF_POOLED)
         thing->type = MT_NOTHING;
@@ -155,18 +155,18 @@ static void P_RemoveThingDelayed(thinker_t __far* thinker)
 // removed automatically as part of the thinker process.
 //
 
-void P_RemoveThinker(thinker_t __far* thinker)
+void P_RemoveThinker(thinker_t* thinker)
 {
   thinker->function = P_RemoveThinkerDelayed;
 }
 
 // Map things spawn first and thinkers are only ever added at the end, so the map things
 // lead the list in load order.
-static int16_t P_ThinkerLoadIndex(thinker_t __far* th)
+static int16_t P_ThinkerLoadIndex(thinker_t* th)
 {
   if (th->function == P_MobjThinker || th->function == P_RemoveThingDelayed)
   {
-    const int16_t i = ((mobjext_t __far*)th)->loadthing;
+    const int16_t i = ((mobjext_t*)th)->loadthing;
     if (i)
       return i - 1;
   }
@@ -174,9 +174,9 @@ static int16_t P_ThinkerLoadIndex(thinker_t __far* th)
 }
 
 // Links a map thing that was asleep where it would have been all along.
-void P_AddLoadThinker(thinker_t __far* thinker, int16_t t)
+void P_AddLoadThinker(thinker_t* thinker, int16_t t)
 {
-  thinker_t __far* next = _g_thinkerclasscap.next;
+  thinker_t* next = _g_thinkerclasscap.next;
   while (next != &_g_thinkerclasscap && P_ThinkerLoadIndex(next) < t)
     next = next->next;
   thinker->next = next;
@@ -187,7 +187,7 @@ void P_AddLoadThinker(thinker_t __far* thinker, int16_t t)
     _g_runnext = thinker;
 }
 
-void P_RemoveThing(mobj_t __far* thing)
+void P_RemoveThing(mobj_t* thing)
 {
   if (thing->flags & MF_STATIC)
     thing->flags |= MF_REMOVED;
@@ -199,7 +199,7 @@ void P_RemoveThing(mobj_t __far* thing)
 /* cph 2002/01/13 - iterator for thinker list
  * WARNING: Do not modify thinkers between calls to this function
  */
-thinker_t __far* P_NextThinker(thinker_t __far* th)
+thinker_t* P_NextThinker(thinker_t* th)
 {
   thinker_t* top = &_g_thinkerclasscap;
   if (!th) th = top;
@@ -233,7 +233,7 @@ thinker_t __far* P_NextThinker(thinker_t __far* th)
 
 static void P_RunThinkers (void)
 {
-    thinker_t __far* th = _g_thinkerclasscap.next;
+    thinker_t* th = _g_thinkerclasscap.next;
     thinker_t* th_end = &_g_thinkerclasscap;
     int16_t sleeper = 0;
 
@@ -256,7 +256,7 @@ static void P_RunThinkers (void)
         if(th->function)
             th->function(th);
         if (th->function == P_MobjThinker)
-            P_SleepIfUnchanged((mobjext_t __far*)th);
+            P_SleepIfUnchanged((mobjext_t*)th);
 
         th = _g_runnext;
     }

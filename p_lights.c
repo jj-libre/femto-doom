@@ -62,20 +62,16 @@
 typedef struct
 {
   thinker_t thinker;
-  sector_t __far* sector;
+  sector_t* sector;
   int16_t maxlight;
   int16_t minlight;
   int8_t count;
 } lightflash_t;
 
-#if defined __NGDEVKIT__
-typedef char assertLightflashSize[sizeof(lightflash_t) == 22 ? 1 : -1];
-#else
 typedef char assertLightflashSize[sizeof(lightflash_t) == 24 ? 1 : -1];
-#endif
 
 
-static void T_LightFlash (lightflash_t __far* flash)
+static void T_LightFlash (lightflash_t* flash)
 {
   if (--flash->count)
     return;
@@ -105,21 +101,17 @@ static void T_LightFlash (lightflash_t __far* flash)
 typedef struct
 {
   thinker_t thinker;
-  sector_t __far* sector;
+  sector_t* sector;
   int16_t minlight;
   int16_t maxlight;
   int8_t count;
   int8_t darktime;
 } strobe_t;
 
-#if defined __NGDEVKIT__
-typedef char assertStrobeSize[sizeof(strobe_t) == 22 ? 1 : -1];
-#else
 typedef char assertStrobeSize[sizeof(strobe_t) == 24 ? 1 : -1];
-#endif
 
 
-static void T_StrobeFlash (strobe_t __far*   flash)
+static void T_StrobeFlash (strobe_t*   flash)
 {
   if (--flash->count)
     return;
@@ -148,20 +140,16 @@ static void T_StrobeFlash (strobe_t __far*   flash)
 typedef struct
 {
   thinker_t thinker;
-  sector_t __far* sector;
+  sector_t* sector;
   int16_t minlight;
   int16_t maxlight;
   int8_t direction;
 } glow_t;
 
-#if defined __NGDEVKIT__
-typedef char assertGlowSize[sizeof(glow_t) == 22 ? 1 : -1];
-#else
 typedef char assertGlowSize[sizeof(glow_t) == 24 ? 1 : -1];
-#endif
 
 
-static void T_Glow(glow_t __far* g)
+static void T_Glow(glow_t* g)
 {
   int16_t lightlevel = g->sector->lightlevel;
   switch(g->direction)
@@ -197,12 +185,12 @@ static void T_Glow(glow_t __far* g)
 // in a surrounding sector less than that passed. If no smaller light
 // level exists, the light level passed is returned.
 //
-static int16_t P_FindMinSurroundingLight(sector_t __far* sector, int16_t max)
+static int16_t P_FindMinSurroundingLight(sector_t* sector, int16_t max)
 {
   int16_t         i;
   int16_t         min;
-  const line_t __far*     line;
-  sector_t __far*   check;
+  const line_t*     line;
+  sector_t*   check;
 
   min = max;
   for (i=0 ; i < SEC_LINECOUNT(sector) ; i++)
@@ -237,9 +225,9 @@ static int16_t P_FindMinSurroundingLight(sector_t __far* sector, int16_t max)
 // Passed the sector that spawned the thinker
 // Returns nothing
 //
-void P_SpawnLightFlash (sector_t __far* sector)
+void P_SpawnLightFlash (sector_t* sector)
 {
-  lightflash_t __far* flash;
+  lightflash_t* flash;
 
   // nothing special about it during gameplay
   sector->special = 0;
@@ -266,9 +254,9 @@ void P_SpawnLightFlash (sector_t __far* sector)
 //
 // Returns nothing
 //
-void P_SpawnStrobeFlash(sector_t __far* sector, int8_t fastOrSlow, boolean inSync)
+void P_SpawnStrobeFlash(sector_t* sector, int8_t fastOrSlow, boolean inSync)
 {
-  strobe_t __far* flash;
+  strobe_t* flash;
 
   flash = Z_CallocLevSpec(sizeof(*flash));
 
@@ -300,9 +288,9 @@ void P_SpawnStrobeFlash(sector_t __far* sector, int8_t fastOrSlow, boolean inSyn
 // Passed the sector that spawned the thinker
 // Returns nothing
 //
-void P_SpawnGlowingLight(sector_t __far* sector)
+void P_SpawnGlowingLight(sector_t* sector)
 {
-  glow_t __far* g;
+  glow_t* g;
 
   g = Z_CallocLevSpec(sizeof(*g));
 
@@ -331,7 +319,7 @@ void P_SpawnGlowingLight(sector_t __far* sector)
 // Passed the activating line, and a level to set the light to
 // If level passed is 0, the maximum neighbor lighting is used
 //
-void EV_LightTurnOn(const line_t __far* line, int16_t bright)
+void EV_LightTurnOn(const line_t* line, int16_t bright)
 {
 	int16_t i;
 
@@ -339,8 +327,8 @@ void EV_LightTurnOn(const line_t __far* line, int16_t bright)
 
 	for (i = -1; (i = P_FindSectorFromLineTag(LN_TAG(line),i)) >= 0;)
 	{
-		sector_t __far* temp;
-		sector_t __far* sector = _g_sectors+i;
+		sector_t* temp;
+		sector_t* sector = _g_sectors+i;
 		int16_t j, tbright = bright; //jff 5/17/98 search for maximum PER sector
 
 		// bright = 0 means to search for highest light level surrounding sector

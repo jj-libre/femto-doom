@@ -62,7 +62,7 @@ void F_TextWrite(int32_t count)
 
 		c = toupper(c);
 		if (HU_FONTSTART <= c && c <= HU_FONTEND) {
-			const patch_t __far* patch = W_GetLumpByNum(c + font_lump_offset);
+			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);
 			V_DrawPatchNotScaled(cx, cy, patch);
 			cx += W_FetchInt16(&patch->width);
 		} else {

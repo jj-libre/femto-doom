@@ -44,7 +44,7 @@ static uint16_t skywidthmask;
 
 
 #if defined FLAT_SPAN
-static const patch_t __far* skypatch;
+static const patch_t* skypatch;
 
 
 void R_LoadSkyPatch(void)
@@ -73,17 +73,17 @@ void R_DrawSky(draw_column_vars_t *dcvars)
 	xc >>= ANGLETOSKYSHIFT - FRACBITS;
 	xc &= skywidthmask;
 
-	const column_t __far* column = (const column_t __far*) ((const byte __far*)skypatch + W_FetchInt32(&skypatch->columnofs[xc]));
+	const column_t* column = (const column_t*) ((const byte*)skypatch + W_FetchInt32(&skypatch->columnofs[xc]));
 
-	dcvars->source = (const byte __far*)column + 3;
+	dcvars->source = (const byte*)column + 3;
 	R_DrawColumnWall(dcvars);
 }
 
 #else
 
-void R_DrawSky(visplane_t __far* pl)
+void R_DrawSky(visplane_t* pl)
 {
-	const patch_t __far* patch = W_GetLumpByNum(skypatchnum);
+	const patch_t* patch = W_GetLumpByNum(skypatchnum);
 
 	// Normal Doom sky, only one allowed per level
 	draw_column_vars_t dcvars;
@@ -107,9 +107,9 @@ void R_DrawSky(visplane_t __far* pl)
 			xc >>= ANGLETOSKYSHIFT - FRACBITS;
 			xc &= skywidthmask;
 
-			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + W_FetchInt32(&patch->columnofs[xc]));
+			const column_t* column = (const column_t*) ((const byte*)patch + W_FetchInt32(&patch->columnofs[xc]));
 
-			dcvars.source = (const byte __far*)column + 3;
+			dcvars.source = (const byte*)column + 3;
 			R_DrawColumn(&dcvars);
 		}
 	}

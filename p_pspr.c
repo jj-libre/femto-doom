@@ -373,7 +373,7 @@ boolean P_CheckAmmo(player_t *player)
 // spread from.
 //
 
-static boolean P_FloodSector(sector_t __far* sec, int16_t soundblocks, mobj_t __far* soundtarget)
+static boolean P_FloodSector(sector_t* sec, int16_t soundblocks, mobj_t* soundtarget)
 {
   // wake up all monsters in this sector
   const int16_t s = sec - _g_sectors;
@@ -390,7 +390,7 @@ static boolean P_FloodSector(sector_t __far* sec, int16_t soundblocks, mobj_t __
   return true;
 }
 
-static void P_RecursiveSound(sector_t __far* sec, mobj_t __far* soundtarget)
+static void P_RecursiveSound(sector_t* sec, mobj_t* soundtarget)
 {
   if (_g_soundtarget != Z_Ref(soundtarget))
   {
@@ -412,8 +412,8 @@ static void P_RecursiveSound(sector_t __far* sec, mobj_t __far* soundtarget)
 
       for (int16_t i=0; i<SEC_LINECOUNT(sec); i++)
         {
-          sector_t __far* other;
-          const line_t __far* check = SEC_LINE(sec, i);
+          sector_t* other;
+          const line_t* check = SEC_LINE(sec, i);
 
           if (!(LN_FLAGS(check) & ML_TWOSIDED))
             continue;
@@ -440,7 +440,7 @@ static void P_RecursiveSound(sector_t __far* sec, mobj_t __far* soundtarget)
 // If a monster yells at a player,
 // it will alert other monsters to the player.
 //
-static void P_NoiseAlert(mobj_t __far* emitter)
+static void P_NoiseAlert(mobj_t* emitter)
 {
   P_NextValidCount();
   P_RecursiveSound(P_SubsectorSector(emitter->subsector), emitter);
@@ -751,7 +751,7 @@ static fixed_t bulletslope;
 // Sets a slope so a near miss is at aproximately
 // the height of the intended target
 //
-static void P_BulletSlope(mobj_t __far* mo)
+static void P_BulletSlope(mobj_t* mo)
 {
 	angle_t an = mo->angle;    // see which target is to be aimed at
 
@@ -767,7 +767,7 @@ static void P_BulletSlope(mobj_t __far* mo)
 // P_GunShot
 //
 
-static void P_GunShot(mobj_t __far* mo, boolean accurate)
+static void P_GunShot(mobj_t* mo, boolean accurate)
 {
   int16_t damage = 5*(P_Random()%3+1);
   angle_t angle = mo->angle;

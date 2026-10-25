@@ -45,7 +45,7 @@ void R_DrawFuzzColumn (const draw_column_vars_t *dcvars);
 typedef struct {
   uint32_t             position;
   uint32_t             step;
-  const byte    __far* source; // start of a 64*64 tile image
+  const byte   * source; // start of a 64*64 tile image
   const uint8_t* colormap;
 } draw_span_vars_t;
 
@@ -62,8 +62,8 @@ void V_DrawRaw(int16_t num, uint16_t offset);
 
 void ST_Drawer(void);
 
-void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t __far* patch);
-void V_DrawPatchScaled(   int16_t x, int16_t y, const patch_t __far* patch);
+void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch);
+void V_DrawPatchScaled(   int16_t x, int16_t y, const patch_t* patch);
 
 
 void wipe_StartScreen(void);

@@ -35,7 +35,6 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
 #include "doomdef.h"
 #include "d_player.h"
 #include "m_random.h"
@@ -58,7 +57,7 @@
 // Returns true if the mobj is still present.
 //
 
-boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state)
+boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 {
     const state_t*	st;
 
@@ -96,7 +95,7 @@ boolean P_SetMobjState(mobj_t __far* mobj, statenum_t state)
 // P_ExplodeMissile
 //
 
-static void P_ExplodeMissile(mobj_t __far* mo)
+static void P_ExplodeMissile(mobj_t* mo)
   {
   P_Ext(mo)->momx = P_Ext(mo)->momy = P_Ext(mo)->momz = 0;
 
@@ -120,8 +119,8 @@ static void P_ExplodeMissile(mobj_t __far* mo)
 //
 
 static fixed_t   bestslidefrac;
-static const line_t __far*   bestslideline;
-static mobj_t __far*   slidemo;
+static const line_t*   bestslideline;
+static mobj_t*   slidemo;
 static fixed_t   tmxmove;
 static fixed_t   tmymove;
 
@@ -132,7 +131,7 @@ static fixed_t   tmymove;
 // If the floor is icy, then you can bounce off a wall.             // phares
 //
 
-static void P_HitSlideLine(const line_t __far* ld)
+static void P_HitSlideLine(const line_t* ld)
 {
     int16_t     side;
     angle_t lineangle;
@@ -207,7 +206,7 @@ static void P_HitSlideLine(const line_t __far* ld)
 
 static boolean PTR_SlideTraverse (intercept_t* in)
   {
-  const line_t __far* li;
+  const line_t* li;
 
   if (!in->isaline)
     I_Error ("PTR_SlideTraverse: not a line?");
@@ -265,7 +264,7 @@ isblocking:
 //
 // killough 11/98: reformatted
 
-static void P_SlideMove(mobj_t __far* mo)
+static void P_SlideMove(mobj_t* mo)
 {
   int8_t hitcount = 3;
 
@@ -387,7 +386,7 @@ static fixed_t FixedMul32OrigFriction(fixed_t a)
 #define MAXMOVE         (30*FRACUNIT)
 #define STOPSPEED       (FRACUNIT/16)
 
-static void P_XYMovement(mobj_t __far* mo)
+static void P_XYMovement(mobj_t* mo)
 {
     player_t *player;
     fixed_t xmove, ymove;
@@ -449,7 +448,7 @@ static void P_XYMovement(mobj_t __far* mo)
 
                     if (_g_ceilingline)
                     {
-                        const sector_t __far* ceilingBackSector = LN_BACKSECTOR(_g_ceilingline);
+                        const sector_t* ceilingBackSector = LN_BACKSECTOR(_g_ceilingline);
 
                         if(ceilingBackSector && SEC_CEILINGSKY(ceilingBackSector))
                         {
@@ -561,7 +560,7 @@ static void P_XYMovement(mobj_t __far* mo)
 
 #define GRAVITY         FRACUNIT
 
-static void P_ZMovement(mobj_t __far* mo)
+static void P_ZMovement(mobj_t* mo)
 {
 
     // check for smooth step up
@@ -637,12 +636,12 @@ static void P_ZMovement(mobj_t __far* mo)
 // P_NightmareRespawn
 //
 
-static void P_NightmareRespawn(mobj_t __far* mobj)
+static void P_NightmareRespawn(mobj_t* mobj)
 {
     fixed_t      x;
     fixed_t      y;
     int16_t ss;
-    mobj_t __far*      mo;
+    mobj_t*      mo;
 
     /* haleyjd: stupid nightmare respawning bug fix
    *
@@ -706,32 +705,32 @@ static void P_NightmareRespawn(mobj_t __far* mobj)
 }
 
 
-mobjext_t __far* P_Ext(mobj_t __far* mobj)
+mobjext_t* P_Ext(mobj_t* mobj)
 {
     if (mobj->flags & MF_STATIC)
         I_Error("P_Ext: static thing %i", mobj->type);
 
-    return (mobjext_t __far*)((uint8_t __far*)mobj - offsetof(mobjext_t, mo));
+    return (mobjext_t*)((uint8_t*)mobj - offsetof(mobjext_t, mo));
 }
 
 
-mobj_t __far* P_MobjOfThinker(thinker_t __far* th)
+mobj_t* P_MobjOfThinker(thinker_t* th)
 {
-    return &((mobjext_t __far*)th)->mo;
+    return &((mobjext_t*)th)->mo;
 }
 
 
-int16_t P_Health(mobj_t __far* mobj)
+int16_t P_Health(mobj_t* mobj)
 {
     return mobj->flags & MF_STATIC ? 0 : P_Ext(mobj)->health;
 }
 
 // A corpse at rest only ever changes again through its sector, so it goes on as a static:
 // the same mobj_t in a static slot, and everything that referred to it refers to that.
-static void P_SettleCorpse(mobjext_t __far* ext)
+static void P_SettleCorpse(mobjext_t* ext)
 {
-    mobj_t __far* old = &ext->mo;
-    mobj_t __far* mobj = P_NewMobj(MT_MISC0);
+    mobj_t* old = &ext->mo;
+    mobj_t* mobj = P_NewMobj(MT_MISC0);
     *mobj = *old;
     mobj->flags = (old->flags & ~MF_POOLED) | MF_STATIC;
     const zref_t from = Z_Ref(old), to = Z_Ref(mobj);
@@ -740,25 +739,25 @@ static void P_SettleCorpse(mobjext_t __far* ext)
     {
         if (!(mobj->flags & MF_NOSECTOR))
         {
-            *(zref_t __far*)Z_Ptr(mobj->sprev) = to;
+            *(zref_t*)Z_Ptr(mobj->sprev) = to;
             if (mobj->snext)
                 P_Mobj(mobj->snext)->sprev = Z_Ref(&mobj->snext);
         }
         if (!(mobj->flags & MF_NOBLOCKMAP) && mobj->bprev)
         {
-            *(zref_t __far*)Z_Ptr(mobj->bprev) = to;
+            *(zref_t*)Z_Ptr(mobj->bprev) = to;
             if (mobj->bnext)
                 P_Mobj(mobj->bnext)->bprev = Z_Ref(&mobj->bnext);
         }
     }
-    for (msecnode_t __far* n = P_Node(mobj->touching_sectorlist); n; n = P_Node(n->m_tnext))
+    for (msecnode_t* n = P_Node(mobj->touching_sectorlist); n; n = P_Node(n->m_tnext))
         n->m_thing = to;
     P_MoveLoadRef(ext->loadthing, mobj);
 
-    for (thinker_t __far* th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
+    for (thinker_t* th = _g_thinkerclasscap.next; th != &_g_thinkerclasscap; th = th->next)
         if (th->function == P_MobjThinker)
         {
-            mobjext_t __far* e = (mobjext_t __far*)th;
+            mobjext_t* e = (mobjext_t*)th;
             if (e->target == from)
                 e->target = to;
             if (e->lastenemy == from)
@@ -770,10 +769,10 @@ static void P_SettleCorpse(mobjext_t __far* ext)
     P_RemoveThing(old);
 }
 
-void P_MobjThinker (thinker_t __far* th)
+void P_MobjThinker (thinker_t* th)
 {
-    mobjext_t __far* ext = (mobjext_t __far*)th;
-    mobj_t __far* mobj = &ext->mo;
+    mobjext_t* ext = (mobjext_t*)th;
+    mobj_t* mobj = &ext->mo;
 
     // momentum movement
     if (ext->momx | ext->momy)
@@ -836,7 +835,7 @@ void P_MobjThinker (thinker_t __far* th)
 
 
 //Just cycles through the states. Allows sprite animation to work.
-static void P_CycleState(mobj_t __far* mobj)
+static void P_CycleState(mobj_t* mobj)
 {
     // cycle through states,
     // calling action functions at transitions
@@ -855,7 +854,7 @@ static void P_CycleState(mobj_t __far* mobj)
 
 //Thinker function for stuff that doesn't need to do anything
 //interesting.
-static void P_MobjBrainlessThinker(thinker_t __far* th)
+static void P_MobjBrainlessThinker(thinker_t* th)
 {
     P_CycleState(P_MobjOfThinker(th));
 }
@@ -863,10 +862,10 @@ static void P_MobjBrainlessThinker(thinker_t __far* th)
 
 void P_RunStatics(void)
 {
-    for (staticchunk_t __far* c = _g_staticchunks; c; c = c->next)
+    for (staticchunk_t* c = _g_staticchunks; c; c = c->next)
         for (int16_t i = 0; i < STATICCHUNK; i++)
         {
-            mobj_t __far* mobj = &c->mobj[i];
+            mobj_t* mobj = &c->mobj[i];
 
             if (mobj->type == MT_NOTHING)
                 continue;
@@ -882,7 +881,7 @@ void P_RunStatics(void)
 
 
 
-static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t __far* mobj)
+static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t* mobj)
 {
     //Full thinking ability.
     if(type < MT_MISC0)
@@ -900,14 +899,14 @@ static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t __far* mobj)
 // P_SpawnMobj
 //
 
-mobj_t __far* P_NewMobj(mobjtype_t type)
+mobj_t* P_NewMobj(mobjtype_t type)
 {
-    mobjext_t __far* ext;
+    mobjext_t* ext;
 
     if (type >= MT_MISC0)
     {
-        mobj_t __far* mobj = NULL;
-        for (staticchunk_t __far* c = _g_staticchunks; c && !mobj; c = c->next)
+        mobj_t* mobj = NULL;
+        for (staticchunk_t* c = _g_staticchunks; c && !mobj; c = c->next)
             for (int16_t i = STATICCHUNK-1; i >= 0; i--)
                 if (c->mobj[i].type == MT_NOTHING)
                 {
@@ -917,7 +916,7 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
 
         if (!mobj)
         {
-            staticchunk_t __far* c = Z_MallocLevel(sizeof(*c));
+            staticchunk_t* c = Z_MallocLevel(sizeof(*c));
             for (int16_t i = 0; i < STATICCHUNK; i++)
                 c->mobj[i].type = MT_NOTHING;
             c->next = _g_staticchunks;
@@ -925,7 +924,7 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
             mobj = &c->mobj[STATICCHUNK-1];
         }
 
-        _fmemset (mobj, 0, sizeof (*mobj));
+        memset (mobj, 0, sizeof (*mobj));
         mobj->flags = MF_STATIC;
         return mobj;
     }
@@ -935,7 +934,7 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
         if(_g_thingPool[i].mo.type == MT_NOTHING)
         {
             ext = &_g_thingPool[i];
-            _fmemset (ext, 0, sizeof (*ext));
+            memset (ext, 0, sizeof (*ext));
 
             ext->mo.flags = MF_POOLED;
             return &ext->mo;
@@ -943,17 +942,17 @@ mobj_t __far* P_NewMobj(mobjtype_t type)
     }
 
     ext = Z_MallocLevel(sizeof(*ext));
-    _fmemset (ext, 0, sizeof (*ext));
+    memset (ext, 0, sizeof (*ext));
     return &ext->mo;
 }
 
-mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
+mobj_t* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 {
     const state_t*    st;
     const mobjinfo_t* info;
 
-    mobj_t __far*     mobj = P_NewMobj(type);
-    mobjext_t __far*  ext  = NULL;
+    mobj_t*     mobj = P_NewMobj(type);
+    mobjext_t*  ext  = NULL;
 
     info = &mobjinfo[type];
     mobj->type = type;
@@ -1015,7 +1014,7 @@ mobj_t __far* P_SpawnMobj(fixed_t x,fixed_t y,fixed_t z,mobjtype_t type)
 // P_RemoveMobj
 //
 
-void P_RemoveMobj(mobj_t __far* mobj)
+void P_RemoveMobj(mobj_t* mobj)
 {
   P_KillLoadNodes(mobj);
   P_UnsetThingPosition (mobj);
@@ -1039,7 +1038,7 @@ void P_RemoveMobj(mobj_t __far* mobj)
 
   if (!_g_demoplayback && !(mobj->flags & MF_STATIC))
   {
-    mobjext_t __far* ext = P_Ext(mobj);
+    mobjext_t* ext = P_Ext(mobj);
     ext->target    = 0;
     ext->lastenemy = 0;
   }
@@ -1079,7 +1078,7 @@ static PUREFUNC int16_t P_FindDoomedNum(int16_t type)
 static void P_SpawnPlayer(int16_t playerx, int16_t playery, int8_t playerangle)
 {
   player_t* p;
-  mobj_t __far*   mobj;
+  mobj_t*   mobj;
 
   p = &_g_player;
 
@@ -1152,7 +1151,7 @@ boolean P_MapThingIsStatic(const mapthing_t* mthing)
 void P_SpawnMapThing(const mapthing_t* mthing)
 {
     int16_t     i;
-    mobj_t __far* mobj;
+    mobj_t* mobj;
     fixed_t x;
     fixed_t y;
 
@@ -1204,7 +1203,7 @@ void P_SpawnMapThing(const mapthing_t* mthing)
 //
 void P_SpawnPuff(fixed_t x,fixed_t y,fixed_t z)
   {
-  mobj_t __far* th;
+  mobj_t* th;
   // killough 5/5/98: remove dependence on order of evaluation:
   int32_t t = P_Random();
   z += (t - P_Random())<<10;
@@ -1228,7 +1227,7 @@ void P_SpawnPuff(fixed_t x,fixed_t y,fixed_t z)
 //
 void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z,int16_t damage)
   {
-  mobj_t __far* th;
+  mobj_t* th;
   // killough 5/5/98: remove dependence on order of evaluation:
   fixed_t t = P_Random();
   z += (t - P_Random())<<10;
@@ -1252,7 +1251,7 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z,int16_t damage)
 //  and possibly explodes it right there.
 //
 
-static void P_CheckMissileSpawn(mobj_t __far* th)
+static void P_CheckMissileSpawn(mobj_t* th)
   {
   th->tics -= P_Random()&3;
   if (th->tics < 1)
@@ -1278,9 +1277,9 @@ static void P_CheckMissileSpawn(mobj_t __far* th)
 // P_SpawnMissile
 //
 
-mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_t type)
+mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type)
   {
-  mobj_t __far* th;
+  mobj_t* th;
   angle_t an;
   fixed_t     dist;
 
@@ -1323,9 +1322,9 @@ mobj_t __far* P_SpawnMissile(mobj_t __far* source, mobj_t __far* dest, mobjtype_
 // Tries to aim at a nearby monster
 //
 
-void P_SpawnPlayerMissile(mobj_t __far* source)
+void P_SpawnPlayerMissile(mobj_t* source)
 {
-	mobj_t __far* th;
+	mobj_t* th;
 	fixed_t x, y, z, slope = 0;
 
 	// see which target is to be aimed at
@@ -1359,7 +1358,7 @@ void P_SpawnPlayerMissile(mobj_t __far* source)
 }
 
 
-struct player_s* P_MobjIsPlayer(const mobj_t __far* mobj)
+struct player_s* P_MobjIsPlayer(const mobj_t* mobj)
 {
     if(mobj == _g_player.mo)
     {

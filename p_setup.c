@@ -59,35 +59,35 @@
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 
-const seg_t    __far* _g_segs;
+const seg_t   * _g_segs;
 
 int16_t      _g_numsectors;
-sector_t __far* _g_sectors;
+sector_t* _g_sectors;
 const mapsector_t *_g_mapsectors;
 
 
 static int16_t      numsubsectors;
-const uint8_t __far* _g_subsecsector;
+const uint8_t* _g_subsecsector;
 const mapsubsector_t *_g_mapsubsectors;
 
 
 
 int16_t      _g_numlines;
-const uint16_t __far* _g_seclinefirst;
-const int16_t  __far* _g_seclines;
-uint8_t      __far* _g_linebits;
+const uint16_t* _g_seclinefirst;
+const int16_t * _g_seclines;
+uint8_t     * _g_linebits;
 int16_t      _g_linebytes;
 uint16_t     _g_linedonetic;
 const line_t *_g_maplines;
 
 
 static int16_t      numsides;
-side_t   __far* _g_sides;
-mover_t  __far* _g_movers;
-uint8_t  __far* _g_secbits;
+side_t  * _g_sides;
+mover_t * _g_movers;
+uint8_t * _g_secbits;
 int16_t         _g_secbytes;
-zref_t   __far* _g_secthings;
-zref_t   __far* _g_sectouching;
+zref_t  * _g_secthings;
+zref_t  * _g_sectouching;
 zref_t          _g_soundtarget;
 static int16_t nummovers;
 const mapsidedef_t *_g_mapsides;
@@ -105,14 +105,14 @@ const mapsidedef_t *_g_mapsides;
 int16_t       _g_bmapwidth, _g_bmapheight;  // size in mapblocks
 
 // killough 3/1/98: remove blockmap limit internally:
-const int16_t      __far* _g_blockmap;
+const int16_t     * _g_blockmap;
 
 // offsets in blockmap are from here
-const int16_t      __far* _g_blockmaplump;
+const int16_t     * _g_blockmaplump;
 
 fixed_t   _g_bmaporgx, _g_bmaporgy;     // origin of block map
 
-zref_t    __far* _g_blocklinks;           // for thing chains
+zref_t   * _g_blocklinks;           // for thing chains
 
 //
 // REJECT
@@ -123,12 +123,12 @@ zref_t    __far* _g_blocklinks;           // for thing chains
 // be used as a PVS lookup as well.
 //
 
-const byte __far* _g_rejectmatrix;
+const byte* _g_rejectmatrix;
 
-mobjext_t __far*   _g_thingPool;
+mobjext_t*   _g_thingPool;
 int16_t _g_thingPoolSize;
 
-staticchunk_t __far* _g_staticchunks;
+staticchunk_t* _g_staticchunks;
 
 
 // Lump order in a map WAD: each map needs a couple of lumps
@@ -153,7 +153,7 @@ enum {
 
 static void P_LoadSegs (int16_t lump)
 {
-    _g_segs = (const seg_t __far*)W_GetMapLumpByNum(lump);
+    _g_segs = (const seg_t*)W_GetMapLumpByNum(lump);
 }
 
 //
@@ -216,7 +216,7 @@ static void P_LoadSectors (int16_t lump)
 
   for (i=0; i<_g_numsectors; i++)
     {
-      sector_t __far* ss = _g_sectors + i;
+      sector_t* ss = _g_sectors + i;
       mapsector_t ms;
       W_Fetch(_g_mapsectors + i, &ms, sizeof(ms));
 
@@ -265,7 +265,7 @@ static boolean P_ThingLoads(const mapthing_t* mt, int16_t map)
 }
 
 
-static void __far* P_CallocPool(int16_t count, uint16_t size)
+static void* P_CallocPool(int16_t count, uint16_t size)
 {
 	uint32_t bytes = (uint32_t)count * size;
 	if (bytes > UINT16_MAX)
@@ -281,7 +281,7 @@ static void __far* P_CallocPool(int16_t count, uint16_t size)
 static void P_LoadThings(int16_t lump, int16_t map)
 {
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
-	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
+	const mapthing_t* data = W_GetMapLumpByNum(lump);
 
 	// Map statics need no pool, and items monsters drop take _g_staticchunks. Map monsters and
 	// barrels spawn asleep, without a mobj.
@@ -308,7 +308,7 @@ static void P_LoadThings(int16_t lump, int16_t map)
 static void P_LoadThings2(int16_t lump, int16_t map)
 {
 	int16_t mapThingCount = W_MapLumpLength(lump) / sizeof(mapthing_t);
-	const mapthing_t __far* data = W_GetMapLumpByNum(lump);
+	const mapthing_t* data = W_GetMapLumpByNum(lump);
 
 	for (int16_t i = 0; i < mapThingCount; i++)
 	{
@@ -336,7 +336,7 @@ static void P_LoadLineDefs (int16_t lump)
 	_g_linebytes   = (_g_numlines + 7) / 8;
 	_g_linebits    = Z_CallocLevel(LB_PLANES * _g_linebytes);
 	_g_linedonetic = 0;
-	_fmemset(&_g_linebits[LB_DONE * _g_linebytes], 0xff, _g_linebytes);
+	memset(&_g_linebits[LB_DONE * _g_linebytes], 0xff, _g_linebytes);
 }
 
 
@@ -364,7 +364,7 @@ static void P_LoadSideDefs (int16_t lump)
         W_Fetch(_g_mapsides + i, &msd, sizeof(msd));
         if (msd.changeable)
         {
-            side_t __far* sd = &_g_sides[msd.changeable - 1];
+            side_t* sd = &_g_sides[msd.changeable - 1];
             sd->textureoffset = msd.textureoffset;
             sd->midtexture    = msd.midtexture;
             sd->toptexture    = msd.toptexture;
@@ -377,7 +377,7 @@ static void P_LoadSideDefs (int16_t lump)
     }
 }
 
-static mover_t __far* P_FindMover(const sector_t __far* sector)
+static mover_t* P_FindMover(const sector_t* sector)
 {
   const int16_t s = sector - _g_sectors;
   for (int16_t i = 0; i < nummovers; i++)
@@ -386,18 +386,18 @@ static mover_t __far* P_FindMover(const sector_t __far* sector)
   return NULL;
 }
 
-mover_t __far* P_Mover(sector_t __far* sector)
+mover_t* P_Mover(sector_t* sector)
 {
-  mover_t __far* m = P_FindMover(sector);
+  mover_t* m = P_FindMover(sector);
   if (m)
     return m;
 
   if (nummovers % 4 == 0)
   {
-    mover_t __far* movers = Z_CallocLevel((nummovers + 4) * sizeof(mover_t));
+    mover_t* movers = Z_CallocLevel((nummovers + 4) * sizeof(mover_t));
     if (nummovers)
     {
-      _fmemcpy(movers, _g_movers, nummovers * sizeof(mover_t));
+      memcpy(movers, _g_movers, nummovers * sizeof(mover_t));
       Z_Free(_g_movers);
     }
     _g_movers = movers;
@@ -407,15 +407,15 @@ mover_t __far* P_Mover(sector_t __far* sector)
   return m;
 }
 
-zref_t SEC_FLOORDATA(const sector_t __far* s)
+zref_t SEC_FLOORDATA(const sector_t* s)
 {
-  const mover_t __far* m = P_FindMover(s);
+  const mover_t* m = P_FindMover(s);
   return m ? m->floordata : 0;
 }
 
-zref_t SEC_CEILINGDATA(const sector_t __far* s)
+zref_t SEC_CEILINGDATA(const sector_t* s)
 {
-  const mover_t __far* m = P_FindMover(s);
+  const mover_t* m = P_FindMover(s);
   return m ? m->ceilingdata : 0;
 }
 
@@ -442,7 +442,7 @@ uint8_t P_GetSide(int16_t n, side_t* side)
   return msd.rowoffset;
 }
 
-side_t __far* P_ChangeableSide(int16_t n)
+side_t* P_ChangeableSide(int16_t n)
 {
   const uint8_t k = W_FetchUInt8(&_g_mapsides[n].changeable);
   if (!k)
@@ -521,8 +521,8 @@ static void M_AddToBox(fixed_t* box,fixed_t x,fixed_t y)
 
 static void P_GroupLines (int16_t map)
 {
-    const line_t __far* li;
-    sector_t __far* sector;
+    const line_t* li;
+    sector_t* sector;
     int16_t i, total = _g_numlines;
     int16_t j;
 
@@ -531,22 +531,22 @@ static void P_GroupLines (int16_t map)
     {
         char name[9];
         sprintf(name, "E1M%dGL", map);
-        const byte __far* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
+        const byte* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
         struct { uint16_t version, numsectors, numsubsectors, pad; uint32_t first, lines, subsecsector; } h;
         W_Fetch(gl, &h, sizeof(h));
         if (h.version != 2 || h.numsectors != _g_numsectors || h.numsubsectors != numsubsectors)
             I_Error("P_GroupLines: %s does not fit the map", name);
 
-        _g_seclinefirst = (const uint16_t __far*)(gl + h.first);
-        _g_seclines     = (const int16_t __far*)(gl + h.lines);
+        _g_seclinefirst = (const uint16_t*)(gl + h.first);
+        _g_seclines     = (const int16_t*)(gl + h.lines);
         _g_subsecsector = gl + h.subsecsector;
     }
 }
 
 
 // What P_GroupLines computed for every sector, now only for one making a sound.
-void P_SectorSoundOrg(const sector_t __far* sector, fixed_t* x, fixed_t* y)
+void P_SectorSoundOrg(const sector_t* sector, fixed_t* x, fixed_t* y)
 {
     fixed_t bbox[4];
     M_ClearBox(bbox);

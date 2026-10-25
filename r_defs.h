@@ -114,8 +114,8 @@ static inline int16_t SEC_FLAT(uint8_t p)
 uint8_t P_FlatByte(int16_t pic);
 
 #define SECBUCKETS 16
-extern zref_t __far* _g_secthings;    // mobj_t chains by sector index, SECBUCKETS of them
-extern zref_t __far* _g_sectouching;  // msecnode_t chains by sector index
+extern zref_t* _g_secthings;    // mobj_t chains by sector index, SECBUCKETS of them
+extern zref_t* _g_sectouching;  // msecnode_t chains by sector index
 #define SEC_THINGS(s)   (_g_secthings[((s) - _g_sectors) & (SECBUCKETS - 1)])
 #define SEC_TOUCHING(s) (_g_sectouching[((s) - _g_sectors) & (SECBUCKETS - 1)])
 
@@ -137,11 +137,11 @@ typedef struct
   zref_t ceilingdata;  // floors, ceilings, lighting,
 } mover_t;
 
-extern mover_t __far* _g_movers;
+extern mover_t* _g_movers;
 
-mover_t __far* P_Mover(sector_t __far* sector);
-zref_t SEC_FLOORDATA(const sector_t __far* s);
-zref_t SEC_CEILINGDATA(const sector_t __far* s);
+mover_t* P_Mover(sector_t* sector);
+zref_t SEC_FLOORDATA(const sector_t* s);
+zref_t SEC_CEILINGDATA(const sector_t* s);
 
 // A bit per sector in each plane of _g_secbits.
 enum
@@ -154,7 +154,7 @@ enum
   SB_PLANES
 };
 
-extern uint8_t __far* _g_secbits;
+extern uint8_t* _g_secbits;
 extern int16_t _g_secbytes;
 #define SEC_BIT(p, i)    (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] & (1 << ((i) & 7)))
 #define SEC_SETBIT(p, i) (_g_secbits[(p) * _g_secbytes + ((i) >> 3)] |= (1 << ((i) & 7)))
@@ -209,7 +209,7 @@ typedef char assertMapsidedefSize[sizeof(mapsidedef_t) == 8 ? 1 : -1];
 // Play changes only the sides at the front of lines with a special. femtowad numbers them
 // from 1 in mapsidedef_t.changeable, and only they are in _g_sides.
 uint8_t P_GetSide(int16_t n, side_t* side);  // returns the row offset
-side_t __far* P_ChangeableSide(int16_t n);
+side_t* P_ChangeableSide(int16_t n);
 
 
 //
@@ -271,7 +271,7 @@ typedef char assertLineSize[sizeof(line_t) == 32 ? 1 : -1];
 #define LN_SIDENUM(l, s) W_FetchUInt16(&(l)->sidenum[s])
 #define LN_LINENO(l)     W_FetchUInt16(&(l)->lineno)
 
-sector_t __far* LN_BackSector(const line_t __far* l);
+sector_t* LN_BackSector(const line_t* l);
 
 #define LN_FRONTSECTOR(l) (SIDE_SECTOR(LN_SIDENUM(l, 0)))
 #define LN_BACKSECTOR(l) LN_BackSector(l)
@@ -315,12 +315,12 @@ typedef struct msecnode_s
 
 typedef char assertMsecnodeSize[sizeof(msecnode_t) == 14 ? 1 : -1];
 
-static inline msecnode_t __far* P_Node(zref_t ref)
+static inline msecnode_t* P_Node(zref_t ref)
 {
   return Z_Ptr(ref);
 }
 
-static inline sector_t __far* P_Sector(zref_t ref)
+static inline sector_t* P_Sector(zref_t ref)
 {
   return Z_Ptr(ref);
 }
@@ -462,7 +462,7 @@ typedef char assertSpriteframeSize[sizeof(spriteframe_t) == 18 ? 1 : -1];
 
 typedef struct visplane
 {
-  struct visplane __far* next;        // Next visplane in hash chain -- killough
+  struct visplane* next;        // Next visplane in hash chain -- killough
   int16_t picnum, lightlevel;
   int16_t minx, maxx;
   fixed_t height;

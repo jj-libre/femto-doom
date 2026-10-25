@@ -36,7 +36,6 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
 #include "d_player.h"
 #include "w_wad.h"
 #include "r_main.h"
@@ -51,7 +50,7 @@
 
 int16_t V_NumPatchWidth(int16_t num)
 {
-	const patch_t __far* patch = W_GetLumpByNum(num);
+	const patch_t* patch = W_GetLumpByNum(num);
 	int16_t width = W_FetchInt16(&patch->width);
 	return width;
 }
@@ -101,10 +100,10 @@ typedef char assertMaptextureSize[sizeof(maptexture_t) == 20 ? 1 : -1];
 
 static const uint16_t *texturep;
 static int16_t numtextures;
-static const byte __far* texcols;
+static const byte* texcols;
 
 
-const texture_t __far* R_GetTexture(int16_t texture)
+const texture_t* R_GetTexture(int16_t texture)
 {
 #ifdef RANGECHECK
     if (texture >= numtextures)
@@ -132,14 +131,14 @@ static int16_t R_GetTextureNumForName(const char* tex_name)
     char name8[8];
     strncpy(name8, tex_name, sizeof(name8));
 
-    const int32_t __far* maptex = W_GetLumpByName("TEXTURE1");
-    const int32_t __far* directory = maptex+1;
+    const int32_t* maptex = W_GetLumpByName("TEXTURE1");
+    const int32_t* directory = maptex+1;
 
     for (int16_t i = 0; i < numtextures; i++)
     {
         int32_t offset = W_FetchInt32(directory++);
 
-        const maptexture_t __far* mtexture = (const maptexture_t __far*) ( (const byte __far*)maptex + offset);
+        const maptexture_t* mtexture = (const maptexture_t*) ( (const byte*)maptex + offset);
 
         char name[8];
         W_Fetch(mtexture->name, name, sizeof(name));
@@ -188,7 +187,7 @@ int16_t PUREFUNC R_CheckTextureNumForName (const char *tex_name)
 
 static void R_InitTextures()
 {
-	const int32_t __far* mtex1 = W_GetLumpByName("TEXTURE1");
+	const int32_t* mtex1 = W_GetLumpByName("TEXTURE1");
 	numtextures = W_FetchInt32(mtex1);
 
 	texturep = W_GetLumpByName("TEXTUREP");

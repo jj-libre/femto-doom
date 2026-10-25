@@ -59,80 +59,6 @@
 enum automapmode_e automapmode; // Mode that the automap is in
 
 
-#if NR_OF_COLORS == 1
-static const uint8_t mapcolor_wall = 0xb0;
-static const uint8_t mapcolor_fchg = 0xb1;
-static const uint8_t mapcolor_cchg = 0xb1;
-static const uint8_t mapcolor_clsd = 0xdb;
-static const uint8_t mapcolor_rdor = 0xb2;
-static const uint8_t mapcolor_bdor = 0xb2;
-static const uint8_t mapcolor_ydor = 0xb2;
-static const uint8_t mapcolor_tele = 0xb0;
-static const uint8_t mapcolor_secr = 0xb0;
-static const uint8_t mapcolor_unsn = 0xb0;
-static const uint8_t mapcolor_sngl = 0xdb;
-#elif NR_OF_COLORS == 2
-#define IGNORED	0
-static const uint8_t mapcolor_wall = IGNORED;
-static const uint8_t mapcolor_fchg = IGNORED;
-static const uint8_t mapcolor_cchg = IGNORED;
-static const uint8_t mapcolor_clsd = IGNORED;
-static const uint8_t mapcolor_rdor = IGNORED;
-static const uint8_t mapcolor_bdor = IGNORED;
-static const uint8_t mapcolor_ydor = IGNORED;
-static const uint8_t mapcolor_tele = IGNORED;
-static const uint8_t mapcolor_secr = IGNORED;
-static const uint8_t mapcolor_unsn = IGNORED;
-static const uint8_t mapcolor_sngl = IGNORED;
-#elif NR_OF_COLORS == 4
-#define CYAN	(1<<6)
-#define MAGENTA	(2<<6)
-#define WHITE	(3<<6)
-static const uint8_t mapcolor_wall = MAGENTA;
-static const uint8_t mapcolor_fchg = MAGENTA;
-static const uint8_t mapcolor_cchg = MAGENTA;
-static const uint8_t mapcolor_clsd = WHITE;
-static const uint8_t mapcolor_rdor = MAGENTA;
-static const uint8_t mapcolor_bdor = CYAN;
-static const uint8_t mapcolor_ydor = WHITE;
-static const uint8_t mapcolor_tele = CYAN;
-static const uint8_t mapcolor_secr = MAGENTA;
-static const uint8_t mapcolor_unsn = WHITE;
-static const uint8_t mapcolor_sngl = WHITE;
-#elif NR_OF_COLORS == 16
-#define BLUE			0x11
-#define GREEN			0x22
-#define RED				0x44
-#define BROWN			0x66
-#define DARK_GRAY		0x88
-#define LIGHT_RED		0xcc
-#define LIGHT_MAGENTA	0xdd
-#define YELLOW			0xee
-#define WHITE			0xff
-static const uint8_t mapcolor_wall = RED;
-static const uint8_t mapcolor_fchg = BROWN;
-static const uint8_t mapcolor_cchg = BROWN;
-static const uint8_t mapcolor_clsd = WHITE;
-static const uint8_t mapcolor_rdor = LIGHT_RED;
-static const uint8_t mapcolor_bdor = BLUE;
-static const uint8_t mapcolor_ydor = YELLOW;
-static const uint8_t mapcolor_tele = GREEN;
-static const uint8_t mapcolor_secr = LIGHT_MAGENTA;
-static const uint8_t mapcolor_unsn = DARK_GRAY;
-static const uint8_t mapcolor_sngl = WHITE;
-#elif defined __NGDEVKIT__
-static const uint8_t mapcolor_wall =  92;
-static const uint8_t mapcolor_fchg = 189;
-static const uint8_t mapcolor_cchg =  56;
-static const uint8_t mapcolor_clsd = 111;
-static const uint8_t mapcolor_rdor =  38;
-static const uint8_t mapcolor_bdor = 196;
-static const uint8_t mapcolor_ydor = 191;
-static const uint8_t mapcolor_tele =  39;
-static const uint8_t mapcolor_secr =  52;
-static const uint8_t mapcolor_unsn =  24;
-static const uint8_t mapcolor_sngl = 111;
-#else
 static const uint8_t mapcolor_wall =  23;    // 211 115 115 normal 1s wall color
 static const uint8_t mapcolor_fchg =  55;    // 255 187 147 line at floor height change color
 static const uint8_t mapcolor_cchg = 215;    // 255 127  27 line at ceiling height change color
@@ -144,7 +70,6 @@ static const uint8_t mapcolor_tele = 119;    //  67 147  55 teleporter line colo
 static const uint8_t mapcolor_secr = 252;    // 207   0 207 secret sector boundary color
 static const uint8_t mapcolor_unsn = 104;    //  79  79  79 computer map unseen line color
 static const uint8_t mapcolor_sngl = 208;    // 255 255 255 single player arrow color
-#endif
 
 
 #if !defined MAPWIDTH
@@ -881,7 +806,7 @@ static int16_t AM_DoorColor(int16_t type)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-static boolean PUREFUNC P_WasSecret(const sector_t __far* sec)
+static boolean PUREFUNC P_WasSecret(const sector_t* sec)
 {
   return SEC_BIT(SB_SECRET, sec - _g_sectors) != 0;
 }
@@ -920,8 +845,8 @@ static void AM_drawWalls(void)
         l.b.y = (fixed_t)ml.v2.y << MAPBITS;
 
 
-        const sector_t __far* backsector = LN_BACKSECTOR(&_g_maplines[i]);
-        const sector_t __far* frontsector = LN_FRONTSECTOR(&_g_maplines[i]);
+        const sector_t* backsector = LN_BACKSECTOR(&_g_maplines[i]);
+        const sector_t* frontsector = LN_FRONTSECTOR(&_g_maplines[i]);
 
         const int16_t line_special =  LN_SPECIAL(&_g_maplines[i]);
 

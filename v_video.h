@@ -59,11 +59,11 @@ void V_DrawRawRect(int16_t num, uint16_t offset, int16_t x, int16_t y, int16_t w
 #endif
 
 // V_DrawNumPatchScaled - Draws the patch from lump num
-void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t __far* patch);
+void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t* patch);
 void V_DrawNumPatchScaled(int16_t x, int16_t y, int16_t lump);
 void V_DrawNumPatchNotScaled(int16_t x, int16_t y, int16_t lump);
 
-void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t __far* patch);
+void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch);
 
 
 // V_DrawNamePatchScaled - Draws the patch from lump "name"

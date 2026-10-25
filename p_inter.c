@@ -267,7 +267,7 @@ boolean P_GivePower(player_t *player, powertype_t power)
 // P_TouchSpecialThing
 //
 
-void P_TouchSpecialThing(mobj_t __far* special, mobj_t __far* toucher)
+void P_TouchSpecialThing(mobj_t* special, mobj_t* toucher)
 {
   player_t *player;
   int16_t      i;
@@ -506,10 +506,10 @@ void P_TouchSpecialThing(mobj_t __far* special, mobj_t __far* toucher)
 //
 // KillMobj
 //
-static void P_KillMobj(mobj_t __far* source, mobj_t __far* target)
+static void P_KillMobj(mobj_t* source, mobj_t* target)
 {
   mobjtype_t item;
-  mobj_t     __far* mo;
+  mobj_t    * mo;
 
   target->flags &= ~MF_SHOOTABLE;
   target->flags &= ~MF_NOGRAVITY;
@@ -589,7 +589,7 @@ static void P_KillMobj(mobj_t __far* source, mobj_t __far* target)
 // and other environmental stuff.
 //
 
-void P_DamageMobj(mobj_t __far* target, mobj_t __far* inflictor, mobj_t __far* source, int16_t damage)
+void P_DamageMobj(mobj_t* target, mobj_t* inflictor, mobj_t* source, int16_t damage)
 {
   player_t *player;
   boolean justhit = false;          /* killough 11/98 */

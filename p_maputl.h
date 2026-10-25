@@ -61,8 +61,8 @@ typedef struct {
   boolean     isaline;
   union
   {
-    mobj_t __far* thing;
-    const line_t __far* line;
+    mobj_t* thing;
+    const line_t* line;
     int16_t loadthing;  // isaline == INTERCEPT_SLEEPER
   } d;
 } intercept_t;
@@ -74,34 +74,34 @@ typedef struct {
 typedef boolean (*traverser_t)(intercept_t *in);
 
 fixed_t CONSTFUNC P_AproxDistance (fixed_t dx, fixed_t dy);
-int16_t     P_PointOnLineSide (fixed_t x, fixed_t y, const line_t __far* line);
-int16_t     P_BoxOnLineSide (const fixed_t *tmbox, const line_t __far* ld);
+int16_t     P_PointOnLineSide (fixed_t x, fixed_t y, const line_t* line);
+int16_t     P_BoxOnLineSide (const fixed_t *tmbox, const line_t* ld);
 
-void    P_LineOpening(const line_t __far* linedef);
-void    P_UnsetThingPosition(mobj_t __far* thing);
-void    P_SetThingPosition(mobj_t __far* thing);
+void    P_LineOpening(const line_t* linedef);
+void    P_UnsetThingPosition(mobj_t* thing);
+void    P_SetThingPosition(mobj_t* thing);
 void    P_BeginLoadThings(int16_t map);
 void    P_SetLoadingThing(int16_t thing);
 void    P_EndLoadThings(void);
 boolean P_SpawnLoadStatic(fixed_t x, fixed_t y, mobjtype_t type);
-boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t __far*));
-int16_t P_LoadIndex(mobj_t __far* thing);
+boolean P_SectorLoadThings(int16_t sector, boolean func(mobj_t*));
+int16_t P_LoadIndex(mobj_t* thing);
 int16_t P_LoadNodeFirst(int16_t i);
 boolean P_LoadNodeAlive(int16_t k);
 int16_t P_LoadNodeSector(int16_t k);
 void    P_KillLoadNode(int16_t k);
-void    P_KillLoadNodes(mobj_t __far* thing);
+void    P_KillLoadNodes(mobj_t* thing);
 void    P_BeginLoadNodeChange(int16_t sector, fixed_t oldfloor, fixed_t oldceiling);
 void    P_EndLoadNodeChange(void);
-boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t __far*));
+boolean P_ChangeLoadNodeThing(int16_t sector, void func(mobj_t*));
 void    P_RunLoadStatics(void);
 int16_t P_RunSleepers(int16_t slot, int16_t t);
-void    P_SleepIfUnchanged(mobjext_t __far* ext);
-void    P_SleepAtLoad(mobj_t __far* mobj);
+void    P_SleepIfUnchanged(mobjext_t* ext);
+void    P_SleepAtLoad(mobj_t* mobj);
 boolean P_SleeperOfType(mobjtype_t type);
-void    P_MoveLoadRef(int16_t loadthing, mobj_t __far* mobj);
-boolean P_BlockLinesIterator (int16_t x, int16_t y, boolean func(const line_t __far*));
-boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t __far*));
+void    P_MoveLoadRef(int16_t loadthing, mobj_t* mobj);
+boolean P_BlockLinesIterator (int16_t x, int16_t y, boolean func(const line_t*));
+boolean P_BlockThingsIterator(int16_t x, int16_t y, boolean func(mobj_t*));
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                        int16_t flags, boolean trav(intercept_t *));
 

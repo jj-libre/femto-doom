@@ -46,7 +46,6 @@
 #include "config.h"
 #endif
 
-#include "compiler.h"
 #include "d_player.h"
 #include "f_finale.h"
 #include "doomtype.h"
@@ -75,10 +74,10 @@
 #include "globdata.h"
 
 
-static const byte __far* demobuffer;   /* cph - only used for playback */
+static const byte* demobuffer;   /* cph - only used for playback */
 static uint16_t demolength; // check for overrun (missing DEMOMARKER)
 
-static const byte __far* demo_p;
+static const byte* demo_p;
 
 gameaction_t    _g_gameaction;
 gamestate_t     _g_gamestate;
@@ -166,7 +165,7 @@ static void G_InitNew(skill_t skill, int16_t map);
 static void G_ReadDemoTiccmd (void);
 
 
-typedef struct gba_save_data_t
+typedef struct save_data_t
 {
     int32_t save_present;
     skill_t gameskill;
@@ -176,10 +175,10 @@ typedef struct gba_save_data_t
     int32_t weaponowned[NUMWEAPONS];
     int32_t ammo[NUMAMMO];
     int32_t maxammo[NUMAMMO];
-} gba_save_data_t;
+} save_data_t;
 
 
-typedef struct gba_save_settings_t
+typedef struct save_settings_t
 {
     uint32_t cookie;
     uint32_t alwaysRun;
@@ -187,11 +186,11 @@ typedef struct gba_save_settings_t
     uint32_t showMessages;
     uint32_t musicVolume;
     uint32_t soundVolume;
-} gba_save_settings_t;
+} save_settings_t;
 
 static const uint32_t settings_cookie = 0xbaddead1;
 
-static const uint16_t settings_sram_offset = sizeof(gba_save_data_t) * 8;
+static const uint16_t settings_offset = sizeof(save_data_t) * 8;
 
 //
 // G_BuildTiccmd
@@ -674,9 +673,9 @@ static void G_DoWorldDone (void)
 #define MIN_MAXPLAYERS 4
 
 
-inline static void LoadSRAM(byte __far* eeprom, uint16_t size, uint16_t offset)
+inline static void LoadSaveData(byte* data, uint16_t size, uint16_t offset)
 {
-	UNUSED(eeprom);
+	UNUSED(data);
 	UNUSED(size);
 	UNUSED(offset);
 }
@@ -688,14 +687,14 @@ inline static void LoadSRAM(byte __far* eeprom, uint16_t size, uint16_t offset)
 void G_UpdateSaveGameStrings(void)
 {
 #if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(gba_save_data_t) * 8;
+    uint16_t savebuffersize = sizeof(save_data_t) * 8;
 
 
-    byte __far* loadbuffer = Z_MallocStatic(savebuffersize);
+    byte* loadbuffer = Z_MallocStatic(savebuffersize);
 
-    LoadSRAM(loadbuffer, savebuffersize, 0);
+    LoadSaveData(loadbuffer, savebuffersize, 0);
 
-    gba_save_data_t __far* saveslots = (gba_save_data_t __far*)loadbuffer;
+    save_data_t* saveslots = (save_data_t*)loadbuffer;
 
     for(int16_t i = 0; i < 8; i++)
     {
@@ -729,16 +728,16 @@ void G_LoadGame(int16_t slot)
 static void G_DoLoadGame(void)
 {
 #if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(gba_save_data_t) * 8;
+    uint16_t savebuffersize = sizeof(save_data_t) * 8;
 
 
-    byte __far* loadbuffer = Z_MallocStatic(savebuffersize);
+    byte* loadbuffer = Z_MallocStatic(savebuffersize);
 
-    LoadSRAM(loadbuffer, savebuffersize, 0);
+    LoadSaveData(loadbuffer, savebuffersize, 0);
 
-    gba_save_data_t __far* saveslots = (gba_save_data_t __far*)loadbuffer;
+    save_data_t* saveslots = (save_data_t*)loadbuffer;
 
-    gba_save_data_t __far* savedata = &saveslots[savegameslot];
+    save_data_t* savedata = &saveslots[savegameslot];
 
     if(savedata->save_present != 1)
         return;
@@ -749,9 +748,9 @@ static void G_DoLoadGame(void)
     G_InitNew (_g_gameskill, _g_gamemap);
 
     totalleveltimes = savedata->totalleveltimes;
-    _fmemcpy(_g_player.weaponowned, savedata->weaponowned, sizeof(savedata->weaponowned));
-    _fmemcpy(_g_player.ammo, savedata->ammo, sizeof(savedata->ammo));
-    _fmemcpy(_g_player.maxammo, savedata->maxammo, sizeof(savedata->maxammo));
+    memcpy(_g_player.weaponowned, savedata->weaponowned, sizeof(savedata->weaponowned));
+    memcpy(_g_player.ammo, savedata->ammo, sizeof(savedata->ammo));
+    memcpy(_g_player.maxammo, savedata->maxammo, sizeof(savedata->maxammo));
 	
     //If stored maxammo is more than no backpack ammo, player had a backpack.
     if(_g_player.maxammo[am_clip] > maxammo[am_clip])
@@ -775,9 +774,9 @@ void G_SaveGame(int16_t slot)
 }
 
 
-inline static void SaveSRAM(const byte __far* eeprom, uint16_t size, uint16_t offset)
+inline static void StoreSaveData(const byte* data, uint16_t size, uint16_t offset)
 {
-	UNUSED(eeprom);
+	UNUSED(data);
 	UNUSED(size);
 	UNUSED(offset);
 }
@@ -786,15 +785,15 @@ inline static void SaveSRAM(const byte __far* eeprom, uint16_t size, uint16_t of
 static void G_DoSaveGame(void)
 {
 #if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(gba_save_data_t) * 8;
+    uint16_t savebuffersize = sizeof(save_data_t) * 8;
 
-    byte __far* savebuffer = Z_MallocStatic(savebuffersize);
+    byte* savebuffer = Z_MallocStatic(savebuffersize);
 
-    LoadSRAM(savebuffer, savebuffersize, 0);
+    LoadSaveData(savebuffer, savebuffersize, 0);
 
-    gba_save_data_t __far* saveslots = (gba_save_data_t __far*)savebuffer;
+    save_data_t* saveslots = (save_data_t*)savebuffer;
 
-    gba_save_data_t __far* savedata = &saveslots[savegameslot];
+    save_data_t* savedata = &saveslots[savegameslot];
 
     savedata->save_present = 1;
 
@@ -802,11 +801,11 @@ static void G_DoSaveGame(void)
     savedata->gamemap = _g_gamemap;
     savedata->totalleveltimes = totalleveltimes;
 
-    _fmemcpy(savedata->weaponowned, _g_player.weaponowned, sizeof(savedata->weaponowned));
-    _fmemcpy(savedata->ammo, _g_player.ammo, sizeof(savedata->ammo));
-    _fmemcpy(savedata->maxammo, _g_player.maxammo, sizeof(savedata->maxammo));
+    memcpy(savedata->weaponowned, _g_player.weaponowned, sizeof(savedata->weaponowned));
+    memcpy(savedata->ammo, _g_player.ammo, sizeof(savedata->ammo));
+    memcpy(savedata->maxammo, _g_player.maxammo, sizeof(savedata->maxammo));
 
-    SaveSRAM(savebuffer, savebuffersize, 0);
+    StoreSaveData(savebuffer, savebuffersize, 0);
 
     Z_Free(savebuffer);
 
@@ -818,7 +817,7 @@ static void G_DoSaveGame(void)
 
 void G_SaveSettings()
 {
-    gba_save_settings_t settings;
+    save_settings_t settings;
 
     settings.cookie = settings_cookie;
 
@@ -830,14 +829,14 @@ void G_SaveSettings()
     settings.musicVolume = snd_MusicVolume;
     settings.soundVolume = snd_SfxVolume;
 
-    SaveSRAM((byte __far*)&settings, sizeof(settings), settings_sram_offset);
+    StoreSaveData((byte*)&settings, sizeof(settings), settings_offset);
 }
 
 void G_LoadSettings()
 {
-    gba_save_settings_t settings = {0};
+    save_settings_t settings = {0};
 
-    LoadSRAM((byte __far*)&settings, sizeof(settings), settings_sram_offset);
+    LoadSaveData((byte*)&settings, sizeof(settings), settings_offset);
 
     if(settings.cookie == settings_cookie)
     {
@@ -962,7 +961,7 @@ void G_DeferedPlayDemo (const char* name)
 
 
 //e6y: Check for overrun
-static void CheckForOverrun(const byte __far* start_p, const byte __far* current_p, size_t size)
+static void CheckForOverrun(const byte* start_p, const byte* current_p, size_t size)
 {
     size_t pos = current_p - start_p;
     if (pos + size > demolength)
@@ -971,7 +970,7 @@ static void CheckForOverrun(const byte __far* start_p, const byte __far* current
     }
 }
 
-static const byte __far* G_ReadDemoHeader(const byte __far* demo_p)
+static const byte* G_ReadDemoHeader(const byte* demo_p)
 {
     skill_t skill;
     int16_t map;
@@ -979,7 +978,7 @@ static const byte __far* G_ReadDemoHeader(const byte __far* demo_p)
     // e6y
     // The local variable should be used instead of demobuffer,
     // because demobuffer can be uninitialized
-    const byte __far* header_p = demo_p;
+    const byte* header_p = demo_p;
 
     _g_basetic = _g_gametic;  // killough 9/29/98
 

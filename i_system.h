@@ -36,15 +36,11 @@
 #ifndef __I_SYSTEM__
 #define __I_SYSTEM__
 
-#include "compiler.h"
 #include "config.h"
 #include "sounds.h"
 
 
-uint8_t __far* I_ZoneBase(uint32_t *heapSize);
-
-
-#define PARAGRAPH_SIZE 16
+uint8_t* I_ZoneBase(uint32_t *heapSize);
 
 
 void I_InitTimer(void);

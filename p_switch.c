@@ -133,7 +133,7 @@ void P_LoadTexture(int16_t texture)
 // to remain active in gametics.
 // No return.
 //
-static void P_StartButton(const line_t __far* line, bwhere_e w, int16_t texture, int16_t time)
+static void P_StartButton(const line_t* line, bwhere_e w, int16_t texture, int16_t time)
 {
   int16_t           i;
 
@@ -172,14 +172,14 @@ static void P_StartButton(const line_t __far* line, bwhere_e w, int16_t texture,
 // 1 second, in ticks.
 #define BUTTONTIME  TICRATE
 
-void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
+void P_ChangeSwitchTexture(const line_t* line, boolean useAgain)
 {
     /* Rearranged a bit to avoid too much code duplication */
     int16_t     i;
     int16_t   *texture, ttop, tmid, tbot;
     bwhere_e position;
 
-    side_t __far* side = P_ChangeableSide(LN_SIDENUM(line, 0));
+    side_t* side = P_ChangeableSide(LN_SIDENUM(line, 0));
     ttop = side->toptexture;
     tmid = side->midtexture;
     tbot = side->bottomtexture;
@@ -248,11 +248,11 @@ void P_ChangeSwitchTexture(const line_t __far* line, boolean useAgain)
 //
 // Passed the line activating the door and the thing activating it
 //
-static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
+static void EV_VerticalDoor(const line_t* line, mobj_t* thing)
 {
   player_t* player;
-  sector_t __far* sec;
-  vldoor_t __far* door;
+  sector_t* sec;
+  vldoor_t* door;
 
   //  Check for locks
   player = P_MobjIsPlayer(thing);
@@ -394,7 +394,7 @@ static void EV_VerticalDoor(const line_t __far* line, mobj_t __far* thing)
 // Passed the thing using the line and the line being used
 // Returns true if a thinker was created
 //
-boolean P_UseSpecialLine(mobj_t __far* thing, const line_t __far* line)
+boolean P_UseSpecialLine(mobj_t* thing, const line_t* line)
 {
   // Switches that other things can activate.
   if (!P_MobjIsPlayer(thing))

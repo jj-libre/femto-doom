@@ -49,16 +49,16 @@
 // New limit-free plat structure -- killough
 
 typedef struct platlist {
-  plat_t __far* plat;
-  struct platlist __far* next;
-  struct platlist __far*__far* prev;
+  plat_t* plat;
+  struct platlist* next;
+  struct platlist** prev;
 } platlist_t;
 
 
-static platlist_t __far* activeplats;
+static platlist_t* activeplats;
 
 
-static void P_RemoveActivePlat(plat_t __far* plat);
+static void P_RemoveActivePlat(plat_t* plat);
 
 //
 // T_PlatRaise()
@@ -69,7 +69,7 @@ static void P_RemoveActivePlat(plat_t __far* plat);
 // No return
 //
 
-void T_PlatRaise(plat_t __far* plat)
+void T_PlatRaise(plat_t* plat)
 {
   result_e      res;
 
@@ -167,14 +167,14 @@ void T_PlatRaise(plat_t __far* plat)
 // Returns true if a thinker is started
 //
 
-static void P_AddActivePlat(plat_t __far* plat);
+static void P_AddActivePlat(plat_t* plat);
 
-boolean EV_DoPlat(const line_t __far* line, plattype_e type)
+boolean EV_DoPlat(const line_t* line, plattype_e type)
 {
-  plat_t __far* plat;
+  plat_t* plat;
   int16_t             secnum;
   boolean             rtn;
-  sector_t __far*       sec;
+  sector_t*       sec;
 
   secnum = -1;
   rtn = false;
@@ -256,17 +256,17 @@ boolean EV_DoPlat(const line_t __far* line, plattype_e type)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-static void P_AddActivePlat(plat_t __far* plat)
+static void P_AddActivePlat(plat_t* plat)
 {
-    platlist_t __far* old_head = activeplats;
+    platlist_t* old_head = activeplats;
 
-    platlist_t __far* list = activeplats = Z_MallocLevel(sizeof *list);
+    platlist_t* list = activeplats = Z_MallocLevel(sizeof *list);
     list->plat = plat;
     plat->list = list;
     if ((list->next = old_head))
         list->next->prev = &list->next;
 
-    list->prev = (platlist_t __far* __far*)old_head; // FIXME this is suspicious
+    list->prev = (platlist_t**)old_head; // FIXME this is suspicious
 }
 
 //
@@ -277,9 +277,9 @@ static void P_AddActivePlat(plat_t __far* plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-static void P_RemoveActivePlat(plat_t __far* plat)
+static void P_RemoveActivePlat(plat_t* plat)
 {
-  platlist_t __far* list = plat->list;
+  platlist_t* list = plat->list;
   P_Mover(plat->sector)->floordata = Z_Ref(0); //jff 2/23/98 multiple thinkers
 
   P_RemoveThinker(&plat->thinker);

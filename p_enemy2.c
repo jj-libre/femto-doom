@@ -44,7 +44,7 @@
 static const fixed_t xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 static const fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
-static boolean P_Move(mobj_t __far* actor)
+static boolean P_Move(mobj_t* actor)
 {
   if (P_Ext(actor)->movedir == DI_NODIR)
     return false;
@@ -117,7 +117,7 @@ static boolean P_Move(mobj_t __far* actor)
 // an OpenDoor call is made to start it opening.
 //
 
-boolean P_TryWalk(mobj_t __far* actor)
+boolean P_TryWalk(mobj_t* actor)
 {
   if (!P_Move(actor))
     return false;
@@ -132,7 +132,7 @@ boolean P_TryWalk(mobj_t __far* actor)
 // killough 9/9/98: whether a target is visible to a monster
 //
 
-static boolean P_IsVisible(mobj_t __far* actor, mobj_t __far* mo, boolean allaround)
+static boolean P_IsVisible(mobj_t* actor, mobj_t* mo, boolean allaround)
 {
     if (!allaround)
     {
@@ -151,7 +151,7 @@ static boolean P_IsVisible(mobj_t __far* actor, mobj_t __far* mo, boolean allaro
 // Returns true if a player is targeted.
 //
 
-static boolean P_LookForPlayers(mobj_t __far* actor, boolean allaround)
+static boolean P_LookForPlayers(mobj_t* actor, boolean allaround)
 {
     player_t *player;
 
@@ -180,7 +180,7 @@ static boolean P_LookForPlayers(mobj_t __far* actor, boolean allaround)
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
 
-static boolean P_LookForTargets(mobj_t __far* actor, boolean allaround)
+static boolean P_LookForTargets(mobj_t* actor, boolean allaround)
 {
     return P_LookForPlayers (actor, allaround);
 }
@@ -191,10 +191,10 @@ static boolean P_LookForTargets(mobj_t __far* actor, boolean allaround)
 // Stay in state until a player is sighted.
 //
 
-void A_Look(mobj_t __far* actor)
+void A_Look(mobj_t* actor)
 {
     const int16_t s = P_SubsectorSector(actor->subsector) - _g_sectors;
-    mobj_t __far* targ = SEC_BIT(SB_HEARD, s) ? P_Mobj(_g_soundtarget) : NULL;
+    mobj_t* targ = SEC_BIT(SB_HEARD, s) ? P_Mobj(_g_soundtarget) : NULL;
     P_Ext(actor)->threshold = 0; // any shot will wake up
     P_Ext(actor)->pursuecount = 0;
 
@@ -253,7 +253,7 @@ void A_Look(mobj_t __far* actor)
 // so it tries to close as fast as possible
 //
 
-void A_Chase(mobj_t __far* actor)
+void A_Chase(mobj_t* actor)
 {
     if (P_Ext(actor)->reactiontime)
         P_Ext(actor)->reactiontime--;

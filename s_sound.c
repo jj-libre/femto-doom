@@ -56,7 +56,7 @@ typedef struct
 {
   const sfxinfo_t *sfxinfo;  // sound information (if null, channel avail.)
   int32_t tickend;
-  void __far* origin;        // origin of sound
+  void* origin;        // origin of sound
   int16_t handle;          // handle of the sound being played
   boolean is_pickup;       // whether sound is a player's weapon
 } channel_t;
@@ -109,9 +109,9 @@ static void S_StopChannel(int16_t cnum);
 
 static void S_StopMusic(void);
 
-static boolean S_AdjustSoundParams(mobj_t __far* listener, mobj_t __far* source, int16_t *vol, int16_t *sep);
+static boolean S_AdjustSoundParams(mobj_t* listener, mobj_t* source, int16_t *vol, int16_t *sep);
 
-static int16_t S_getChannel(void __far* origin, const sfxinfo_t *sfxinfo, boolean is_pickup);
+static int16_t S_getChannel(void* origin, const sfxinfo_t *sfxinfo, boolean is_pickup);
 
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
@@ -173,7 +173,7 @@ void S_Start(void)
     S_ChangeMusic(mnum, true);
 }
 
-static void S_StartSoundAtVolume(mobj_t __far* origin, sfxenum_t sfx_id, int16_t volume)
+static void S_StartSoundAtVolume(mobj_t* origin, sfxenum_t sfx_id, int16_t volume)
 {
     int16_t cnum;
     boolean is_pickup;
@@ -228,12 +228,12 @@ static void S_StartSoundAtVolume(mobj_t __far* origin, sfxenum_t sfx_id, int16_t
 
 }
 
-void S_StartSound(mobj_t __far* origin, sfxenum_t sfx_id)
+void S_StartSound(mobj_t* origin, sfxenum_t sfx_id)
 {
     S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
 }
 
-void S_StartSound2(const sector_t __far* sector, sfxenum_t sfx_id)
+void S_StartSound2(const sector_t* sector, sfxenum_t sfx_id)
 {
     //Look at this mess.
 
@@ -253,14 +253,14 @@ void S_StartSound2(const sector_t __far* sector, sfxenum_t sfx_id)
     static struct fake_mobj
     {
         degenmobj_t origin;
-    } __far fm;
+    } fm;
 
     P_SectorSoundOrg(sector, &fm.origin.x, &fm.origin.y);
 
-    S_StartSoundAtVolume((mobj_t __far*)&fm, sfx_id, snd_SfxVolume);
+    S_StartSoundAtVolume((mobj_t*)&fm, sfx_id, snd_SfxVolume);
 }
 
-void S_StopSound(void __far* origin)
+void S_StopSound(void* origin)
 {
     int16_t cnum;
 
@@ -427,7 +427,7 @@ static void S_StopChannel(int16_t cnum)
 // Otherwise, modifies parameters and returns true.
 //
 
-static boolean S_AdjustSoundParams(mobj_t __far* listener, mobj_t __far* source, int16_t *vol, int16_t *sep)
+static boolean S_AdjustSoundParams(mobj_t* listener, mobj_t* source, int16_t *vol, int16_t *sep)
 {
 	fixed_t adx, ady,approx_dist;
 
@@ -498,7 +498,7 @@ static boolean S_AdjustSoundParams(mobj_t __far* listener, mobj_t __far* source,
 //   If none available, return -1.  Otherwise channel #.
 //
 
-static int16_t S_getChannel(void __far* origin, const sfxinfo_t *sfxinfo, boolean is_pickup)
+static int16_t S_getChannel(void* origin, const sfxinfo_t *sfxinfo, boolean is_pickup)
 {
     // channel number to use
     int16_t cnum;
