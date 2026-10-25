@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .art import GAMMA_LEVELS
-from .engine import Engine
+from .info import MAX_SPRITE_FRAMES, SPRITES
 from .picture import Picture
 from .texcols import texture_columns
 from .wad import Lump, Wad, name8
@@ -66,7 +66,7 @@ def texture_names(iwad: Wad) -> list[str]:
     return [name8(texture.name) for texture in read_textures(iwad["TEXTURE1"])]
 
 
-def lumps_read_by_name(engine: Engine) -> set[str]:
+def lumps_read_by_name() -> set[str]:
     names = set(NAMED_LUMPS)
     names |= {f"PLAYPAL{level}" for level in range(1, GAMMA_LEVELS + 1)}
     names |= {f"STCFN{code:03d}" for code in range(ord("!"), ord("_") + 1)}
@@ -80,14 +80,14 @@ def lumps_read_by_name(engine: Engine) -> set[str]:
     return names
 
 
-def build_graphics(iwad: Wad, art: Mapping[str, bytes], engine: Engine, texshift: int, high_detail: bool) -> Wad:
+def build_graphics(iwad: Wad, art: Mapping[str, bytes], texshift: int, high_detail: bool) -> Wad:
     """`art` replaces lumps of the same name or is appended. Of lumps sharing a name only the last
     is kept, the one Doom's lookup finds."""
     textures = read_textures(iwad["TEXTURE1"])
     pnames = patch_names(iwad["PNAMES"])
     patches = {pnames[ref.patch] for texture in textures for ref in texture.patches}
-    sprites = {lump.name for lump in iwad.between("S_START", "S_END") if lump.name[:4] in engine.sprites}
-    by_name = lumps_read_by_name(engine)
+    sprites = {lump.name for lump in iwad.between("S_START", "S_END") if lump.name[:4] in SPRITES}
+    by_name = lumps_read_by_name()
 
     kept = by_name | patches | sprites | {"PNAMES"}
     last = {lump.name: i for i, lump in enumerate(iwad)}
@@ -103,7 +103,7 @@ def build_graphics(iwad: Wad, art: Mapping[str, bytes], engine: Engine, texshift
     wad["TEXTURE1"] = pack_textures(textures)
     wad["TEXHEIGH"] = struct.pack(f"<{len(textures)}h", *(t.height for t in textures))
     wad.lumps[wad.index("PNAMES")] = Lump("TEXTUREP", texture_patches(wad, textures, pnames))
-    wad["SPRITES"] = sprite_frames(wad, sprites, engine)
+    wad["SPRITES"] = sprite_frames(wad, sprites)
     wad["TEXCOLS"] = texture_columns(wad.to_bytes(), wad["TEXTURE1"], wad["TEXTUREP"], texshift, high_detail)
     return wad
 
@@ -174,14 +174,14 @@ def texture_patches(wad: Wad, textures: list[Texture], pnames: list[str]) -> byt
     return struct.pack(f"<{len(offsets)}H", *offsets) + b"".join(entries)
 
 
-def sprite_frames(wad: Wad, sprites: set[str], engine: Engine) -> bytes:
+def sprite_frames(wad: Wad, sprites: set[str]) -> bytes:
     """Per sprite and frame the lump of each of 8 rotations, a flip mask and a rotate flag."""
-    table = bytearray(SPRITE_FRAME.size * engine.sprite_frames * len(engine.sprites))
+    table = bytearray(SPRITE_FRAME.size * MAX_SPRITE_FRAMES * len(SPRITES))
     for number, lump in enumerate(wad.lumps):
         if lump.name not in sprites:
             continue
-        sprite = engine.sprites.index(lump.name[:4])
-        at = SPRITE_FRAME.size * (engine.sprite_frames * sprite + ord(lump.name[4]) - ord("A"))
+        sprite = SPRITES.index(lump.name[:4])
+        at = SPRITE_FRAME.size * (MAX_SPRITE_FRAMES * sprite + ord(lump.name[4]) - ord("A"))
         *rotations, flips, rotates = SPRITE_FRAME.unpack_from(table, at)
         rotation = int(lump.name[5])
         if rotation == 0:

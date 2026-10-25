@@ -12,12 +12,14 @@ from __future__ import annotations
 import struct
 from collections.abc import Sequence
 
-from .engine import Engine
+from .info import MF, MOBJS
 from .level import NO_SECTOR, Level, Side
 
 VERSION = 3
 GEOMETRY_VERSION = 2
 SKILL_GROUPS = (1, 2, 4)
+FIRST_STATIC = next(i for i, mobj in enumerate(MOBJS) if mobj.name == "MISC0")
+"""Thing types from here on never think."""
 MTF_AMBUSH = 8
 NO_MOBJTYPE = 0xFF
 PLAYER_START = 1
@@ -49,8 +51,10 @@ def shorts(values: Sequence[int]) -> bytes:
     return struct.pack(f"<{len(values)}h", *values)
 
 
-def thing_lists(level: Level, engine: Engine) -> bytes:
-    by_doomednum = engine.mobj_by_doomednum()
+def thing_lists(level: Level) -> bytes:
+    by_doomednum: dict[int, int] = {}
+    for number, mobj in enumerate(MOBJS):
+        by_doomednum.setdefault(mobj.doomednum, number)
     counts = [[0, 0] for _ in SKILL_GROUPS]
     entries = []
     sectors: list[int | None] = []
@@ -63,18 +67,18 @@ def thing_lists(level: Level, engine: Engine) -> bytes:
         subsector = -1
         touched: list[int] = []
         if mobjtype is not None:
-            static = mobjtype >= engine.first_static
+            static = mobjtype >= FIRST_STATIC
             for group, bit in enumerate(SKILL_GROUPS):
                 if thing.doomednum == PLAYER_START or thing.options & bit:
                     slots[group] = counts[group][static]
                     counts[group][static] += 1
-            info = engine.mobjs[mobjtype]
+            info = MOBJS[mobjtype]
             x, y = thing.x << 16, thing.y << 16
             subsector = level.point_subsector(x, y)
-            if not info.flags & engine.flags["MF_NOSECTOR"]:
+            if not info.flags & MF.NOSECTOR:
                 sector = level.subsector_sector[subsector]
                 touched = sorted(level.touched_sectors(x, y, info.radius))
-            if not info.flags & engine.flags["MF_NOBLOCKMAP"]:
+            if not info.flags & MF.NOBLOCKMAP:
                 block = level.block(x, y)
         angle = (thing.angle & 0x7F) | (0x80 if thing.options & MTF_AMBUSH else 0)
         entries.append(

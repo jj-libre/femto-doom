@@ -10,7 +10,6 @@ import struct
 from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple
 
-from .engine import Engine
 from .level import NO_SECTOR, NO_SIDE, Level, Line, Node, Sector, Seg, Side, Subsector, Thing
 from .lists import geometry_lists, number_changeable_sides, thing_lists
 from .palette import Color, Palette, closest, parse_palette
@@ -70,7 +69,7 @@ def short(value: int) -> int:
     return (value + 0x8000) % 0x10000 - 0x8000
 
 
-def build_maps(iwad: Wad, textures: Sequence[str], engine: Engine) -> Wad:
+def build_maps(iwad: Wad, textures: Sequence[str]) -> Wad:
     """Each map's marker and lumps, then E1MxTL and E1MxGL of every map."""
     palette = parse_palette(iwad["PLAYPAL"])
     maps = Wad()
@@ -85,7 +84,7 @@ def build_maps(iwad: Wad, textures: Sequence[str], engine: Engine) -> Wad:
             source[lump.name] = lump.data
         level = MapConverter(marker.name, source, textures, iwad, palette).convert()
         lists += [
-            Lump(marker.name + "TL", thing_lists(level, engine)),
+            Lump(marker.name + "TL", thing_lists(level)),
             Lump(marker.name + "GL", geometry_lists(level)),
         ]
         level.sides = number_changeable_sides(level)

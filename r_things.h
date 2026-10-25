@@ -36,8 +36,6 @@
 #ifndef __R_THINGS__
 #define __R_THINGS__
 
-#define MAX_SPRITE_FRAMES 23
-
 extern const spriteframe_t *sprites;
 
 void R_InitSprites(void);

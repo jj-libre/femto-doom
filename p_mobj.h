@@ -118,71 +118,7 @@
 // Any questions?
 //
 
-//
-// Misc. mobj flags
-//
-
-// Call P_SpecialThing when touched.
-#define MF_SPECIAL      0x00000001UL
-// Blocks.
-#define MF_SOLID        0x00000002UL
-// Can be hit.
-#define MF_SHOOTABLE    0x00000004UL
-// Don't use the sector links (invisible but touchable).
-#define MF_NOSECTOR     0x00000008UL
-// Don't use the blocklinks (inert but displayable)
-#define MF_NOBLOCKMAP   0x00000010UL
-
-// Not to be activated by sound, deaf monster.
-#define MF_AMBUSH       0x00000020UL
-// Will try to attack right back.
-#define MF_JUSTHIT      0x00000040UL
-// Will take at least one step before attacking.
-#define MF_JUSTATTACKED 0x00000080UL
-
-// Don't apply gravity (every tic),
-//  that is, object will float, keeping current height
-//  or changing it actively.
-#define MF_NOGRAVITY    0x00000200UL
-
-// Movement flags.
-// This allows jumps from high places.
-#define MF_DROPOFF      0x00000400UL
-// For players, will pick up items.
-#define MF_PICKUP       0x00000800UL
-// Player cheat. ???
-#define MF_NOCLIP       0x00001000UL
-
-// Don't hit same species, explode on block.
-// Player missiles as well as fireballs of various kinds.
-#define MF_MISSILE      0x00010000UL
-// Dropped by a demon, not level spawned.
-// E.g. ammo clips dropped by dying former humans.
-#define MF_DROPPED      0x00020000UL
-// Use fuzzy draw (shadow demons or spectres),
-//  temporary player invisibility powerup.
-#define MF_SHADOW       0x00040000UL
-// Flag: don't bleed when shot (use puff),
-//  barrels and shootable furniture shall not bleed.
-#define MF_NOBLOOD      0x00080000UL
-// Don't stop moving halfway off a step,
-//  that is, have dead bodies slide down all the way.
-#define MF_CORPSE       0x00100000UL
-
-// On kill, count this enemy object
-//  towards intermission kill total.
-// Happy gathering.
-#define MF_COUNTKILL    0x00400000UL
-
-// On picking up, count this item object
-//  towards intermission item total.
-#define MF_COUNTITEM    0x00800000UL
-
-#define MF_POOLED       0x10000000UL
-#define MF_STATIC       0x20000000UL
-#define MF_REMOVED      0x40000000UL
-// Still linked where the map put it, through the load lists; sprev is its load index.
-#define MF_INPLACE      0x80000000UL
+// The MF_ flags are in info.h.
 
 
 // Map Object definition.
