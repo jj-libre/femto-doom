@@ -143,8 +143,10 @@ extern const uint8_t *fullcolormap;
 void W_SetWads(const uint8_t* iwad, const uint8_t* maps);
 
 // Sets the game up and returns; the platform then calls D_DoomStep for every frame.
-void D_DoomMain(int argc, const char * const * argv);
+void D_DoomInit(int argc, const char * const * argv);
 void D_DoomStep(void);
+// D_DoomInit, then D_DoomStep forever.
+_Noreturn void D_DoomMain(int argc, const char * const * argv);
 
 void D_PostEvent(event_t* ev);
 

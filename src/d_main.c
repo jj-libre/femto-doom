@@ -29,7 +29,7 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *  DOOM main program (D_DoomMain) and one game step (D_DoomStep),
+ *  DOOM set-up (D_DoomInit), one game step (D_DoomStep) and main loop (D_DoomMain),
  *  plus functions to
  *  parse command line parameters, configure game parameters (turbo),
  *  and call the startup functions.
@@ -251,7 +251,7 @@ static void TryRunTics (void)
 //
 //  D_DoomStep()
 //
-// Runs the tics that are due and draws one frame. After D_DoomMain the platform calls it
+// Runs the tics that are due and draws one frame. After D_DoomInit the platform calls it
 //  over and over.
 // Manages timing and IO,
 //  calls all ?_Responder, ?_Ticker, and ?_Drawer,
@@ -441,13 +441,14 @@ static void D_Init(void)
 
 
 //
-// D_DoomMainSetup
+// D_DoomInit
 //
-// CPhipps - the old contents of D_DoomMain, but moved out of the main
-//  line of execution so its stack space can be freed
 
-static void D_DoomMainSetup(void)
+void D_DoomInit(int argc, const char * const * argv)
 {
+    myargc = argc;
+    myargv = argv;
+
     // init subsystems
     I_InitKeyboard();
 
@@ -508,14 +509,15 @@ static void D_DoomMainSetup(void)
     }
 }
 
+
 //
 // D_DoomMain
 //
 
-void D_DoomMain(int argc, const char * const * argv)
+_Noreturn void D_DoomMain(int argc, const char * const * argv)
 {
-    myargc = argc;
-    myargv = argv;
+    D_DoomInit(argc, argv);
 
-    D_DoomMainSetup();
+    for (;;)
+        D_DoomStep();
 }

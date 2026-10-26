@@ -15,10 +15,13 @@ compilers that shorten them), because `boolean` is an enum and the engine casts 
 
 ```c
 W_SetWads(graphics_wad, map_wad);   /* both mapped in memory, see wad-format.md */
-D_DoomMain(argc, argv);             /* sets the game up and returns */
+D_DoomInit(argc, argv);             /* sets the game up and returns */
 for (;;)
     D_DoomStep();                   /* runs the tics that are due, draws one frame */
 ```
+
+`D_DoomMain(argc, argv)` does the same and never returns, for a platform with nothing to do
+between frames.
 
 Input goes in from `I_StartTic` as `event_t`s posted with `D_PostEvent`, the keys being `KEYD_*`.
 
