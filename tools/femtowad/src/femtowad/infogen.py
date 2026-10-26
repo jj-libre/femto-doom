@@ -135,7 +135,8 @@ def info_h() -> str:
         comment = MF_COMMENTS.get(flag)
         if comment:
             flag_lines.append(f"// {comment}")
-        flag_lines.append(f"#define {'MF_' + flag.name:<15} 0x{flag.value:08X}UL")
+        name = f"MF_{flag.name}"
+        flag_lines.append(f"#define {name:<15} 0x{flag.value:08X}UL")
     parts = [
         LICENCE,
         "#ifndef __INFO__\n#define __INFO__\n",
@@ -196,11 +197,12 @@ def check_references() -> None:
 
 
 def write_info(engine: Path, check: bool) -> bool:
-    """Writes info.c and info.h, or with `check` only compares them; whether they were current."""
+    """Writes src/info.c and src/info.h of the femto-doom checkout at `engine`, or with `check`
+    only compares them; whether they were current."""
     check_references()
     current = True
     for name, text in (("info.h", info_h()), ("info.c", info_c())):
-        path = engine / name
+        path = engine / "src" / name
         old = path.read_bytes().decode("latin-1").replace("\r\n", "\n") if path.exists() else None
         if old == text:
             continue

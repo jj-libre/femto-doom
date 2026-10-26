@@ -26,7 +26,7 @@ from .wad import Wad
 
 def find_engine() -> Path | None:
     """The femto-doom checkout this tool lives in."""
-    return next((d for d in Path(__file__).resolve().parents if (d / "info.c").is_file()), None)
+    return next((d for d in Path(__file__).resolve().parents if (d / "src" / "info.c").is_file()), None)
 
 
 def wads(args: argparse.Namespace) -> None:
