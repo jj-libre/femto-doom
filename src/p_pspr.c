@@ -46,7 +46,7 @@
 #include "d_event.h"
 
 #include "globdata.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #define LOWERSPEED   (FRACUNIT*6)
 #define RAISESPEED   (FRACUNIT*6)

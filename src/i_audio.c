@@ -54,7 +54,7 @@
 
 #include "m_fixed.h"
 
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

@@ -41,7 +41,7 @@
 #include "g_game.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

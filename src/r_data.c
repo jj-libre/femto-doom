@@ -40,7 +40,7 @@
 #include "w_wad.h"
 #include "r_main.h"
 #include "m_fixed.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "r_things.h"
 #include "p_tick.h"
 #include "p_tick.h"

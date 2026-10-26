@@ -47,7 +47,7 @@
 #include "info.h"
 #include "g_game.h"
 #include "p_inter.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

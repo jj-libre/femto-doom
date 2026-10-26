@@ -40,7 +40,7 @@
 #include "doomdef.h"
 #include "d_player.h"
 #include "m_random.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "w_wad.h"
 #include "st_stuff.h"
 #include "r_main.h"
@@ -641,7 +641,7 @@ static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
 
 static void ST_refreshBackground(void)
 {
-	V_DrawRaw(statusbarnum, st_offset);
+	V_DrawRaw(st_offset, W_GetLumpByNum(statusbarnum), W_LumpLength(statusbarnum));
 }
 
 
@@ -746,7 +746,7 @@ static void ST_initRects(void)
 }
 
 
-void ST_ForceRefresh(void)
+static void ST_ForceRefresh(void)
 {
 	st_fullrefresh = true;
 }
@@ -808,7 +808,8 @@ static void ST_doPartialRefresh(void)
 	{
 		const st_rect_t* r = &st_rects[i];
 		if ((dirty & (1UL << i)) && r->x0 < r->x1)
-			V_DrawRawRect(statusbarnum, st_offset, r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
+			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + (r->y0 * SCREENWIDTH + r->x0 - st_offset),
+				r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
 	}
 
 	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
@@ -825,7 +826,7 @@ static void ST_doPartialRefresh(void)
 #endif
 
 
-void ST_doRefresh(void)
+static void ST_doRefresh(void)
 {
 #if !defined DISABLE_STATUS_BAR
 #if defined ST_PARTIAL_REFRESH
@@ -845,7 +846,7 @@ void ST_doRefresh(void)
 #endif
 }
 
-boolean ST_NeedUpdate(void)
+static boolean ST_NeedUpdate(void)
 {
 #if defined ST_PARTIAL_REFRESH
 	if (st_fullrefresh)
@@ -888,6 +889,19 @@ boolean ST_NeedUpdate(void)
     }
 
     return false;
+}
+
+
+void ST_Drawer(void)
+{
+#if defined ST_PARTIAL_REFRESH
+	static boolean menuwasactive;
+	if (menuwasactive)
+		ST_ForceRefresh();
+	menuwasactive = _g_menuactive;
+#endif
+	if (ST_NeedUpdate())
+		ST_doRefresh();
 }
 
 
@@ -1071,7 +1085,7 @@ static void ST_Stop(void)
 {
   if (st_stopped)
     return;
-  I_SetPalette(0);
+  V_SetPalette(0);
   st_stopped = true;
 }
 

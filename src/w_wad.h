@@ -38,11 +38,9 @@
 #define __W_WAD__
 
 #include "doomtype.h"
+#include "i_platform.h"
 
 
-// The graphics WAD and the map WAD, as the platform maps them. With W_FETCH defined, the platform
-// also supplies W_Fetch and every read goes through it.
-void W_SetWads(const uint8_t* iwad, const uint8_t* maps);
 void W_Init(void);
 
 int16_t           PUREFUNC W_GetNumForName(const char *name);
@@ -57,9 +55,7 @@ const void* PUREFUNC W_GetMapLumpByNum( int16_t num);
 
 #define W_GetLumpByName(x)    W_GetLumpByNum(W_GetNumForName(x))
 
-#if defined W_FETCH
-void W_Fetch(const void* src, void* dst, uint16_t len);
-#else
+#if !defined W_FETCH
 #include <string.h>
 #define W_Fetch(src, dst, len) memcpy(dst, src, len)
 #endif

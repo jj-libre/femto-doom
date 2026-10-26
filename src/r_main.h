@@ -40,19 +40,6 @@
 #include "r_data.h"
 
 
-typedef struct {
-  int16_t              x;
-  int16_t              yl;
-  int16_t              yh;
-  uint16_t             fracstep;
-  fixed_t              texturemid;
-
-  const byte   * source; // first pixel in a column
-
-  const uint8_t* colormap;
-} draw_column_vars_t;
-
-
 //Global vars.
 
 extern int16_t numnodes;
@@ -65,7 +52,6 @@ extern fixed_t  viewcos, viewsin;
 
 extern angle_t viewangle;
 
-extern const uint8_t *fullcolormap;
 extern const uint8_t* fixedcolormap;
 
 extern const int16_t  * textureheight; //needed for texture pegging (and TFE fix - killough)
@@ -90,10 +76,6 @@ int16_t V_NumPatchWidth(int16_t num);
 //
 
 void R_RenderPlayerView(player_t *player);   // Called by G_Drawer.
-
-void R_DrawColumnSprite(const draw_column_vars_t *dcvars);
-void R_DrawColumnWall(const draw_column_vars_t *dcvars);
-void R_DrawColumnFlat(uint8_t color, const draw_column_vars_t *dcvars);
 
 void R_DrawPlanes (void);
 visplane_t* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel);

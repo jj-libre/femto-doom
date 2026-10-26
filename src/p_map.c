@@ -46,7 +46,7 @@
 #include "p_inter.h"
 #include "p_user.h"
 #include "m_random.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

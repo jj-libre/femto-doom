@@ -41,7 +41,7 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_setup.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "info.h"
 #include "m_random.h"
 #include "w_wad.h"

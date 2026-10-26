@@ -40,7 +40,7 @@
 #include "r_main.h"
 #include "r_things.h"
 #include "v_video.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

@@ -27,7 +27,7 @@
 
 #include "r_defs.h"
 #include "r_main.h"
-#include "i_video.h"
+#include "i_platform.h"
 #include "w_wad.h"
 
 #include "globdata.h"

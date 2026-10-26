@@ -43,7 +43,7 @@
 #include "s_sound.h"
 #include "p_setup.h"
 #include "i_sound.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "d_main.h"
 #include "r_main.h"
 #include "m_random.h"

@@ -39,7 +39,7 @@
 
 #include "d_player.h"
 #include "doomtype.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "w_wad.h"
 #include "globdata.h"
 

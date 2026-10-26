@@ -54,7 +54,7 @@
 #include "m_menu.h"
 #include "doomtype.h"
 #include "am_map.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "i_sound.h"
 
 #include "globdata.h"
@@ -760,8 +760,8 @@ static void M_ChangeGamma(int16_t choice)
 			_g_gamma++;
 		  break;
     }
-	I_ReloadPalette();
-	I_SetPalette(0);
+	V_LoadPalettes();
+	V_SetPalette(0);
 
     G_SaveSettings();
 }

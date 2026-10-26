@@ -392,31 +392,7 @@ typedef char assertMapsubsectorSize[sizeof(mapsubsector_t) == 4 ? 1 : -1];
 // OTHER TYPES
 //
 
-// Patches.
-// A patch holds one or more columns.
-// Patches are used for sprites and all masked pictures,
-// and we compose textures from the TEXTURE1 list
-// of patches.
-typedef struct
-{
-    int16_t		width;		// bounding box size
-    int16_t		height;
-    int16_t		leftoffset;	// pixels to the left of origin
-    int16_t		topoffset;	// pixels below the origin
-    int32_t		columnofs[8];	// only [width] used, upper word is always zero
-    // the [0] is &columnofs[width]
-} patch_t;
-
-
-// posts are runs of non masked source pixels
-typedef struct
-{
-    byte		topdelta;	// -1 is the last post in a column
-    byte		length; 	// length data bytes follows
-} post_t;
-
-// column_t is a list of 0 or more post_t, (byte)-1 terminated
-typedef post_t	column_t;
+// Patches, posts and columns are in i_platform.h.
 
 
 //

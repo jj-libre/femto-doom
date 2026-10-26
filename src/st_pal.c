@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "doomdef.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "st_stuff.h"
 
 #include "globdata.h"
@@ -82,6 +82,6 @@ void ST_doPaletteStuff(void)
         palette = 0;
 
     if (palette != st_palette) {
-        I_SetPalette(st_palette = palette);
+        V_SetPalette(st_palette = palette);
     }
 }

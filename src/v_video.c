@@ -46,7 +46,7 @@
 
 void V_DrawRawFullScreen(int16_t num)
 {
-	V_DrawRaw(num, 0);
+	V_DrawRaw(0, W_GetLumpByNum(num), W_LumpLength(num));
 }
 
 
@@ -61,4 +61,24 @@ void V_DrawNumPatchNotScaled(int16_t x, int16_t y, int16_t num)
 {
 	const patch_t* patch = W_GetLumpByNum(num);
 	V_DrawPatchNotScaled(x, y, patch);
+}
+
+
+static int16_t palettelump = -1;
+
+
+void V_LoadPalettes(void)
+{
+	char lumpName[8] = "PLAYPAL";
+	if (_g_gamma != 0)
+		lumpName[7] = '0' + _g_gamma;
+
+	palettelump = W_GetNumForName(lumpName);
+}
+
+
+void V_SetPalette(int8_t pal)
+{
+	if (palettelump >= 0)
+		I_SetPalette((const uint8_t*)W_GetLumpByNum(palettelump) + pal * 256 * 3);
 }

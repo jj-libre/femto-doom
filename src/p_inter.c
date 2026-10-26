@@ -41,7 +41,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 #include "p_tick.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "p_inter.h"
 #include "p_enemy.h"

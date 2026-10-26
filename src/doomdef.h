@@ -54,6 +54,7 @@
 #include <limits.h>
 
 #include "m_swap.h"
+#include "i_platform.h"
 
 
 #define UNUSED(x)	(x = x)	// for pesky compiler / lint warnings
@@ -68,20 +69,12 @@
 #endif
 
 
-// SCREENWIDTH and SCREENHEIGHT define the visible size
-#define SCREENWIDTH  240u
-#define SCREENHEIGHT 160 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
-
 #define SCREENWIDTH_VGA  320
 #define SCREENHEIGHT_VGA 200
 
 
 // The maximum number of players, multiplayer/networking.
 #define MAXPLAYERS       1
-
-
-// State updates, number of tics / second.
-#define TICRATE          35
 
 
 int16_t M_CheckParm(char *check);
@@ -164,20 +157,6 @@ typedef enum {
   IRONTICS    = (60*TICRATE)
 } powerduration_t;
 
-
-// Keys
-#define KEYD_A              0
-#define KEYD_B              1
-#define KEYD_L              2
-#define KEYD_R              3
-#define KEYD_UP             4
-#define KEYD_DOWN           5
-#define KEYD_LEFT           6
-#define KEYD_RIGHT          7
-#define KEYD_START          8
-#define KEYD_SELECT         9
-#define KEYD_MINUS         10
-#define KEYD_PLUS          11
 
 #define NUMKEYS            12
 

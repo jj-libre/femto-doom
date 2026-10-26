@@ -39,7 +39,7 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "w_wad.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 

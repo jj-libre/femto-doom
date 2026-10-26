@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include "z_zone.h"
 #include "doomdef.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 
 //

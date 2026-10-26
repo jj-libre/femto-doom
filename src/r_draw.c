@@ -49,7 +49,7 @@
 #include "r_things.h"
 #include "m_fixed.h"
 #include "st_stuff.h"
-#include "i_system.h"
+#include "i_platform.h"
 #include "g_game.h"
 #include "m_random.h"
 

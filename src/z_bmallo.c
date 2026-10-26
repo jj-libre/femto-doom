@@ -42,7 +42,7 @@
 #include "doomtype.h"
 #include "z_zone.h"
 #include "z_bmallo.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 
 typedef struct bmalpool_s {

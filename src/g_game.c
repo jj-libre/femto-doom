@@ -69,7 +69,7 @@
 #include "m_fixed.h"
 #include "p_inter.h"
 #include "g_game.h"
-#include "i_system.h"
+#include "i_platform.h"
 
 #include "globdata.h"
 
@@ -848,7 +848,7 @@ void G_LoadSettings()
         snd_SfxVolume   = (settings.soundVolume > 15) ? 15 : settings.soundVolume;
         snd_MusicVolume = (settings.musicVolume > 15) ? 15 : settings.musicVolume;
 		
-        I_SetPalette(0);
+        V_SetPalette(0);
 
         S_SetSfxVolume(snd_SfxVolume);
         S_SetMusicVolume(snd_MusicVolume);

@@ -50,9 +50,8 @@
 #include "s_sound.h"
 #include "v_video.h"
 #include "f_finale.h"
-#include "f_wipe.h"
+#include "i_platform.h"
 #include "m_menu.h"
-#include "i_system.h"
 #include "i_sound.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -159,7 +158,7 @@ static void D_Display (void)
 
     if (_g_gamestate != GS_LEVEL) { // Not a level
         if (oldgamestate == GS_LEVEL)
-            I_SetPalette(0); // cph - use default (basic) palette
+            V_SetPalette(0); // cph - use default (basic) palette
 
         switch (_g_gamestate)
         {
@@ -492,6 +491,8 @@ static void D_DoomMainSetup(void)
     _g_fps_show = false;
 
     I_InitGraphics();
+    V_LoadPalettes();
+    V_SetPalette(0);
 
     int16_t p = M_CheckParm("-timedemo");
     if (p && p < myargc - 1)

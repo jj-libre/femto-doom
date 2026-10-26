@@ -48,32 +48,20 @@
 // VIDEO
 //
 
-void V_DrawBackground(int16_t backgroundnum);
-
-void V_DrawRaw(int16_t num, uint16_t offset);
 void V_DrawRawFullScreen(int16_t num);
 
-#if defined ST_PARTIAL_REFRESH
-// V_DrawRawRect - Draws only the part of raw lump num, placed at offset, that lies in the rectangle
-void V_DrawRawRect(int16_t num, uint16_t offset, int16_t x, int16_t y, int16_t w, int16_t h);
-#endif
-
 // V_DrawNumPatchScaled - Draws the patch from lump num
-void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t* patch);
 void V_DrawNumPatchScaled(int16_t x, int16_t y, int16_t lump);
 void V_DrawNumPatchNotScaled(int16_t x, int16_t y, int16_t lump);
-
-void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch);
 
 
 // V_DrawNamePatchScaled - Draws the patch from lump "name"
 #define V_DrawNamePatchScaled(x,y,name) V_DrawNumPatchScaled(x,y,W_GetNumForName(name))
 
 
-void V_ClearViewWindow(void);
-void V_InitDrawLine(void);
-void V_ShutdownDrawLine(void);
-void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color);
+// The palettes of the current gamma level; V_SetPalette passes palette pal of them on.
+void V_LoadPalettes(void);
+void V_SetPalette(int8_t pal);
 
 
 #endif
