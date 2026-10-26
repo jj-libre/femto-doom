@@ -4,11 +4,12 @@
 IWAD's own nodes. The layout follows jWadUtil by Frenkel Smeijers, which made the WADs of
 Doom64KB, the engine femto-doom grew from.
 
-`info` writes the engine's info.c and info.h from info.py, the one source of thing types, their
-states and sprites, which `wads` uses too.
+`generate` writes the engine's generated sources: info.c and info.h from info.py, the one
+source of thing types, their states and sprites, which `wads` uses too, and r_view.c and
+r_view.h, the view tables of every supported view width.
 
 usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir> [--texture-shift N] [--high-detail]
-       uv run --project tools/femtowad femtowad info [--check]
+       uv run --project tools/femtowad femtowad generate [--check]
 """
 
 from __future__ import annotations
@@ -21,8 +22,8 @@ from pathlib import Path
 from .art import generate_art
 from .graphics import build_graphics, texture_names
 from .info import WAD_VERSION
-from .infogen import write_info
 from .maps import build_maps
+from .sourcegen import write_sources
 from .wad import Wad
 
 
@@ -43,10 +44,10 @@ def wads(args: argparse.Namespace) -> None:
         print(f"{args.out / name}: {len(data)} B, {len(wad)} lumps")
 
 
-def info(args: argparse.Namespace) -> None:
+def generate(args: argparse.Namespace) -> None:
     if args.engine is None:
         sys.exit("no femto-doom checkout found, pass --engine")
-    if not write_info(args.engine, args.check) and args.check:
+    if not write_sources(args.engine, args.check) and args.check:
         sys.exit(1)
 
 
@@ -61,10 +62,10 @@ def main() -> None:
     wads_parser.add_argument("--high-detail", action="store_true", help="the engine is built with HIGH_DETAIL")
     wads_parser.set_defaults(run=wads)
 
-    info_parser = commands.add_parser("info", help="write info.c and info.h from info.py")
+    info_parser = commands.add_parser("generate", help="write the engine's generated sources")
     info_parser.add_argument("--check", action="store_true", help="only fail if they differ from info.py")
     info_parser.add_argument("--engine", type=Path, default=find_engine(), help="the femto-doom checkout")
-    info_parser.set_defaults(run=info)
+    info_parser.set_defaults(run=generate)
 
     args = parser.parse_args()
     args.run(args)

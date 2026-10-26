@@ -30,6 +30,7 @@
 #include "i_platform.h"
 #include "w_wad.h"
 
+#include "r_view.h"
 #include "globdata.h"
 
 
@@ -107,7 +108,7 @@ static fixed_t yslope(uint8_t y)
 	return yslopeTable[y];
 }
 
-static fixed_t distscale(uint8_t x)
+static fixed_t distscale(viewx_t x)
 {
 	return 0x010000 | distscaleTable[x];
 }

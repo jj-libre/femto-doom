@@ -6,7 +6,7 @@ Defined on the compiler's command line; all are optional.
 
 | Option | Default | Effect |
 |---|---|---|
-| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be one with a view angle table (240, 120, 80, 60, 40, 38, 30) |
+| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be one femtowad generates view tables for (`VIEW_WIDTHS` in `viewgen.py`: 30, 38, 40, 60, 80, 120, 160, 240, 320) |
 | `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
 | `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |
 | `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |

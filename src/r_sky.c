@@ -26,6 +26,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "w_wad.h"
+#include "r_view.h"
 
 
 #define ANGLETOSKYSHIFT         22

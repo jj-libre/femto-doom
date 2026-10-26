@@ -1,6 +1,6 @@
 """Thing types, their states and sprites: the one source of femto-doom's info.c and info.h.
 
-Edit this file, then write the C again with `uv run --project tools/femtowad femtowad info`.
+Edit this file, then write the C again with `uv run --project tools/femtowad femtowad generate`.
 Names leave out the C prefixes: sprite TROO is SPR_TROO, state PUNCH is S_PUNCH, action Punch
 is AC_Punch calling A_Punch, thing PLAYER is MT_PLAYER, flag SOLID is MF_SOLID and sound pistol
 is sfx_pistol.

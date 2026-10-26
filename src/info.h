@@ -29,7 +29,7 @@
  * DESCRIPTION:
  *      Thing types, their states and sprites.
  *      Written by tools/femtowad from src/femtowad/info.py; edit that and run
- *      `uv run --project tools/femtowad femtowad info`.
+ *      `uv run --project tools/femtowad femtowad generate`.
  *
  *-----------------------------------------------------------------------------*/
 

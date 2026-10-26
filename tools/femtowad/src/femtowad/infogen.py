@@ -3,46 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from pathlib import Path
 
+from .cheader import licence
 from .info import ACTIONS, FRACUNIT, MAX_SPRITE_FRAMES, MF, MF_COMMENTS, MOBJS, SPRITES, STATES, WAD_VERSION, MobjInfo
 
-LICENCE = """\
-/*-----------------------------------------------------------------------------
- *
- *  PrBoom: a Doom port merged with LxDoom and LSDLDoom
- *  based on BOOM, a modified and improved DOOM engine
- *  Copyright (C) 1999 by
- *  id Software, Chi Hoang, Lee Killough, Jim Flynn, Rand Phares, Ty Halderman
- *  Copyright (C) 1999-2000 by
- *  Jess Haas, Nicolas Kalkhof, Colin Phipps, Florian Schulze
- *  Copyright 2005, 2006 by
- *  Florian Schulze, Colin Phipps, Neil Stevens, Andrey Budko
- *  Copyright 2023-2026 by
- *  Frenkel Smeijers
- *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- *  02111-1307, USA.
- *
- * DESCRIPTION:
- *      Thing types, their states and sprites.
- *      Written by tools/femtowad from src/femtowad/info.py; edit that and run
- *      `uv run --project tools/femtowad femtowad info`.
- *
- *-----------------------------------------------------------------------------*/
-"""
+LICENCE = licence("Thing types, their states and sprites.", "info.py")
 
 STATE_STRUCT = """\
 #define FF_FULLBRIGHT   0x80  /* flag in thing->frame */
@@ -195,22 +160,3 @@ def check_references() -> None:
         for name in STATE_FIELDS:
             if getattr(mobj, name) not in states:
                 raise ValueError(f"thing {mobj.name}: {name} {getattr(mobj, name)} is no state")
-
-
-def write_info(engine: Path, check: bool) -> bool:
-    """Writes src/info.c and src/info.h of the femto-doom checkout at `engine`, or with `check`
-    only compares them; whether they were current."""
-    check_references()
-    current = True
-    for name, text in (("info.h", info_h()), ("info.c", info_c())):
-        path = engine / "src" / name
-        old = path.read_bytes().decode("latin-1").replace("\r\n", "\n") if path.exists() else None
-        if old == text:
-            continue
-        current = False
-        if check:
-            print(f"{path} is not what info.py generates")
-        else:
-            path.write_bytes(text.encode("latin-1"))
-            print(f"{path} written")
-    return current
