@@ -170,7 +170,7 @@ static void P_StartButton(const line_t* line, bwhere_e w, int16_t texture, int16
 //
 
 // 1 second, in ticks.
-#define BUTTONTIME  TICRATE
+#define BUTTONTIME  TIC_RATE
 
 void P_ChangeSwitchTexture(const line_t* line, boolean useAgain)
 {

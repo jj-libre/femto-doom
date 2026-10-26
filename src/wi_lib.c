@@ -111,13 +111,13 @@ void WI_drawLF(int16_t map)
 	// draw <LevelName>
 	WI_levelNameLump(map, lname);
 	const patch_t* patch = W_GetLumpByName(lname);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
+	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 
 	y += (5 * W_FetchInt16(&patch->height)) / 4;
 
 	// draw "Finished!"
 	const patch_t* finishedpatch = W_GetLumpByName(finished);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&finishedpatch->width))/2, y, finishedpatch);
+	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&finishedpatch->width))/2, y, finishedpatch);
 }
 
 
@@ -137,11 +137,11 @@ void WI_drawEL(int16_t map)
 
 	// draw "Entering"
 	const patch_t* enteringpatch = W_GetLumpByName(entering);
-	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&enteringpatch->width))/2, y, enteringpatch);
+	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&enteringpatch->width))/2, y, enteringpatch);
 
 	// draw level
 	y += (5 * W_FetchInt16(&patch->height)) / 4;
-	V_DrawPatchScaled((SCREENWIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
+	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 }
 
 
@@ -211,23 +211,23 @@ int16_t WI_drawNum(int16_t x, int16_t y, int16_t n, int16_t digits)
 void WI_drawStats(int16_t cnt_kills, int16_t cnt_items, int16_t cnt_secret, int32_t cnt_time, int32_t cnt_total_time, int16_t cnt_par)
 {
 	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY, kills);
-	WI_drawPercent(SCREENWIDTH_VGA - SP_STATSX, SP_STATSY, cnt_kills);
+	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY, cnt_kills);
 
 	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY + lineHeight, items);
-	WI_drawPercent(SCREENWIDTH_VGA - SP_STATSX, SP_STATSY + lineHeight, cnt_items);
+	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY + lineHeight, cnt_items);
 
 	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY + 2 * lineHeight, sp_secret);
-	WI_drawPercent(SCREENWIDTH_VGA - SP_STATSX, SP_STATSY + 2 * lineHeight, cnt_secret);
+	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY + 2 * lineHeight, cnt_secret);
 
 	// Put the times on the screen
 	V_DrawNamePatchScaled(SP_TIMEX, SP_TIMEY, time1);
-	WI_drawTime(SCREENWIDTH_VGA / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
+	WI_drawTime(SCREEN_WIDTH_VGA / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
 
-	V_DrawNamePatchScaled(SP_TIMEX, (SP_TIMEY + SCREENHEIGHT_VGA) / 2, total);
-	WI_drawTime(SCREENWIDTH_VGA / 2 - SP_TIMEX, (SP_TIMEY + SCREENHEIGHT_VGA) / 2, cnt_total_time);
+	V_DrawNamePatchScaled(SP_TIMEX, (SP_TIMEY + SCREEN_HEIGHT_VGA) / 2, total);
+	WI_drawTime(SCREEN_WIDTH_VGA / 2 - SP_TIMEX, (SP_TIMEY + SCREEN_HEIGHT_VGA) / 2, cnt_total_time);
 
-	V_DrawNamePatchScaled(SCREENWIDTH_VGA / 2 + SP_TIMEX, SP_TIMEY, par);
-	WI_drawTime(SCREENWIDTH_VGA - SP_TIMEX, SP_TIMEY, cnt_par);
+	V_DrawNamePatchScaled(SCREEN_WIDTH_VGA / 2 + SP_TIMEX, SP_TIMEY, par);
+	WI_drawTime(SCREEN_WIDTH_VGA - SP_TIMEX, SP_TIMEY, cnt_par);
 }
 
 

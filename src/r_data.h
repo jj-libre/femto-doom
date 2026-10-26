@@ -38,12 +38,12 @@
 #ifndef __R_DATA__
 #define __R_DATA__
 
-#if !defined TEXSHIFT
-#define TEXSHIFT 0
+#if !defined TEXTURE_SHIFT
+#define TEXTURE_SHIFT 0
 #endif
 
-#if !defined SPRSHIFT
-#define SPRSHIFT 0
+#if !defined SPRITE_SHIFT
+#define SPRITE_SHIFT 0
 #endif
 
 #include "r_defs.h"
@@ -105,7 +105,7 @@ int16_t R_CheckTextureNumForName (const char *name);
 
 const texture_t* R_GetTexture(int16_t texture);
 
-#define TEXCOLBITS (7 - TEXSHIFT)
+#define TEXCOLBITS (7 - TEXTURE_SHIFT)
 
 // A wall texture in TEXCOLS: its columns at a stride of 1 << TEXCOLBITS bytes, each shared
 // by 1 << cshift texture columns.

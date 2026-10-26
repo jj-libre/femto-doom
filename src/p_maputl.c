@@ -61,10 +61,10 @@ divline_t _g_trace;
 
 
 // 1/11/98 killough: Intercept limit removed
-#if !defined MAXINTERCEPTS
-#define MAXINTERCEPTS 64
+#if !defined MAX_INTERCEPTS
+#define MAX_INTERCEPTS 64
 #endif
-static intercept_t intercepts[MAXINTERCEPTS];
+static intercept_t intercepts[MAX_INTERCEPTS];
 static intercept_t* intercept_p;
 
 
@@ -1210,7 +1210,7 @@ static boolean check_intercept(void)
 {
     size_t offset = intercept_p - intercepts;
 
-    return (offset < MAXINTERCEPTS);
+    return (offset < MAX_INTERCEPTS);
 }
 
 

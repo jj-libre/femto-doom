@@ -7,7 +7,7 @@ Doom64KB, the engine femto-doom grew from.
 `info` writes the engine's info.c and info.h from info.py, the one source of thing types, their
 states and sprites, which `wads` uses too.
 
-usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir> [--texshift N] [--high-detail]
+usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir> [--texture-shift N] [--high-detail]
        uv run --project tools/femtowad femtowad info [--check]
 """
 
@@ -33,7 +33,7 @@ def find_engine() -> Path | None:
 
 def wads(args: argparse.Namespace) -> None:
     iwad = Wad.read(args.iwad)
-    graphics = build_graphics(iwad, generate_art(iwad), args.texshift, args.high_detail)
+    graphics = build_graphics(iwad, generate_art(iwad), args.texture_shift, args.high_detail)
     maps = build_maps(iwad, texture_names(iwad))
     args.out.mkdir(parents=True, exist_ok=True)
     for name, wad in (("GRAPHICS.WAD", graphics), ("MAPS.WAD", maps)):
@@ -57,7 +57,7 @@ def main() -> None:
     wads_parser = commands.add_parser("wads", help="build the WAD pair from an IWAD")
     wads_parser.add_argument("iwad", type=Path, help="Doom IWAD, such as the shareware doom1.wad")
     wads_parser.add_argument("out", type=Path, help="directory for GRAPHICS.WAD and MAPS.WAD")
-    wads_parser.add_argument("--texshift", type=int, default=0, help="the engine's TEXSHIFT")
+    wads_parser.add_argument("--texture-shift", type=int, default=0, help="the engine's TEXTURE_SHIFT")
     wads_parser.add_argument("--high-detail", action="store_true", help="the engine is built with HIGH_DETAIL")
     wads_parser.set_defaults(run=wads)
 

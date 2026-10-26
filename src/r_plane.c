@@ -78,7 +78,7 @@ byte R_GetPlaneColor(int16_t picnum, int16_t lightlevel)
 #else
 
 
-static const fixed_t yslopeTable[VIEWWINDOWHEIGHT / 2] =
+static const fixed_t yslopeTable[VIEW_WINDOW_HEIGHT / 2] =
 {
     132104,134218,136400,138655,140985,143395,145889,148471,151146,153919,156796,159783,162886,166111,
     169467,172961,176602,180400,184365,188508,192842,197379,202135,207126,212370,217886,223696,229825,
@@ -87,7 +87,7 @@ static const fixed_t yslopeTable[VIEWWINDOWHEIGHT / 2] =
     1118481,1290555,1525201,1864135,2396745,3355443,5592405,16777216
 };
 
-static const uint16_t distscaleTable[VIEWWINDOWWIDTH] =
+static const uint16_t distscaleTable[VIEW_WINDOW_WIDTH] =
 {
     0x6A75,
     0x6438,0x5E8C,0x58AB,0x5319,0x4D63,0x4800,0x42B6,0x3D8E,
@@ -137,7 +137,7 @@ static void R_MapPlane(uint16_t y, uint16_t x1, uint16_t x2, draw_span_vars_t *d
 
 static void R_MakeSpans(int16_t x, uint16_t t1, uint16_t b1, uint16_t t2, uint16_t b2, draw_span_vars_t *dsvars)
 {
-    static byte spanstart[VIEWWINDOWHEIGHT];
+    static byte spanstart[VIEW_WINDOW_HEIGHT];
 
     for (; t1 < t2 && t1 <= b1; t1++)
         R_MapPlane(t1, spanstart[t1], x, dsvars);
@@ -192,7 +192,7 @@ static void R_DoDrawPlane(visplane_t* pl)
 
 void R_DrawPlanes (void)
 {
-    static const fixed_t iprojection = (1L << FRACBITS) / (VIEWWINDOWWIDTH / 2);
+    static const fixed_t iprojection = (1L << FRACBITS) / (VIEW_WINDOW_WIDTH / 2);
 
     basexscale = FixedMul(viewsin,iprojection);
     baseyscale = FixedMul(viewcos,iprojection);
@@ -287,7 +287,7 @@ visplane_t* R_FindPlane(fixed_t height, int16_t picnum, int16_t lightlevel)
     check->height = height;
     check->picnum = picnum;
     check->lightlevel = lightlevel;
-    check->minx = VIEWWINDOWWIDTH;
+    check->minx = VIEW_WINDOW_WIDTH;
     check->maxx = -1;
 
     memset(check->top, -1, sizeof(check->top));
@@ -389,14 +389,14 @@ int16_t R_FlatNumForName(const char *name)
 #endif
 
 
-#if !defined FLAT_NUKAGE1_COLOR
-#define FLAT_NUKAGE1_COLOR 122
+#if !defined NUKAGE_COLOR
+#define NUKAGE_COLOR 122
 #endif
 
 void P_UpdateAnimatedFlat(void)
 {
 #if defined FLAT_SPAN
-	nukage = FLAT_NUKAGE1_COLOR + (((int16_t)_g_leveltime >> 3) % 3) * 2;
+	nukage = NUKAGE_COLOR + (((int16_t)_g_leveltime >> 3) % 3) * 2;
 #else
 	int16_t pic = animated_flat_basepic + (((int16_t)_g_leveltime >> 3) % 3);
 

@@ -74,6 +74,6 @@ fixed_t finecosine(int16_t x);
 #define finesineapprox finesine
 #define finecosineapprox finecosine
 
-extern const uint16_t xtoviewangleTable[VIEWWINDOWWIDTH + 1];
+extern const uint16_t xtoviewangleTable[VIEW_WINDOW_WIDTH + 1];
 
 #endif

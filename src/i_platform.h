@@ -47,11 +47,11 @@
 // The screen, in palette indices
 //
 
-#define SCREENWIDTH  240u
-#define SCREENHEIGHT 160
+#define SCREEN_WIDTH  240u
+#define SCREEN_HEIGHT 160
 
 // I_GetTime counts tics, this many per second.
-#define TICRATE          35
+#define TIC_RATE          35
 
 
 //
@@ -121,7 +121,7 @@ typedef struct {
 #endif
 
 // The row of the 3D view the horizon is on.
-extern const int16_t CENTERY;
+extern const int16_t CENTER_Y;
 
 // The light levels of COLORMAP, 34 maps of 256 palette indices.
 extern const uint8_t *fullcolormap;
@@ -205,7 +205,7 @@ void V_DrawBackground(const uint8_t* tile);
 // length pixels of a raw picture at screen offset `offset`.
 void V_DrawRaw(uint16_t offset, const uint8_t* pixels, uint16_t length);
 #if defined ST_PARTIAL_REFRESH
-// The w x h rectangle at x, y of a raw picture whose rows are SCREENWIDTH wide; pixels is the
+// The w x h rectangle at x, y of a raw picture whose rows are SCREEN_WIDTH wide; pixels is the
 // rectangle's first pixel.
 void V_DrawRawRect(const uint8_t* pixels, int16_t x, int16_t y, int16_t w, int16_t h);
 #endif

@@ -32,14 +32,14 @@ too, and the platform reads them the same way.
 
 | Group | Functions |
 |---|---|
-| system | `I_ZoneBase`, `I_InitTimer`, `I_GetTime` (tics, `TICRATE` per second), `I_InitKeyboard`, `I_StartTic`, `I_Quit`, `I_Error`, `I_Printf` (or `printf`), `W_Fetch` with `W_FETCH` |
+| system | `I_ZoneBase`, `I_InitTimer`, `I_GetTime` (tics, `TIC_RATE` per second), `I_InitKeyboard`, `I_StartTic`, `I_Quit`, `I_Error`, `I_Printf` (or `printf`), `W_Fetch` with `W_FETCH` |
 | sound | `DMX_Init`, `DMX_Init2`, `DMX_Play`, `DMX_Shutdown` |
 | frame | `I_InitGraphics`, `I_SetPalette` (256 RGB triples, after `I_InitGraphics`), `I_FinishUpdate`, `wipe_StartScreen`, `D_Wipe` |
 | 3D view | `R_DrawColumnWall`, `R_DrawColumnSprite`, `R_DrawFuzzColumn`, `R_DrawColumnFlat`, `R_DrawSpan` without `FLAT_SPAN`, `V_ClearViewWindow` |
 | pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` with `ST_PARTIAL_REFRESH` |
 | automap | `V_InitDrawLine`, `V_DrawLine`, `V_ShutdownDrawLine` |
 
-The screen is `SCREENWIDTH` × `SCREENHEIGHT` (240 × 160) palette indices; the 3D view is
-`VIEWWINDOWWIDTH` × `VIEWWINDOWHEIGHT` of it, its horizon on row `CENTERY`. Column drawing gets a
+The screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT` (240 × 160) palette indices; the 3D view is
+`VIEW_WINDOW_WIDTH` × `VIEW_WINDOW_HEIGHT` of it, its horizon on row `CENTER_Y`. Column drawing gets a
 `draw_column_vars_t` and the light levels in `fullcolormap`; pictures come in Doom's patch format,
 `patch_t` with its posts.

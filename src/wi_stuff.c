@@ -261,7 +261,7 @@ static void WI_initShowNextLoc(void)
   state = ShowNextLoc;
   _g_acceleratestage = false;
   
-    cnt = SHOWNEXTLOCDELAY * TICRATE;
+    cnt = SHOWNEXTLOCDELAY * TIC_RATE;
 }
 
 
@@ -342,7 +342,7 @@ static void WI_initStats(void)
   cnt_items = -1;
 
   cnt_time = cnt_par = cnt_total_time = -1;
-  cnt_pause = TICRATE;
+  cnt_pause = TIC_RATE;
 }
 
 // ====================================================================
@@ -363,9 +363,9 @@ static void WI_updateStats(void)
     cnt_secret = (wbs->maxsecret ?
       (plrs[0].ssecret * 100) / wbs->maxsecret : 100);
 
-    cnt_total_time = wbs->totaltimes / TICRATE;
-    cnt_time = plrs[0].stime / TICRATE;
-    cnt_par = wbs->partime / TICRATE;
+    cnt_total_time = wbs->totaltimes / TIC_RATE;
+    cnt_time = plrs[0].stime / TIC_RATE;
+    cnt_par = wbs->partime / TIC_RATE;
     S_StartSound(0, sfx_barexp);
     sp_state = 10;
   }
@@ -421,21 +421,21 @@ static void WI_updateStats(void)
 
     cnt_time += 3;
 
-    if (cnt_time >= plrs[0].stime / TICRATE)
-      cnt_time = plrs[0].stime / TICRATE;
+    if (cnt_time >= plrs[0].stime / TIC_RATE)
+      cnt_time = plrs[0].stime / TIC_RATE;
 
     cnt_total_time += 3;
 
-    if (cnt_total_time >= wbs->totaltimes / TICRATE)
-      cnt_total_time = wbs->totaltimes / TICRATE;
+    if (cnt_total_time >= wbs->totaltimes / TIC_RATE)
+      cnt_total_time = wbs->totaltimes / TIC_RATE;
 
     cnt_par += 3;
 
-    if (cnt_par >= wbs->partime / TICRATE)
+    if (cnt_par >= wbs->partime / TIC_RATE)
     {
-      cnt_par = wbs->partime / TICRATE;
+      cnt_par = wbs->partime / TIC_RATE;
 
-      if ((cnt_time >= plrs[0].stime / TICRATE) && (cnt_total_time >= wbs->totaltimes / TICRATE))
+      if ((cnt_time >= plrs[0].stime / TIC_RATE) && (cnt_total_time >= wbs->totaltimes / TIC_RATE))
       {
         S_StartSound(0, sfx_barexp);
         sp_state++;
@@ -456,7 +456,7 @@ static void WI_updateStats(void)
     if (!--cnt_pause)
     {
       sp_state++;
-      cnt_pause = TICRATE;
+      cnt_pause = TIC_RATE;
     }
   }
 }

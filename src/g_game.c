@@ -614,7 +614,7 @@ static void G_DoCompleted (void)
     _g_wminfo.maxitems = _g_totalitems;
     _g_wminfo.maxsecret = _g_totalsecret;
 
-    _g_wminfo.partime = TICRATE*pars[_g_gamemap];
+    _g_wminfo.partime = TIC_RATE*pars[_g_gamemap];
 
 
     _g_wminfo.plyr[0].skills = _g_player.killcount;
@@ -627,7 +627,7 @@ static void G_DoCompleted (void)
    *  the times in seconds shown for each level. Also means our total time
    *  will agree with Compet-n.
    */
-    _g_wminfo.totaltimes = (totalleveltimes += (_g_leveltime - (int16_t)_g_leveltime % TICRATE));
+    _g_wminfo.totaltimes = (totalleveltimes += (_g_leveltime - (int16_t)_g_leveltime % TIC_RATE));
 
     _g_gamestate = GS_INTERMISSION;
     automapmode &= ~am_active;
@@ -1089,7 +1089,7 @@ void G_CheckDemoStatus (void)
         int32_t endtime = I_GetTime();
         // killough -- added fps information and made it work for longer demos:
         uint32_t realtics = endtime - starttime;
-        uint32_t resultfps = TICRATE * 1000L * _g_gametic / realtics;
+        uint32_t resultfps = TIC_RATE * 1000L * _g_gametic / realtics;
         I_Error ("Timed %lu gametics in %lu realtics = %lu.%.3lu frames per second",
                  (uint32_t) _g_gametic,realtics,
                  resultfps / 1000, resultfps % 1000);

@@ -159,7 +159,7 @@ void T_VerticalDoor(vldoor_t* door)
           // close then open doors start waiting
           case close30ThenOpen:
             door->direction = 0;
-            door->topcountdown = TICRATE*30;
+            door->topcountdown = TIC_RATE*30;
             break;
 
           default:

@@ -61,12 +61,12 @@ void R_FreeSkyPatch(void)
 
 void R_DrawSky(draw_column_vars_t *dcvars)
 {
-	dcvars->texturemid = (SCREENHEIGHT_VGA / 2) * FRACUNIT;
+	dcvars->texturemid = (SCREEN_HEIGHT_VGA / 2) * FRACUNIT;
 
 	if (!(dcvars->colormap = fixedcolormap))
 		dcvars->colormap = fullcolormap;
 
-	dcvars->fracstep = ((FRACUNIT * SCREENHEIGHT_VGA) / (VIEWWINDOWHEIGHT + 16)) >> COLEXTRABITS;
+	dcvars->fracstep = ((FRACUNIT * SCREEN_HEIGHT_VGA) / (VIEW_WINDOW_HEIGHT + 16)) >> COLEXTRABITS;
 
 	int16_t xc = viewangle >> FRACBITS;
 	xc += xtoviewangleTable[dcvars->x];
@@ -87,7 +87,7 @@ void R_DrawSky(visplane_t* pl)
 
 	// Normal Doom sky, only one allowed per level
 	draw_column_vars_t dcvars;
-	dcvars.texturemid = (SCREENHEIGHT_VGA / 2) * FRACUNIT;    // Default y-offset
+	dcvars.texturemid = (SCREEN_HEIGHT_VGA / 2) * FRACUNIT;    // Default y-offset
 
 	// Sky is always drawn full bright, i.e. colormaps[0] is used.
 	// Because of this hack, sky is not affected by INVUL inverse mapping.
@@ -96,7 +96,7 @@ void R_DrawSky(visplane_t* pl)
 	if (!(dcvars.colormap = fixedcolormap))
 		dcvars.colormap = fullcolormap;
 
-	dcvars.fracstep = ((FRACUNIT * SCREENHEIGHT_VGA) / (VIEWWINDOWHEIGHT + 16)) >> COLEXTRABITS;
+	dcvars.fracstep = ((FRACUNIT * SCREEN_HEIGHT_VGA) / (VIEW_WINDOW_HEIGHT + 16)) >> COLEXTRABITS;
 
 	for (int16_t x = pl->minx; (dcvars.x = x) <= pl->maxx; x++)
 	{

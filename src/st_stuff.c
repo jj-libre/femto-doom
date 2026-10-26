@@ -175,7 +175,7 @@ static int16_t      st_randomnumber;
 // Now sensitive for scaling.
 
 // proff 08/18/98: Changed for high-res
-#define ST_Y      (SCREENHEIGHT - ST_HEIGHT)
+#define ST_Y      (SCREEN_HEIGHT - ST_HEIGHT)
 
 
 //
@@ -197,11 +197,11 @@ static int16_t      st_randomnumber;
 #define ST_FACESX               (ST_X+104)
 #define ST_FACESY               (ST_Y)
 
-#define ST_EVILGRINCOUNT        (2*TICRATE)
+#define ST_EVILGRINCOUNT        (2*TIC_RATE)
  //Fix Status bar face timing ~Kippykip
 #define ST_STRAIGHTFACECOUNT    (18)
-#define ST_TURNCOUNT            (1*TICRATE)
-#define ST_RAMPAGEDELAY         (2*TICRATE)
+#define ST_TURNCOUNT            (1*TIC_RATE)
+#define ST_RAMPAGEDELAY         (2*TIC_RATE)
 
 #define ST_MUCHPAIN             20
 
@@ -637,7 +637,7 @@ static void ST_drawWidgets(void)
 }
 
 
-static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
+static const uint16_t st_offset = (SCREEN_HEIGHT - ST_HEIGHT) * SCREEN_WIDTH;
 
 static void ST_refreshBackground(void)
 {
@@ -696,8 +696,8 @@ static void ST_growRect(st_rect_t* r, int16_t x, int16_t y, int16_t lump)
 
 	if (x0 < 0)            x0 = 0;
 	if (y0 < ST_Y)         y0 = ST_Y;
-	if (x1 > SCREENWIDTH)  x1 = SCREENWIDTH;
-	if (y1 > SCREENHEIGHT) y1 = SCREENHEIGHT;
+	if (x1 > SCREEN_WIDTH)  x1 = SCREEN_WIDTH;
+	if (y1 > SCREEN_HEIGHT) y1 = SCREEN_HEIGHT;
 
 	if (x0 >= x1 || y0 >= y1)
 		return;
@@ -808,7 +808,7 @@ static void ST_doPartialRefresh(void)
 	{
 		const st_rect_t* r = &st_rects[i];
 		if ((dirty & (1UL << i)) && r->x0 < r->x1)
-			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + (r->y0 * SCREENWIDTH + r->x0 - st_offset),
+			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + (r->y0 * SCREEN_WIDTH + r->x0 - st_offset),
 				r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
 	}
 

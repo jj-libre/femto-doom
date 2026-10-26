@@ -77,7 +77,7 @@ boolean    _g_message_dontfuckwithme;
 // Locally used constants, shortcuts.
 //
 
-#define HU_TITLEY (VIEWWINDOWHEIGHT - 1 - HU_FONT_HEIGHT)
+#define HU_TITLEY (VIEW_WINDOW_HEIGHT - 1 - HU_FONT_HEIGHT)
 
 #define HU_MSGY         0
 
@@ -167,7 +167,7 @@ static void HUlib_drawTextLine(hu_textline_t* textline)
 		{
 			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);
 			int16_t w = W_FetchInt16(&patch->width);
-			if (x + w > SCREENWIDTH)
+			if (x + w > SCREEN_WIDTH)
 			{
 				break;
 			}
@@ -177,7 +177,7 @@ static void HUlib_drawTextLine(hu_textline_t* textline)
 		else
 		{
 			x += HU_FONT_SPACE_WIDTH;
-			if (x >= SCREENWIDTH)
+			if (x >= SCREEN_WIDTH)
 				break;
 		}
 	}
@@ -215,7 +215,7 @@ void HU_Drawer(void)
 // Passed nothing, returns nothing
 //
 
-#define HU_MSGTIMEOUT   (4*TICRATE)
+#define HU_MSGTIMEOUT   (4*TIC_RATE)
 
 void HU_Ticker(void)
 {

@@ -6,23 +6,23 @@ Defined on the compiler's command line; all are optional.
 
 | Option | Default | Effect |
 |---|---|---|
-| `VIEWWINDOWWIDTH`, `VIEWWINDOWHEIGHT` | 60, 128 | the 3D view in pixels; the width must be one with a view angle table (240, 120, 80, 60, 40, 38, 30) |
-| `MAPWIDTH` | `SCREENWIDTH` | automap width |
-| `TEXSHIFT`, `SPRSHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXSHIFT` must match `femtowad wads --texshift` |
+| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be one with a view angle table (240, 120, 80, 60, 40, 38, 30) |
+| `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
+| `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |
 | `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |
 | `FLAT_SPAN` | off | floors and ceilings in one colour each; required with femtowad's WADs, which carry no flats |
-| `FLAT_NUKAGE1_COLOR` | 122 | colour of nukage floors |
+| `NUKAGE_COLOR` | 122 | colour of nukage floors |
 | `FLAT_WALL` | off | walls in one colour |
 
 ## Memory
 
 | Option | Default | Effect |
 |---|---|---|
-| `MAXDRAWSEGS` | by view size | wall segments per frame |
-| `MAXOPENINGS` | `VIEWWINDOWWIDTH` × 16 | clip range entries per frame |
-| `MAXINTERCEPTS` | 64 | lines and things one trace can cross |
+| `MAX_DRAWSEGS` | by view size | wall segments per frame |
+| `MAX_OPENINGS` | `VIEW_WINDOW_WIDTH` × 16 | clip range entries per frame |
+| `MAX_INTERCEPTS` | 64 | lines and things one trace can cross |
 | `THING_POOL_RESERVE` | 0 | thing slots kept free at map load |
-| `MINFRAGMENT` | 16 | smallest free zone fragment split off a block |
+| `MIN_FRAGMENT` | 16 | smallest free zone fragment split off a block |
 | `NO_LOOKUP_TABLE` | off | divide instead of using the 256 KB reciprocal table |
 | `RECIPROCAL_DIV(v)` | `0xffffffff / v` | the division used without the table |
 | `SMALL_TRIG` | off | half-size tangent table |

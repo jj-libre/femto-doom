@@ -78,8 +78,8 @@ typedef struct
 #define HEADER_UNITS	((sizeof(memblock_t) + ZONE_UNIT - 1) / ZONE_UNIT)
 
 // A free fragment smaller than this stays with the block allocated before it.
-#if !defined MINFRAGMENT
-#define MINFRAGMENT		16
+#if !defined MIN_FRAGMENT
+#define MIN_FRAGMENT		16
 #endif
 
 
@@ -297,7 +297,7 @@ static void* Z_TryMalloc(uint16_t size, int8_t tag)
     // found a block big enough
 
     uint16_t newblock_units = base->size - units;
-    if ((uint32_t)newblock_units * ZONE_UNIT > MINFRAGMENT)
+    if ((uint32_t)newblock_units * ZONE_UNIT > MIN_FRAGMENT)
     {
         // there will be a free fragment after the allocated block
         zindex_t base_index     = pointerToIndex(base);

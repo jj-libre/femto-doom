@@ -301,10 +301,10 @@ static void D_UpdateFPS()
     fps_frames++;
 
     uint32_t timenow = I_GetTime();
-    if(timenow >= (fps_timebefore + TICRATE))
+    if(timenow >= (fps_timebefore + TIC_RATE))
     {
         uint32_t tics_elapsed = timenow - fps_timebefore;
-        fixed_t f_realfps = FixedApproxDiv((fps_frames*(TICRATE*10)) << FRACBITS, tics_elapsed <<FRACBITS);
+        fixed_t f_realfps = FixedApproxDiv((fps_frames*(TIC_RATE*10)) << FRACBITS, tics_elapsed <<FRACBITS);
 
         _g_fps_framerate = (f_realfps >> FRACBITS);
 
@@ -358,7 +358,7 @@ static void D_DrawTitle1(const char *name)
 	UNUSED(name);
 
 	S_StartMusic(mus_intro);
-	pagetic = (TICRATE*30);
+	pagetic = (TIC_RATE*30);
 }
 
 
@@ -388,7 +388,7 @@ static void D_DoAdvanceDemo(void)
     advancedemo = _g_usergame = false;
     _g_gameaction = ga_nothing;
 
-    pagetic = TICRATE * 11;
+    pagetic = TIC_RATE * 11;
     _g_gamestate = GS_DEMOSCREEN;
 
 

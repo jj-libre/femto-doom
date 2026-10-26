@@ -60,17 +60,17 @@
 #define UNUSED(x)	(x = x)	// for pesky compiler / lint warnings
 
 
-#if !defined VIEWWINDOWWIDTH
-#define VIEWWINDOWWIDTH  60
+#if !defined VIEW_WINDOW_WIDTH
+#define VIEW_WINDOW_WIDTH  60
 #endif
 
-#if !defined VIEWWINDOWHEIGHT
-#define VIEWWINDOWHEIGHT 128
+#if !defined VIEW_WINDOW_HEIGHT
+#define VIEW_WINDOW_HEIGHT 128
 #endif
 
 
-#define SCREENWIDTH_VGA  320
-#define SCREENHEIGHT_VGA 200
+#define SCREEN_WIDTH_VGA  320
+#define SCREEN_HEIGHT_VGA 200
 
 
 // The maximum number of players, multiplayer/networking.
@@ -152,9 +152,9 @@ typedef enum {
 
 // Power up durations (how many seconds till expiration).
 typedef enum {
-  INVISTICS   = (60*TICRATE),
-  INFRATICS   = (120*TICRATE),
-  IRONTICS    = (60*TICRATE)
+  INVISTICS   = (60*TIC_RATE),
+  INFRATICS   = (120*TIC_RATE),
+  IRONTICS    = (60*TIC_RATE)
 } powerduration_t;
 
 
