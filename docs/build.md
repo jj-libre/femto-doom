@@ -6,8 +6,8 @@ Defined on the compiler's command line; all are optional.
 
 | Option | Default | Effect |
 |---|---|---|
-| `SCREEN_WIDTH`, `SCREEN_HEIGHT` | 240, 160 | the screen in pixels, any size; must match `femtowad wads --screen`. The status bar is its bottom `ST_HEIGHT` rows, Doom's 32 of 200 scaled, at least 32 |
-| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be one femtowad generates view tables for (`VIEW_WIDTHS` in `viewgen.py`: 30, 38, 40, 60, 80, 120, 160, 240, 320) |
+| `SCREEN_WIDTH`, `SCREEN_HEIGHT` | 240, 160 | the screen in pixels; must match `femtowad wads --screen` |
+| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be in `VIEW_WIDTHS` in femtowad's `viewgen.py` |
 | `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
 | `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |
 | `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |
@@ -34,8 +34,8 @@ Defined on the compiler's command line; all are optional.
 | Option | Default | Effect |
 |---|---|---|
 | `NO_DEMOS` | off | no attract-mode demo |
-| `LOW_MEMORY` | off | Doom64KB's cut: maps other than E1M1 and E1M8 spawn only player starts and keys, E1M6 plays E1M1, demos play E1M1 |
-| `ST_PARTIAL_REFRESH` | off | the status bar redraws only widgets that changed, through `V_DrawRawRect` |
+| `LOW_MEMORY` | off | maps other than E1M1 and E1M8 spawn only player starts and keys, E1M6 plays E1M1, demos play E1M1 |
+| `ST_PARTIAL_REFRESH` | off | the status bar redraws only widgets that changed |
 | `DISABLE_STATUS_BAR` | off | no status bar |
 | `I_Printf` | `printf` | name of the platform's log function |
 

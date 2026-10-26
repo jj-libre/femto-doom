@@ -27,8 +27,8 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *      The contract between the engine and a platform: what a platform calls,
- *      what it provides, and the data it is handed.
+ *      The contract between the engine and a platform: the functions each side
+ *      calls and the data the platform is handed.
  *
  *-----------------------------------------------------------------------------*/
 

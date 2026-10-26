@@ -9,27 +9,20 @@ uv run --project tools/femtowad femtowad wads doom1.wad <out-dir> [--screen WxH]
 
 ## Directory
 
-| Field | Size |
-|---|---|
-| `"IWAD"` | 4 |
-| lump count | 4, the engine reads 16 bits |
-| directory offset | 4 |
+Doom's WAD directory. The engine reads lump counts and sizes as 16 bits, so lumps of 64 KiB or
+more are only read piecewise. Lumps with the same data share it.
 
-Then per lump: data offset (4), size (4, the engine reads 16 bits; lumps of 64 KiB or more are
-only read piecewise), name (8). Lumps with the same data share it.
-
-Both WADs hold a lump `FEMTOWAD`: the format version (u16), now 2, which the engine checks at
-start-up against `WAD_VERSION` in `info.h`; in the graphics WAD it is followed by the screen
-width and height (u16 each) the pictures are made for, checked against `SCREEN_WIDTH` and
-`SCREEN_HEIGHT`.
+Both WADs hold a lump `FEMTOWAD` with the format version (u16), checked at start-up against
+`WAD_VERSION` in `info.h`. In the graphics WAD the screen width and height follow (u16 each),
+checked against `SCREEN_WIDTH` and `SCREEN_HEIGHT`.
 
 ## Graphics WAD
 
 | Lump | Content |
 |---|---|
-| `PLAYPAL`, `PLAYPAL1`–`PLAYPAL5` | 14 palettes of 256 RGB triples; the numbered ones for gamma levels 1–5 |
-| `COLORMAP` | 34 light level maps of 256 bytes |
-| `TEXTURE1` | count, offsets, then per texture: name (8), width, height, patch count, and per patch x, y, patch number |
+| `PLAYPAL`, `PLAYPAL1`–`PLAYPAL5` | Doom's; the numbered ones gamma-corrected for levels 1–5 |
+| `COLORMAP` | Doom's |
+| `TEXTURE1` | Doom's, without the fields the engine ignores |
 | `TEXTUREP` | per texture an offset (u16), then: width mask (u16), width, height, overlapped (u8), patch count (u8), and per patch x, y, lump number, patch width |
 | `TEXHEIGH` | height of every texture (i16) |
 | `TEXCOLS` | `TEXTURE_SHIFT` (u8), `HIGH_DETAIL` (u8), log2 of rows per column (u8), 0 (u8), texture count (u16), 0 (u16); per texture: offset (u32), width mask (u16), column shift (u8, 2 when four columns share one), 0 (u8); then every texture's columns, 128 >> `TEXTURE_SHIFT` bytes each |
@@ -63,7 +56,7 @@ Sides of lines without a special that are equal are stored once.
 
 ### E1MxTL
 
-What spawning the map's things would leave in memory. Header: thing count, sector count, block
+The map's things, spawned in advance. Header: thing count, sector count, block
 count, node count; then per skill group (easy, normal, hard) the number of things
 that never think, then per skill group the number that do (u16 each); then nine u32 offsets of:
 
@@ -78,6 +71,6 @@ that never think, then per skill group the number that do (u16 each); then nine 
 
 ### E1MxGL
 
-What grouping the lines would build. Header: sector count, subsector count (u16 each);
+Each sector's lines, grouped in advance. Header: sector count, subsector count (u16 each);
 three u32 offsets of: where each sector's lines start (u16, count + 1), the lines of each sector
 (u16), the sector of each subsector (u8, 0xFF for none).

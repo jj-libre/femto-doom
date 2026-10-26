@@ -1,8 +1,8 @@
 """Per map lumps that spare the engine the memory of spawning things and grouping lines.
 
-E1MxTL holds what spawning the map's things leaves behind: each thing's spawn data, subsector
+E1MxTL holds the map's things, spawned in advance: each thing's spawn data, subsector
 and slot per skill, and, in reverse load order, the things in each sector and block and the
-sectors each thing touches. E1MxGL holds what P_GroupLines would build: the lines of each sector
+sectors each thing touches. E1MxGL holds the lines, grouped in advance: the lines of each sector
 and the sector of each subsector. Sides play can change, those at the front of lines with a
 special, get a number.
 """
