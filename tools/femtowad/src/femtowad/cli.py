@@ -1,6 +1,6 @@
 """femto-doom's data tool.
 
-`wads` builds DOOM64KL.WAD (graphics) and DOOM64ML.WAD (maps) from a Doom IWAD. The maps keep the
+`wads` builds GRAPHICS.WAD and MAPS.WAD from a Doom IWAD. The maps keep the
 IWAD's own nodes. The layout follows jWadUtil by Frenkel Smeijers, which made the WADs of
 Doom64KB, the engine femto-doom grew from.
 
@@ -14,11 +14,13 @@ usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir> [--te
 from __future__ import annotations
 
 import argparse
+import struct
 import sys
 from pathlib import Path
 
 from .art import generate_art
 from .graphics import build_graphics, texture_names
+from .info import WAD_VERSION
 from .infogen import write_info
 from .maps import build_maps
 from .wad import Wad
@@ -34,7 +36,8 @@ def wads(args: argparse.Namespace) -> None:
     graphics = build_graphics(iwad, generate_art(iwad), args.texshift, args.high_detail)
     maps = build_maps(iwad, texture_names(iwad))
     args.out.mkdir(parents=True, exist_ok=True)
-    for name, wad in (("DOOM64KL.WAD", graphics), ("DOOM64ML.WAD", maps)):
+    for name, wad in (("GRAPHICS.WAD", graphics), ("MAPS.WAD", maps)):
+        wad["FEMTOWAD"] = struct.pack("<H", WAD_VERSION)
         data = wad.to_bytes()
         (args.out / name).write_bytes(data)
         print(f"{args.out / name}: {len(data)} B, {len(wad)} lumps")
@@ -53,7 +56,7 @@ def main() -> None:
 
     wads_parser = commands.add_parser("wads", help="build the WAD pair from an IWAD")
     wads_parser.add_argument("iwad", type=Path, help="Doom IWAD, such as the shareware doom1.wad")
-    wads_parser.add_argument("out", type=Path, help="directory for DOOM64KL.WAD and DOOM64ML.WAD")
+    wads_parser.add_argument("out", type=Path, help="directory for GRAPHICS.WAD and MAPS.WAD")
     wads_parser.add_argument("--texshift", type=int, default=0, help="the engine's TEXSHIFT")
     wads_parser.add_argument("--high-detail", action="store_true", help="the engine is built with HIGH_DETAIL")
     wads_parser.set_defaults(run=wads)

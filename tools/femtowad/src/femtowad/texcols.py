@@ -11,7 +11,6 @@ from dataclasses import dataclass
 
 from .wad import ENTRY, HEADER
 
-VERSION = 1
 VIEW_ROWS = 128
 QUANTIZE = 0xFFFC
 
@@ -112,6 +111,6 @@ def texture_columns(image: bytes, texture1: bytes, texturep: bytes, texshift: in
         shared += cshift == 2
         entries += struct.pack("<IHBx", table + len(columns), texture.widthmask, cshift)
         columns += b"".join(cols[:: 1 << cshift])
-    header = struct.pack("<BBBBHxx", VERSION, texshift, high_detail, reader.rows.bit_length() - 1, count)
+    header = struct.pack("<BBBxHxx", texshift, high_detail, reader.rows.bit_length() - 1, count)
     print(f"TEXCOLS: {count} textures, {shared} with columns shared by 4, {len(columns)} B of columns")
     return header + entries + columns

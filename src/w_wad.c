@@ -40,6 +40,7 @@
 #include "d_player.h"
 #include "doomtype.h"
 #include "i_platform.h"
+#include "info.h"
 #include "w_wad.h"
 #include "globdata.h"
 
@@ -75,6 +76,10 @@ void W_Init(void)
 {
 	const wadinfo_t *header = (const wadinfo_t*)&doom_iwad[0];
 	fileinfo = (const filelump_t*)&doom_iwad[W_FetchInt32(&header->infotableofs)];
+
+	if (W_FetchUInt16(W_GetLumpByName("FEMTOWAD")) != WAD_VERSION
+	 || W_FetchUInt16(W_GetMapLumpByNum(W_GetMapNumForName("FEMTOWAD"))) != WAD_VERSION)
+		I_Error("W_Init: the WADs are not in WAD format %i", WAD_VERSION);
 }
 
 

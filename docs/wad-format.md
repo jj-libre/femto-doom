@@ -1,6 +1,6 @@
 # WAD format
 
-femto-doom reads two WADs in place, a graphics WAD and a map WAD, both little-endian.
+femto-doom reads two WADs in place, `GRAPHICS.WAD` and `MAPS.WAD`, both little-endian.
 `tools/femtowad` builds them from a Doom IWAD:
 
 ```bash
@@ -18,6 +18,9 @@ uv run --project tools/femtowad femtowad wads doom1.wad <out-dir> [--texshift N]
 Then per lump: data offset (4), size (4, the engine reads 16 bits; lumps of 64 KiB or more are
 only read piecewise), name (8). Lumps with the same data share it.
 
+Both WADs hold a lump `FEMTOWAD`: the format version (u16), now 1, which the engine checks at
+start-up against `WAD_VERSION` in `info.h`.
+
 ## Graphics WAD
 
 | Lump | Content |
@@ -27,7 +30,7 @@ only read piecewise), name (8). Lumps with the same data share it.
 | `TEXTURE1` | count, offsets, then per texture: name (8), width, height, patch count, and per patch x, y, patch number |
 | `TEXTUREP` | per texture an offset (u16), then: width mask (u16), width, height, overlapped (u8), patch count (u8), and per patch x, y, lump number, patch width |
 | `TEXHEIGH` | height of every texture (i16) |
-| `TEXCOLS` | version 1 (u8), `TEXSHIFT` (u8), `HIGH_DETAIL` (u8), log2 of rows per column (u8), texture count (u16), 0 (u16); per texture: offset (u32), width mask (u16), column shift (u8, 2 when four columns share one), 0 (u8); then every texture's columns, 128 >> `TEXSHIFT` bytes each |
+| `TEXCOLS` | `TEXSHIFT` (u8), `HIGH_DETAIL` (u8), log2 of rows per column (u8), 0 (u8), texture count (u16), 0 (u16); per texture: offset (u32), width mask (u16), column shift (u8, 2 when four columns share one), 0 (u8); then every texture's columns, 128 >> `TEXSHIFT` bytes each |
 | `SPRITES` | per sprite of `sprnames` and per frame up to `MAX_SPRITE_FRAMES`: the lump of rotations 1–8 (i16 each), a flip mask (u8), a rotate flag (u8) |
 | `TITLEPIC`, `HELP2`, `WIMAP0` | 240 × 160 raw pixels |
 | `STBAR` | 240 × 32 raw pixels |
@@ -56,10 +59,10 @@ Values are i16 unless noted. A map has at most 255 sectors, 255 textures and 255
 
 Sides of lines without a special that are equal are stored once.
 
-### E1MxTL, version 3
+### E1MxTL
 
-What spawning the map's things would leave in memory. Header: version, thing count, sector
-count, block count, node count, 0; then per skill group (easy, normal, hard) the number of things
+What spawning the map's things would leave in memory. Header: thing count, sector count, block
+count, node count; then per skill group (easy, normal, hard) the number of things
 that never think, then per skill group the number that do (u16 each); then nine u32 offsets of:
 
 | Array | Content |
@@ -71,8 +74,8 @@ that never think, then per skill group the number that do (u16 each); then nine 
 | node sector, node thing | per node the sector a thing touches and that thing |
 | sector node first, sector nodes | per sector its nodes, the last loaded first |
 
-### E1MxGL, version 2
+### E1MxGL
 
-What grouping the lines would build. Header: version, sector count, subsector count, 0 (u16 each);
+What grouping the lines would build. Header: sector count, subsector count (u16 each);
 three u32 offsets of: where each sector's lines start (u16, count + 1), the lines of each sector
 (u16), the sector of each subsector (u8, 0xFF for none).

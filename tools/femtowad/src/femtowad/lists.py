@@ -15,8 +15,6 @@ from collections.abc import Sequence
 from .info import MF, MOBJS
 from .level import NO_SECTOR, Level, Side
 
-VERSION = 3
-GEOMETRY_VERSION = 2
 SKILL_GROUPS = (1, 2, 4)
 FIRST_STATIC = next(i for i, mobj in enumerate(MOBJS) if mobj.name == "MISC0")
 """Thing types from here on never think."""
@@ -117,7 +115,7 @@ def thing_lists(level: Level) -> bytes:
         secnodes[fill[nodesector[k]]] = k
         fill[nodesector[k]] += 1
 
-    header = struct.pack("<6H", VERSION, numthings, level.numsectors, level.numblocks, numnodes, 0)
+    header = struct.pack("<4H", numthings, level.numsectors, level.numblocks, numnodes)
     header += struct.pack("<6H", *(c[1] for c in counts), *(c[0] for c in counts))
     arrays = [b"".join(entries)] + [
         shorts(a) for a in (sectorfirst, blockfirst, ordered, nodefirst, nodesector, nodething, secnodefirst, secnodes)
@@ -135,7 +133,7 @@ def geometry_lists(level: Level) -> bytes:
         first.append(first[-1] + len(sector_lines))
     flat = [number for sector_lines in lines for number in sector_lines]
     sectors = bytes(NO_SECTOR if s is None else s for s in level.subsector_sector)
-    header = struct.pack("<4H", GEOMETRY_VERSION, level.numsectors, len(sectors), 0)
+    header = struct.pack("<2H", level.numsectors, len(sectors))
     return pack_arrays(header, [struct.pack(f"<{len(first)}H", *first), struct.pack(f"<{len(flat)}H", *flat), sectors])
 
 

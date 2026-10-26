@@ -200,10 +200,10 @@ static void R_InitTextures()
 	const uint8_t highdetail = 0;
 #endif
 	texcols = W_GetLumpByName("TEXCOLS");
-	uint8_t header[4];
+	uint8_t header[3];
 	W_Fetch(texcols, header, sizeof(header));
-	if (header[0] != 1 || header[1] != TEXSHIFT || header[2] != highdetail || header[3] != TEXCOLBITS)
-		I_Error("R_InitTextures: TEXCOLS built for TEXSHIFT %i", header[1]);
+	if (header[0] != TEXSHIFT || header[1] != highdetail || header[2] != TEXCOLBITS)
+		I_Error("R_InitTextures: TEXCOLS built for TEXSHIFT %i", header[0]);
 }
 
 

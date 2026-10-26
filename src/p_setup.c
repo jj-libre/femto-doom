@@ -533,9 +533,9 @@ static void P_GroupLines (int16_t map)
         sprintf(name, "E1M%dGL", map);
         const byte* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
-        struct { uint16_t version, numsectors, numsubsectors, pad; uint32_t first, lines, subsecsector; } h;
+        struct { uint16_t numsectors, numsubsectors; uint32_t first, lines, subsecsector; } h;
         W_Fetch(gl, &h, sizeof(h));
-        if (h.version != 2 || h.numsectors != _g_numsectors || h.numsubsectors != numsubsectors)
+        if (h.numsectors != _g_numsectors || h.numsubsectors != numsubsectors)
             I_Error("P_GroupLines: %s does not fit the map", name);
 
         _g_seclinefirst = (const uint16_t*)(gl + h.first);

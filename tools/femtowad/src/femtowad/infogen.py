@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from .info import ACTIONS, FRACUNIT, MAX_SPRITE_FRAMES, MF, MF_COMMENTS, MOBJS, SPRITES, STATES, MobjInfo
+from .info import ACTIONS, FRACUNIT, MAX_SPRITE_FRAMES, MF, MF_COMMENTS, MOBJS, SPRITES, STATES, WAD_VERSION, MobjInfo
 
 LICENCE = """\
 /*-----------------------------------------------------------------------------
@@ -154,6 +154,7 @@ def info_h() -> str:
         "extern const mobjinfo_t mobjinfo[NUMMOBJTYPES];\n",
         "\n".join(flag_lines) + "\n",
         f"#define MAX_SPRITE_FRAMES {MAX_SPRITE_FRAMES}\n",
+        f"// The format of both WADs, kept in their FEMTOWAD lumps.\n#define WAD_VERSION {WAD_VERSION}\n",
         "#endif\n",
     ]
     return "\n".join(parts)

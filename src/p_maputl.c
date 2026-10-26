@@ -322,7 +322,7 @@ typedef char assertLoadthingSize[sizeof(loadthing_t) == 14 ? 1 : -1];
 
 typedef struct
 {
-  uint16_t version, numthings, numsectors, numblocks, numnodes, pad;
+  uint16_t numthings, numsectors, numblocks, numnodes;
   uint16_t numstatics[3], numthinking[3];
   uint32_t things, sectorfirst, blockfirst, list, nodefirst, nodesector, nodething, secnodefirst, secnodes;
 } loadheader_t;
@@ -381,8 +381,6 @@ void P_BeginLoadThings(int16_t map)
 
   loadheader_t h;
   W_Fetch(tl, &h, sizeof(h));
-  if (h.version != 3)
-    I_Error("P_BeginLoadThings: %s version %i", name, h.version);
 
   tlthings       = (const loadthing_t*)(tl + h.things);
   tlsectorfirst  = (const int16_t*)(tl + h.sectorfirst);
