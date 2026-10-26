@@ -60,7 +60,9 @@ void D_AdvanceDemo(void);
 
 void D_PageTicker(void);
 void D_StartTitle(void);
+// Sets the game up and returns; the platform then calls D_DoomStep for every frame.
 void D_DoomMain(int argc, const char * const * argv);
+void D_DoomStep(void);
 
 
 

@@ -29,7 +29,7 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *  DOOM main program (D_DoomMain) and game loop (D_DoomLoop),
+ *  DOOM main program (D_DoomMain) and one game step (D_DoomStep),
  *  plus functions to
  *  parse command line parameters, configure game parameters (turbo),
  *  and call the startup functions.
@@ -250,51 +250,47 @@ static void TryRunTics (void)
 
 
 //
-//  D_DoomLoop()
+//  D_DoomStep()
 //
-// Not a globally visible function,
-//  just included for source reference,
-//  called by D_DoomMain, never exits.
+// Runs the tics that are due and draws one frame. After D_DoomMain the platform calls it
+//  over and over.
 // Manages timing and IO,
 //  calls all ?_Responder, ?_Ticker, and ?_Drawer,
 //  calls I_GetTime and I_StartTic
 //
-_Noreturn static void D_DoomLoop(void)
+void D_DoomStep(void)
 {
-    for (;;)
+    // frame syncronous IO operations
+
+    // process one or more tics
+    if (singletics)
     {
-        // frame syncronous IO operations
+        I_StartTic ();
+        G_BuildTiccmd ();
 
-        // process one or more tics
-        if (singletics)
-        {
-            I_StartTic ();
-            G_BuildTiccmd ();
+        if (advancedemo)
+            D_DoAdvanceDemo ();
 
-            if (advancedemo)
-                D_DoAdvanceDemo ();
+        M_Ticker ();
+        G_Ticker ();
 
-            M_Ticker ();
-            G_Ticker ();
+        _g_gametic++;
+        maketic++;
+    }
+    else
+        TryRunTics (); // will run at least one tic
 
-            _g_gametic++;
-            maketic++;
-        }
-        else
-            TryRunTics (); // will run at least one tic
+    // killough 3/16/98: change consoleplayer to displayplayer
+    if (_g_player.mo) // cph 2002/08/10
+        S_UpdateSounds();// move positional sounds
 
-        // killough 3/16/98: change consoleplayer to displayplayer
-        if (_g_player.mo) // cph 2002/08/10
-            S_UpdateSounds();// move positional sounds
-
-        // Update display, next frame, with current state.
-        D_Display();
+    // Update display, next frame, with current state.
+    D_Display();
 
 
-        if(_g_fps_show)
-        {
-            D_UpdateFPS();
-        }
+    if(_g_fps_show)
+    {
+        D_UpdateFPS();
     }
 }
 
@@ -521,6 +517,4 @@ void D_DoomMain(int argc, const char * const * argv)
     myargv = argv;
 
     D_DoomMainSetup();
-
-    D_DoomLoop ();  // never returns
 }
