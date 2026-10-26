@@ -44,20 +44,19 @@
 
 
 //
-// The screen, in palette indices: 240 x 160, or 320 x 200 with SCREEN_WIDTH=320
+// The screen, in palette indices
 //
 
 #if !defined SCREEN_WIDTH
 #define SCREEN_WIDTH  240
 #endif
 
-#if SCREEN_WIDTH == 240
+#if !defined SCREEN_HEIGHT
 #define SCREEN_HEIGHT 160
-#elif SCREEN_WIDTH == 320
-#define SCREEN_HEIGHT 200
-#else
-#error unsupported SCREEN_WIDTH value
 #endif
+
+// The status bar's rows at the bottom of the screen: Doom's 32 of 200 scaled, at least 32.
+#define ST_HEIGHT (SCREEN_HEIGHT > 200 ? (32 * SCREEN_HEIGHT + 100) / 200 : 32)
 
 // I_GetTime counts tics, this many per second.
 #define TIC_RATE          35
@@ -206,13 +205,13 @@ void R_DrawSpan(uint16_t y, uint16_t x1, uint16_t x2, const draw_span_vars_t *ds
 #endif
 void V_ClearViewWindow(void);
 
-// Pictures on the screen.
+// Pictures on the screen: Scaled in Doom's 320 x 200 coordinates, NotScaled in the screen's pixels.
 void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t* patch);
 void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch);
 // The screen tiled with a 64 x 64 picture.
 void V_DrawBackground(const uint8_t* tile);
 // length pixels of a raw picture at screen offset `offset`.
-void V_DrawRaw(uint16_t offset, const uint8_t* pixels, uint16_t length);
+void V_DrawRaw(uint32_t offset, const uint8_t* pixels, uint32_t length);
 #if defined ST_PARTIAL_REFRESH
 // The w x h rectangle at x, y of a raw picture whose rows are SCREEN_WIDTH wide; pixels is the
 // rectangle's first pixel.

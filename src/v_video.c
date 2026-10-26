@@ -46,7 +46,7 @@
 
 void V_DrawRawFullScreen(int16_t num)
 {
-	V_DrawRaw(0, W_GetLumpByNum(num), W_LumpLength(num));
+	V_DrawRaw(0, W_GetLumpByNum(num), (uint32_t)SCREEN_WIDTH * SCREEN_HEIGHT);
 }
 
 

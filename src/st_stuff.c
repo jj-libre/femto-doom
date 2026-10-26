@@ -171,44 +171,28 @@ static int16_t      keyboxes[3];
 static int16_t      st_randomnumber;
 
 
-// Size of statusbar.
-// Now sensitive for scaling.
-
-// proff 08/18/98: Changed for high-res
-#define ST_Y      (SCREEN_HEIGHT - ST_HEIGHT)
-
-
 //
 // STATUS BAR DATA
 //
 
-// Location of status bar
-#define ST_X                    0
+// Where the widgets sit: Doom's layout in its 320 x 32 bar, which ST_X() and ST_Y() map onto this
+// screen's bar. femtowad scales the bar's pictures alike.
+#define ST_HEIGHT_VGA           32
+#define ST_X(x)                 ((int16_t)((int32_t)(x) * SCREEN_WIDTH / SCREEN_WIDTH_VGA))
+#define ST_Y(y)                 ((int16_t)(SCREEN_HEIGHT - ST_HEIGHT + (int32_t)(y) * ST_HEIGHT / ST_HEIGHT_VGA))
 
-// Where the widgets sit: Doom's layout on a 320-wide screen, a narrower one on a 240-wide one.
-#if SCREEN_WIDTH == 320
 #define ST_FACESXOFF            143
 #define ST_NUMBERSY             3
 #define ST_AMMOXOFF             44
 #define ST_HEALTHXOFF           90
 #define ST_ARMSXOFF             111
+#define ST_ARMSYOFF             4
 #define ST_ARMSXSPACE           12
-#define ST_ARMORXOFF            221
+#define ST_ARMSYSPACE           10
+#define ST_ARMORXOFF           221
 #define ST_KEYSXOFF             239
 #define ST_AMMOTABLEXOFF        288
 #define ST_MAXAMMOTABLEXOFF     314
-#else
-#define ST_FACESXOFF            104
-#define ST_NUMBERSY             6
-#define ST_AMMOXOFF             32
-#define ST_HEALTHXOFF           66
-#define ST_ARMSXOFF             82
-#define ST_ARMSXSPACE           8
-#define ST_ARMORXOFF            166
-#define ST_KEYSXOFF             178
-#define ST_AMMOTABLEXOFF        220
-#define ST_MAXAMMOTABLEXOFF     238
-#endif
 
 
 #define ST_TURNOFFSET           (ST_NUMSTRAIGHTFACES)
@@ -219,8 +203,8 @@ static int16_t      st_randomnumber;
 #define ST_DEADFACE             (ST_GODFACE+1)
 
 // proff 08/18/98: Changed for high-res
-#define ST_FACESX               (ST_X+ST_FACESXOFF)
-#define ST_FACESY               (ST_Y)
+#define ST_FACESX               ST_X(ST_FACESXOFF)
+#define ST_FACESY               ST_Y(0)
 
 #define ST_EVILGRINCOUNT        (2*TIC_RATE)
  //Fix Status bar face timing ~Kippykip
@@ -242,87 +226,79 @@ static int16_t      st_randomnumber;
 // AMMO number pos.
 #define ST_AMMOWIDTH            3
 // proff 08/18/98: Changed for high-res
-#define ST_AMMOX                (ST_X+ST_AMMOXOFF)
-#define ST_AMMOY                (ST_Y+ST_NUMBERSY)
+#define ST_AMMOX                ST_X(ST_AMMOXOFF)
+#define ST_AMMOY                ST_Y(ST_NUMBERSY)
 
 // HEALTH number pos.
 #define ST_HEALTHWIDTH          3
 // proff 08/18/98: Changed for high-res
-#define ST_HEALTHX              (ST_X+ST_HEALTHXOFF)
-#define ST_HEALTHY              (ST_Y+ST_NUMBERSY)
-
-
-// Weapon pos.
-// proff 08/18/98: Changed for high-res
-#define ST_ARMSX                (ST_X+ST_ARMSXOFF)
-#define ST_ARMSY                (ST_Y+4)
-
-#define ST_ARMSYSPACE           10
+#define ST_HEALTHX              ST_X(ST_HEALTHXOFF)
+#define ST_HEALTHY              ST_Y(ST_NUMBERSY)
 
 
 // ARMOR number pos.
 #define ST_ARMORWIDTH           3
 // proff 08/18/98: Changed for high-res
-#define ST_ARMORX               (ST_X+ST_ARMORXOFF)
-#define ST_ARMORY               (ST_Y+ST_NUMBERSY)
+#define ST_ARMORX               ST_X(ST_ARMORXOFF)
+#define ST_ARMORY               ST_Y(ST_NUMBERSY)
 
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY0X                (ST_X+ST_KEYSXOFF)
-#define ST_KEY0Y                (ST_Y+3)
+#define ST_KEY0X                ST_X(ST_KEYSXOFF)
+#define ST_KEY0Y                ST_Y(3)
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY1X                (ST_X+ST_KEYSXOFF)
-#define ST_KEY1Y                (ST_Y+13)
+#define ST_KEY1X                ST_X(ST_KEYSXOFF)
+#define ST_KEY1Y                ST_Y(13)
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY2X                (ST_X+ST_KEYSXOFF)
-#define ST_KEY2Y                (ST_Y+23)
+#define ST_KEY2X                ST_X(ST_KEYSXOFF)
+#define ST_KEY2Y                ST_Y(23)
 
 
 // Ammunition counter.
 #define ST_AMMO0WIDTH           3
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO0X               (ST_X+ST_AMMOTABLEXOFF)
-#define ST_AMMO0Y               (ST_Y+5)
+#define ST_AMMO0X               ST_X(ST_AMMOTABLEXOFF)
+#define ST_AMMO0Y               ST_Y(5)
 
 #define ST_AMMO1WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO1X               (ST_X+ST_AMMOTABLEXOFF)
-#define ST_AMMO1Y               (ST_Y+11)
+#define ST_AMMO1X               ST_X(ST_AMMOTABLEXOFF)
+#define ST_AMMO1Y               ST_Y(11)
 
 #define ST_AMMO2WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO2X               (ST_X+ST_AMMOTABLEXOFF)
-#define ST_AMMO2Y               (ST_Y+17)
+#define ST_AMMO2X               ST_X(ST_AMMOTABLEXOFF)
+#define ST_AMMO2Y               ST_Y(17)
 
 #define ST_AMMO3WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO3X               (ST_X+ST_AMMOTABLEXOFF)
-#define ST_AMMO3Y               (ST_Y+23)
+#define ST_AMMO3X               ST_X(ST_AMMOTABLEXOFF)
+#define ST_AMMO3Y               ST_Y(23)
 
 
 // Indicate maximum ammunition.
 // Only needed because backpack exists.
 #define ST_MAXAMMO0WIDTH        3
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO0X            (ST_X+ST_MAXAMMOTABLEXOFF)
-#define ST_MAXAMMO0Y            (ST_Y+5)
+#define ST_MAXAMMO0X            ST_X(ST_MAXAMMOTABLEXOFF)
+#define ST_MAXAMMO0Y            ST_Y(5)
 
 #define ST_MAXAMMO1WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO1X            (ST_X+ST_MAXAMMOTABLEXOFF)
-#define ST_MAXAMMO1Y            (ST_Y+11)
+#define ST_MAXAMMO1X            ST_X(ST_MAXAMMOTABLEXOFF)
+#define ST_MAXAMMO1Y            ST_Y(11)
 
 #define ST_MAXAMMO2WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO2X            (ST_X+ST_MAXAMMOTABLEXOFF)
-#define ST_MAXAMMO2Y            (ST_Y+17)
+#define ST_MAXAMMO2X            ST_X(ST_MAXAMMOTABLEXOFF)
+#define ST_MAXAMMO2Y            ST_Y(17)
 
 #define ST_MAXAMMO3WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO3X            (ST_X+ST_MAXAMMOTABLEXOFF)
-#define ST_MAXAMMO3Y            (ST_Y+23)
+#define ST_MAXAMMO3X            ST_X(ST_MAXAMMOTABLEXOFF)
+#define ST_MAXAMMO3Y            ST_Y(23)
 
 
 // used to use appopriately pained face
@@ -661,11 +637,9 @@ static void ST_drawWidgets(void)
 }
 
 
-static const uint16_t st_offset = (SCREEN_HEIGHT - ST_HEIGHT) * SCREEN_WIDTH;
-
 static void ST_refreshBackground(void)
 {
-	V_DrawRaw(st_offset, W_GetLumpByNum(statusbarnum), W_LumpLength(statusbarnum));
+	V_DrawRaw((uint32_t)ST_Y(0) * SCREEN_WIDTH, W_GetLumpByNum(statusbarnum), (uint32_t)SCREEN_WIDTH * ST_HEIGHT);
 }
 
 
@@ -675,9 +649,15 @@ static void ST_refreshBackground(void)
 #define ST_FIRSTICON  (1 + 2 * NUMAMMO + 2)
 #define ST_NUMWIDGETS (ST_FIRSTICON + 1 + 3 + 6)
 
+#if SCREEN_WIDTH <= UINT8_MAX && SCREEN_HEIGHT <= UINT8_MAX
+typedef uint8_t st_coord_t;
+#else
+typedef int16_t st_coord_t;
+#endif
+
 typedef struct
 {
-	uint8_t x0, y0, x1, y1;
+	st_coord_t x0, y0, x1, y1;
 } st_rect_t;
 
 // Everything a widget can ever cover, over all the patches it can show.
@@ -719,7 +699,7 @@ static void ST_growRect(st_rect_t* r, int16_t x, int16_t y, int16_t lump)
 	int16_t y1 = y0 + patch.height;
 
 	if (x0 < 0)            x0 = 0;
-	if (y0 < ST_Y)         y0 = ST_Y;
+	if (y0 < ST_Y(0))      y0 = ST_Y(0);
 	if (x1 > SCREEN_WIDTH)  x1 = SCREEN_WIDTH;
 	if (y1 > SCREEN_HEIGHT) y1 = SCREEN_HEIGHT;
 
@@ -832,7 +812,7 @@ static void ST_doPartialRefresh(void)
 	{
 		const st_rect_t* r = &st_rects[i];
 		if ((dirty & (1UL << i)) && r->x0 < r->x1)
-			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + (r->y0 * SCREEN_WIDTH + r->x0 - st_offset),
+			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + ((uint32_t)(r->y0 - ST_Y(0)) * SCREEN_WIDTH + r->x0),
 				r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
 	}
 
@@ -1067,7 +1047,7 @@ static void ST_createWidgets(void)
     // weapons owned
     for(int8_t i = 0; i < 6; i++)
     {
-        STlib_initMultIcon(&w_arms[i], ST_ARMSX+(i%3)*ST_ARMSXSPACE, ST_ARMSY+(i/3)*ST_ARMSYSPACE, arms[i], &_g_player.weaponowned[i+1]);
+        STlib_initMultIcon(&w_arms[i], ST_X(ST_ARMSXOFF+(i%3)*ST_ARMSXSPACE), ST_Y(ST_ARMSYOFF+(i/3)*ST_ARMSYSPACE), arms[i], &_g_player.weaponowned[i+1]);
     }
 	
     // keyboxes 0-2

@@ -81,8 +81,8 @@ void W_Init(void)
 	if (W_FetchUInt16(&graphics[0]) != WAD_VERSION
 	 || W_FetchUInt16(W_GetMapLumpByNum(W_GetMapNumForName("FEMTOWAD"))) != WAD_VERSION)
 		I_Error("W_Init: the WADs are not in WAD format %i", WAD_VERSION);
-	if (W_FetchUInt16(&graphics[1]) != SCREEN_WIDTH)
-		I_Error("W_Init: the graphics WAD is for a %i pixel wide screen", W_FetchUInt16(&graphics[1]));
+	if (W_FetchUInt16(&graphics[1]) != SCREEN_WIDTH || W_FetchUInt16(&graphics[2]) != SCREEN_HEIGHT)
+		I_Error("W_Init: the graphics WAD is for a %i x %i screen", W_FetchUInt16(&graphics[1]), W_FetchUInt16(&graphics[2]));
 }
 
 

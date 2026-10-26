@@ -39,11 +39,6 @@
 #define __STSTUFF_H__
 
 
-// Size of statusbar.
-
-#define ST_HEIGHT 32
-
-
 //
 // STATUS BAR
 //

@@ -1,30 +1,27 @@
 """Lumps femto-doom reads that a Doom IWAD lacks or holds at another size, made from the IWAD.
 
-On a 320 x 200 screen the IWAD's own pictures fit as they are. On a 240 x 160 one, full-screen
-pictures become 240 x 160 raw images. The status bar is rebuilt 240 wide from the
-IWAD's own bar, with its widgets where st_stuff.c draws them: labels and digit cells are copied,
-plain texture between them is thinned out. Big digits and the percent sign are narrowed to 10
-pixels.
+Pictures the platform scales are kept as they are. Full-screen pictures become raw images of the
+screen's size. The status bar keeps Doom's layout scaled to the screen: its background becomes a
+raw image as wide as the screen and ST_HEIGHT high, and the pictures drawn on it are scaled by the
+same factors, except that the smallest, the 4 x 6 digits and the key cards, never shrink. On a
+320 x 200 screen all of them stay at Doom's size.
 """
 
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
-from itertools import pairwise
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 from .palette import Color, Palette, closest, parse_palette
 from .picture import Picture, Pixels
 from .wad import Wad
 
-SCREENS = {240: (240, 160), 320: (320, 200)}
-"""The screens the engine supports, by SCREEN_WIDTH."""
 FULL_SCREEN_PICTURES = ("HELP2", "TITLEPIC", "WIMAP0")
-BAR_WIDTH, BAR_HEIGHT = 240, 32
-LABEL_ROWS = 23
-TALL_DIGIT_WIDTH = 10
-PERCENT_AT = ((66, 6), (166, 6))
+BAR_PICTURE_PREFIXES = ("STYSNUM", "STGNUM", "STKEYS", "STF")
+DOOM_SCREEN = (320, 200)
+DOOM_BAR_HEIGHT = 32
+SMALL_PICTURE_ROWS = 6
 DOOM_PERCENT_AT = ((90, 3), (221, 3))
 ARMS_AT = (104, 0)
 GAMMA_LEVELS = 5
@@ -33,48 +30,45 @@ FONT_SPACE = 4
 MENU_TEXT = {"M_ARUN": "ALWAYS RUN:", "M_GAMMA": "GAMMA BOOST:"}
 
 
-class Anchor(NamedTuple):
-    """Bar column `x` shows source column `source`; equal steps between anchors copy columns.
+class Screen(NamedTuple):
+    width: int
+    height: int
 
-    Per panel of the bar, BAR_TOP anchors the rows above the labels and BAR_LABELS the rows
-    with them. Labels, digit cells and edges are copied, the texture between is thinned out.
+    @classmethod
+    def parse(cls, text: str) -> Screen:
+        width, height = (int(n) for n in text.lower().split("x"))
+        return cls(width, height)
+
+    @property
+    def bar_height(self) -> int:
+        """ST_HEIGHT: Doom's 32 status bar rows of 200, scaled, at least 32."""
+        return max(DOOM_BAR_HEIGHT, (DOOM_BAR_HEIGHT * self.height + 100) // 200)
+
+    @property
+    def bar_scale(self) -> tuple[float, float]:
+        return self.width / DOOM_SCREEN[0], self.bar_height / DOOM_BAR_HEIGHT
+
+
+def generate_art(iwad: Wad, screen: Screen, names: Iterable[str]) -> dict[str, bytes]:
+    """New lumps first, in the order they are appended, then those replacing the IWAD's.
+
+    `names` are the lumps the engine reads; the status bar's pictures among them are scaled.
     """
-
-    x: int
-    source: int
-
-
-BAR_TOP = {
-    "ammo": ((0, 0), (2, 2), (33, 46), (35, 48)),
-    "health": ((37, 50), (77, 104), (78, 105)),
-    "arms": ((79, 106), (82, 111), (86, 115), (90, 123), (94, 127), (98, 135), (102, 139), (107, 143)),
-    "face": ((108, 144), (134, 177), (135, 178)),
-    "armor": ((137, 180), (176, 235), (178, 237)),
-    "keys": ((178, 239), (187, 248)),
-    "ammo table": ((187, 249), (189, 251), (189, 254), (206, 271), (220, 292), (224, 296), (238, 318), (240, 320)),
-}
-BAR_LABELS = BAR_TOP | {
-    "ammo": ((0, 0), (2, 2), (2, 8), (33, 39), (33, 46), (35, 48)),
-    "health": ((37, 50), (37, 55), (77, 95), (77, 104), (78, 105)),
-    "arms": ((79, 106), (79, 110), (106, 137), (107, 143)),
-    "armor": ((137, 180), (137, 188), (173, 224), (176, 235), (178, 237)),
-}
-
-
-def generate_art(iwad: Wad, screen_width: int) -> dict[str, bytes]:
-    """New lumps first, in the order they are appended, then those replacing the IWAD's."""
-    full_size = screen_width == 320
     palette = parse_palette(iwad["PLAYPAL"])
+    doom_size = screen == DOOM_SCREEN
     art = {name: menu_text(iwad, text) for name, text in MENU_TEXT.items()}
     for digit in range(10):
-        digit_lump = iwad[f"STTNUM{digit}"]
-        art[f"STGANUM{digit}"] = digit_lump if full_size else narrow(Picture.parse(digit_lump), palette).encode()
+        art[f"STGANUM{digit}"] = bar_picture(iwad[f"STTNUM{digit}"], screen, palette)
     for level in range(1, GAMMA_LEVELS + 1):
         art[f"PLAYPAL{level}"] = gamma_corrected(iwad["PLAYPAL"], level)
     for name in FULL_SCREEN_PICTURES:
         pixels = Picture.parse(iwad[name]).pixels()
-        art[name] = raw(pixels if full_size else resample(pixels, *SCREENS[screen_width], palette))
-    art["STBAR"] = raw(doom_status_bar(iwad) if full_size else status_bar(iwad, palette))
+        art[name] = raw(pixels if doom_size else resample(pixels, *screen, palette))
+    bar = doom_status_bar(iwad)
+    art["STBAR"] = raw(bar if screen.bar_scale == (1, 1) else resample(bar, screen.width, screen.bar_height, palette))
+    for name in sorted(names):
+        if name.startswith(BAR_PICTURE_PREFIXES):
+            art[name] = bar_picture(iwad[name], screen, palette)
     return art
 
 
@@ -141,9 +135,21 @@ def resample(pixels: Pixels, width: int, height: int, palette: Palette) -> Pixel
     return out
 
 
-def narrow(picture: Picture, palette: Palette) -> Picture:
-    pixels = resample(picture.pixels(), TALL_DIGIT_WIDTH, picture.height, palette)
-    return Picture.from_pixels(pixels, picture.left, picture.top)
+def scaled(n: int, scale: float) -> int:
+    return math.floor(n * scale)
+
+
+def bar_picture(lump: bytes, screen: Screen, palette: Palette) -> bytes:
+    """A picture drawn on the status bar, scaled as the bar is; the smallest never shrink."""
+    sx, sy = screen.bar_scale
+    picture = Picture.parse(lump)
+    if picture.height <= SMALL_PICTURE_ROWS:
+        sx, sy = max(sx, 1), max(sy, 1)
+    if (sx, sy) == (1, 1):
+        return lump
+    width, height = max(1, scaled(picture.width, sx)), max(1, scaled(picture.height, sy))
+    pixels = resample(picture.pixels(), width, height, palette)
+    return Picture.from_pixels(pixels, scaled(picture.left, sx), scaled(picture.top, sy)).encode()
 
 
 def draw(target: Pixels, pixels: Pixels, x: int, y: int) -> None:
@@ -151,31 +157,6 @@ def draw(target: Pixels, pixels: Pixels, x: int, y: int) -> None:
         for dx, p in enumerate(row):
             if p is not None:
                 target[y + dy][x + dx] = p
-
-
-def column_map(panels: dict[str, tuple[tuple[int, int], ...]]) -> list[int]:
-    """The source column of every bar column; a repeated `x` jumps in the source."""
-    points = [Anchor(*a) for anchors in panels.values() for a in anchors]
-    out = []
-    for a, b in pairwise(points):
-        width = b.x - a.x
-        out += [a.source + (b.source - a.source) * k // width for k in range(width)]
-    if len(out) != BAR_WIDTH:
-        raise AssertionError(f"status bar column map is {len(out)} wide")
-    return out
-
-
-def status_bar(iwad: Wad, palette: Palette) -> Pixels:
-    source = Picture.parse(iwad["STBAR"]).pixels()
-    draw(source, Picture.parse(iwad["STARMS"]).pixels(), *ARMS_AT)
-    top, labels = column_map(BAR_TOP), column_map(BAR_LABELS)
-    bar: Pixels = [
-        [source[y][(top if y < LABEL_ROWS else labels)[x]] for x in range(BAR_WIDTH)] for y in range(BAR_HEIGHT)
-    ]
-    percent = narrow(Picture.parse(iwad["STTPRCNT"]), palette).pixels()
-    for x, y in PERCENT_AT:
-        draw(bar, percent, x, y)
-    return bar
 
 
 def doom_status_bar(iwad: Wad) -> Pixels:

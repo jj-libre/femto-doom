@@ -6,7 +6,7 @@ Defined on the compiler's command line; all are optional.
 
 | Option | Default | Effect |
 |---|---|---|
-| `SCREEN_WIDTH` | 240 | 240 for a 240 × 160 screen with a compact status bar, 320 for 320 × 200 with Doom's; must match `femtowad wads --screen-width` |
+| `SCREEN_WIDTH`, `SCREEN_HEIGHT` | 240, 160 | the screen in pixels, any size; must match `femtowad wads --screen`. The status bar is its bottom `ST_HEIGHT` rows, Doom's 32 of 200 scaled, at least 32 |
 | `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be one femtowad generates view tables for (`VIEW_WIDTHS` in `viewgen.py`: 30, 38, 40, 60, 80, 120, 160, 240, 320) |
 | `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
 | `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |

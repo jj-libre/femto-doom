@@ -39,7 +39,11 @@ too, and the platform reads them the same way.
 | pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` with `ST_PARTIAL_REFRESH` |
 | automap | `V_InitDrawLine`, `V_DrawLine`, `V_ShutdownDrawLine` |
 
-The screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT` (240 × 160, or 320 × 200) palette indices; the 3D view is
+The screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT` palette indices, the status bar its bottom `ST_HEIGHT` rows; the 3D view is
 `VIEW_WINDOW_WIDTH` × `VIEW_WINDOW_HEIGHT` of it, its horizon on row `CENTER_Y`. Column drawing gets a
 `draw_column_vars_t` and the light levels in `fullcolormap`; pictures come in Doom's patch format,
-`patch_t` with its posts.
+`patch_t` with its posts. `V_DrawPatchScaled` places and sizes a picture in Doom's 320 × 200 coordinates,
+`V_DrawPatchNotScaled` in the screen's pixels.
+
+A view smaller than the screen above the status bar leaves a border the engine never draws: it
+keeps whatever was there last, a full-screen picture for instance, unless the platform clears it.
