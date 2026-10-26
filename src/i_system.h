@@ -66,7 +66,7 @@ void I_ReloadPalette(void);
 void I_SetPalette(int8_t pal);
 
 /* I_StartTic
- * Called by D_DoomLoop,
+ * Called by D_DoomStep,
  * called before processing each tic in a frame.
  * Quick syncronous operations are performed here.
  * Can call D_PostEvent.

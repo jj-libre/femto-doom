@@ -1,0 +1,44 @@
+# Build options
+
+Defined on the compiler's command line; all are optional.
+
+## Size and detail
+
+| Option | Default | Effect |
+|---|---|---|
+| `VIEWWINDOWWIDTH`, `VIEWWINDOWHEIGHT` | 60, 128 | the 3D view in pixels; the width must be one with a view angle table (240, 120, 80, 60, 40, 38, 30) |
+| `MAPWIDTH` | `SCREENWIDTH` | automap width |
+| `TEXSHIFT`, `SPRSHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXSHIFT` must match `femtowad wads --texshift` |
+| `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |
+| `FLAT_SPAN` | off | floors and ceilings in one colour each; required with femtowad's WADs, which carry no flats |
+| `FLAT_NUKAGE1_COLOR` | 122 | colour of nukage floors |
+| `FLAT_WALL` | off | walls in one colour |
+
+## Memory
+
+| Option | Default | Effect |
+|---|---|---|
+| `MAXDRAWSEGS` | by view size | wall segments per frame |
+| `MAXOPENINGS` | `VIEWWINDOWWIDTH` × 16 | clip range entries per frame |
+| `MAXINTERCEPTS` | 64 | lines and things one trace can cross |
+| `THING_POOL_RESERVE` | 0 | thing slots kept free at map load |
+| `MINFRAGMENT` | 16 | smallest free zone fragment split off a block |
+| `NO_LOOKUP_TABLE` | off | divide instead of using the 256 KB reciprocal table |
+| `RECIPROCAL_DIV(v)` | `0xffffffff / v` | the division used without the table |
+| `SMALL_TRIG` | off | half-size tangent table |
+| `W_FETCH` | off | WAD reads go through the platform's `W_Fetch`, see [platform.md](platform.md) |
+
+## Features
+
+| Option | Default | Effect |
+|---|---|---|
+| `NO_DEMOS` | off | no attract-mode demo |
+| `LOW_MEMORY` | off | Doom64KB's cut: maps other than E1M1 and E1M8 spawn only player starts and keys, E1M6 plays E1M1, demos play E1M1 |
+| `ST_PARTIAL_REFRESH` | off | the status bar redraws only widgets that changed, through `V_DrawRawRect` |
+| `DISABLE_STATUS_BAR` | off | no status bar |
+| `I_Printf` | `printf` | name of the platform's log function |
+
+## Debugging
+
+`RANGECHECK` checks table indices, `INSTRUMENTED` logs zone use on every allocation, `DEBUG` checks zone block ids,
+`ONE_WALL_TEXTURE` draws every wall with one texture.

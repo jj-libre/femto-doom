@@ -20,3 +20,9 @@ Download Doom64KB [here](https://github.com/FrenkelS/Doom64KB/releases).
  - No saving and loading
  - No multiplayer
  - No screen resizing
+
+## Documentation
+
+- [docs/platform.md](docs/platform.md): building the engine and what a platform provides
+- [docs/build.md](docs/build.md): build options
+- [docs/wad-format.md](docs/wad-format.md): the WADs and the tool that builds them
