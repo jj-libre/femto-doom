@@ -77,9 +77,12 @@ void W_Init(void)
 	const wadinfo_t *header = (const wadinfo_t*)&doom_iwad[0];
 	fileinfo = (const filelump_t*)&doom_iwad[W_FetchInt32(&header->infotableofs)];
 
-	if (W_FetchUInt16(W_GetLumpByName("FEMTOWAD")) != WAD_VERSION
+	const uint16_t* graphics = W_GetLumpByName("FEMTOWAD");
+	if (W_FetchUInt16(&graphics[0]) != WAD_VERSION
 	 || W_FetchUInt16(W_GetMapLumpByNum(W_GetMapNumForName("FEMTOWAD"))) != WAD_VERSION)
 		I_Error("W_Init: the WADs are not in WAD format %i", WAD_VERSION);
+	if (W_FetchUInt16(&graphics[1]) != SCREEN_WIDTH)
+		I_Error("W_Init: the graphics WAD is for a %i pixel wide screen", W_FetchUInt16(&graphics[1]));
 }
 
 

@@ -4,7 +4,7 @@ femto-doom reads two WADs in place, `GRAPHICS.WAD` and `MAPS.WAD`, both little-e
 `tools/femtowad` builds them from a Doom IWAD:
 
 ```bash
-uv run --project tools/femtowad femtowad wads doom1.wad <out-dir> [--texture-shift N] [--high-detail]
+uv run --project tools/femtowad femtowad wads doom1.wad <out-dir> [--screen-width 240|320] [--texture-shift N] [--high-detail]
 ```
 
 ## Directory
@@ -19,7 +19,8 @@ Then per lump: data offset (4), size (4, the engine reads 16 bits; lumps of 64 K
 only read piecewise), name (8). Lumps with the same data share it.
 
 Both WADs hold a lump `FEMTOWAD`: the format version (u16), now 1, which the engine checks at
-start-up against `WAD_VERSION` in `info.h`.
+start-up against `WAD_VERSION` in `info.h`; in the graphics WAD it is followed by the screen
+width (u16) the pictures are made for, checked against `SCREEN_WIDTH`.
 
 ## Graphics WAD
 
@@ -32,8 +33,8 @@ start-up against `WAD_VERSION` in `info.h`.
 | `TEXHEIGH` | height of every texture (i16) |
 | `TEXCOLS` | `TEXTURE_SHIFT` (u8), `HIGH_DETAIL` (u8), log2 of rows per column (u8), 0 (u8), texture count (u16), 0 (u16); per texture: offset (u32), width mask (u16), column shift (u8, 2 when four columns share one), 0 (u8); then every texture's columns, 128 >> `TEXTURE_SHIFT` bytes each |
 | `SPRITES` | per sprite of `sprnames` and per frame up to `MAX_SPRITE_FRAMES`: the lump of rotations 1–8 (i16 each), a flip mask (u8), a rotate flag (u8) |
-| `TITLEPIC`, `HELP2`, `WIMAP0` | 240 × 160 raw pixels |
-| `STBAR` | 240 × 32 raw pixels |
+| `TITLEPIC`, `HELP2`, `WIMAP0` | raw pixels, the size of the screen |
+| `STBAR` | raw pixels, the screen's width × 32, with the arms panel and percent signs drawn in |
 | `FLOOR4_8` | 64 × 64 raw pixels, the finale background |
 | `DEMO3` | the attract-mode demo |
 | status bar, menu and intermission pictures, sprites, wall patches | Doom's patch format; walls keep every 4th column, sprites every 2nd, equal columns are stored once |

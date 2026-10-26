@@ -1,6 +1,7 @@
 """Lumps femto-doom reads that a Doom IWAD lacks or holds at another size, made from the IWAD.
 
-Full-screen pictures become 240 x 160 raw images. The status bar is rebuilt 240 wide from the
+On a 320 x 200 screen the IWAD's own pictures fit as they are. On a 240 x 160 one, full-screen
+pictures become 240 x 160 raw images. The status bar is rebuilt 240 wide from the
 IWAD's own bar, with its widgets where st_stuff.c draws them: labels and digit cells are copied,
 plain texture between them is thinned out. Big digits and the percent sign are narrowed to 10
 pixels.
@@ -17,12 +18,14 @@ from .palette import Color, Palette, closest, parse_palette
 from .picture import Picture, Pixels
 from .wad import Wad
 
-SCREEN_WIDTH, SCREEN_HEIGHT = 240, 160
+SCREENS = {240: (240, 160), 320: (320, 200)}
+"""The screens the engine supports, by SCREEN_WIDTH."""
 FULL_SCREEN_PICTURES = ("HELP2", "TITLEPIC", "WIMAP0")
 BAR_WIDTH, BAR_HEIGHT = 240, 32
 LABEL_ROWS = 23
 TALL_DIGIT_WIDTH = 10
 PERCENT_AT = ((66, 6), (166, 6))
+DOOM_PERCENT_AT = ((90, 3), (221, 3))
 ARMS_AT = (104, 0)
 GAMMA_LEVELS = 5
 FONT_SCALE = 2
@@ -58,18 +61,20 @@ BAR_LABELS = BAR_TOP | {
 }
 
 
-def generate_art(iwad: Wad) -> dict[str, bytes]:
+def generate_art(iwad: Wad, screen_width: int) -> dict[str, bytes]:
     """New lumps first, in the order they are appended, then those replacing the IWAD's."""
+    full_size = screen_width == 320
     palette = parse_palette(iwad["PLAYPAL"])
     art = {name: menu_text(iwad, text) for name, text in MENU_TEXT.items()}
     for digit in range(10):
-        art[f"STGANUM{digit}"] = narrow(Picture.parse(iwad[f"STTNUM{digit}"]), palette).encode()
+        digit_lump = iwad[f"STTNUM{digit}"]
+        art[f"STGANUM{digit}"] = digit_lump if full_size else narrow(Picture.parse(digit_lump), palette).encode()
     for level in range(1, GAMMA_LEVELS + 1):
         art[f"PLAYPAL{level}"] = gamma_corrected(iwad["PLAYPAL"], level)
     for name in FULL_SCREEN_PICTURES:
         pixels = Picture.parse(iwad[name]).pixels()
-        art[name] = raw(resample(pixels, SCREEN_WIDTH, SCREEN_HEIGHT, palette))
-    art["STBAR"] = raw(status_bar(iwad, palette))
+        art[name] = raw(pixels if full_size else resample(pixels, *SCREENS[screen_width], palette))
+    art["STBAR"] = raw(doom_status_bar(iwad) if full_size else status_bar(iwad, palette))
     return art
 
 
@@ -169,6 +174,16 @@ def status_bar(iwad: Wad, palette: Palette) -> Pixels:
     ]
     percent = narrow(Picture.parse(iwad["STTPRCNT"]), palette).pixels()
     for x, y in PERCENT_AT:
+        draw(bar, percent, x, y)
+    return bar
+
+
+def doom_status_bar(iwad: Wad) -> Pixels:
+    """The IWAD's bar with the arms panel and percent signs Doom draws over it."""
+    bar = Picture.parse(iwad["STBAR"]).pixels()
+    draw(bar, Picture.parse(iwad["STARMS"]).pixels(), *ARMS_AT)
+    percent = Picture.parse(iwad["STTPRCNT"]).pixels()
+    for x, y in DOOM_PERCENT_AT:
         draw(bar, percent, x, y)
     return bar
 

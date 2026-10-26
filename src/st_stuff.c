@@ -185,6 +185,31 @@ static int16_t      st_randomnumber;
 // Location of status bar
 #define ST_X                    0
 
+// Where the widgets sit: Doom's layout on a 320-wide screen, a narrower one on a 240-wide one.
+#if SCREEN_WIDTH == 320
+#define ST_FACESXOFF            143
+#define ST_NUMBERSY             3
+#define ST_AMMOXOFF             44
+#define ST_HEALTHXOFF           90
+#define ST_ARMSXOFF             111
+#define ST_ARMSXSPACE           12
+#define ST_ARMORXOFF            221
+#define ST_KEYSXOFF             239
+#define ST_AMMOTABLEXOFF        288
+#define ST_MAXAMMOTABLEXOFF     314
+#else
+#define ST_FACESXOFF            104
+#define ST_NUMBERSY             6
+#define ST_AMMOXOFF             32
+#define ST_HEALTHXOFF           66
+#define ST_ARMSXOFF             82
+#define ST_ARMSXSPACE           8
+#define ST_ARMORXOFF            166
+#define ST_KEYSXOFF             178
+#define ST_AMMOTABLEXOFF        220
+#define ST_MAXAMMOTABLEXOFF     238
+#endif
+
 
 #define ST_TURNOFFSET           (ST_NUMSTRAIGHTFACES)
 #define ST_OUCHOFFSET           (ST_TURNOFFSET + ST_NUMTURNFACES)
@@ -194,7 +219,7 @@ static int16_t      st_randomnumber;
 #define ST_DEADFACE             (ST_GODFACE+1)
 
 // proff 08/18/98: Changed for high-res
-#define ST_FACESX               (ST_X+104)
+#define ST_FACESX               (ST_X+ST_FACESXOFF)
 #define ST_FACESY               (ST_Y)
 
 #define ST_EVILGRINCOUNT        (2*TIC_RATE)
@@ -217,64 +242,63 @@ static int16_t      st_randomnumber;
 // AMMO number pos.
 #define ST_AMMOWIDTH            3
 // proff 08/18/98: Changed for high-res
-#define ST_AMMOX                (ST_X+32)
-#define ST_AMMOY                (ST_Y+6)
+#define ST_AMMOX                (ST_X+ST_AMMOXOFF)
+#define ST_AMMOY                (ST_Y+ST_NUMBERSY)
 
 // HEALTH number pos.
 #define ST_HEALTHWIDTH          3
 // proff 08/18/98: Changed for high-res
-#define ST_HEALTHX              (ST_X+66)
-#define ST_HEALTHY              (ST_Y+6)
+#define ST_HEALTHX              (ST_X+ST_HEALTHXOFF)
+#define ST_HEALTHY              (ST_Y+ST_NUMBERSY)
 
 
 // Weapon pos.
 // proff 08/18/98: Changed for high-res
-#define ST_ARMSX                (ST_X+82)
+#define ST_ARMSX                (ST_X+ST_ARMSXOFF)
 #define ST_ARMSY                (ST_Y+4)
 
-#define ST_ARMSXSPACE           8
 #define ST_ARMSYSPACE           10
 
 
 // ARMOR number pos.
 #define ST_ARMORWIDTH           3
 // proff 08/18/98: Changed for high-res
-#define ST_ARMORX               (ST_X+166)
-#define ST_ARMORY               (ST_Y+6)
+#define ST_ARMORX               (ST_X+ST_ARMORXOFF)
+#define ST_ARMORY               (ST_Y+ST_NUMBERSY)
 
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY0X                (ST_X+178)
+#define ST_KEY0X                (ST_X+ST_KEYSXOFF)
 #define ST_KEY0Y                (ST_Y+3)
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY1X                (ST_X+178)
+#define ST_KEY1X                (ST_X+ST_KEYSXOFF)
 #define ST_KEY1Y                (ST_Y+13)
 
 // proff 08/18/98: Changed for high-res
-#define ST_KEY2X                (ST_X+178)
+#define ST_KEY2X                (ST_X+ST_KEYSXOFF)
 #define ST_KEY2Y                (ST_Y+23)
 
 
 // Ammunition counter.
 #define ST_AMMO0WIDTH           3
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO0X               (ST_X+220)
+#define ST_AMMO0X               (ST_X+ST_AMMOTABLEXOFF)
 #define ST_AMMO0Y               (ST_Y+5)
 
 #define ST_AMMO1WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO1X               (ST_X+220)
+#define ST_AMMO1X               (ST_X+ST_AMMOTABLEXOFF)
 #define ST_AMMO1Y               (ST_Y+11)
 
 #define ST_AMMO2WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO2X               (ST_X+220)
+#define ST_AMMO2X               (ST_X+ST_AMMOTABLEXOFF)
 #define ST_AMMO2Y               (ST_Y+17)
 
 #define ST_AMMO3WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO3X               (ST_X+220)
+#define ST_AMMO3X               (ST_X+ST_AMMOTABLEXOFF)
 #define ST_AMMO3Y               (ST_Y+23)
 
 
@@ -282,22 +306,22 @@ static int16_t      st_randomnumber;
 // Only needed because backpack exists.
 #define ST_MAXAMMO0WIDTH        3
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO0X            (ST_X+238)
+#define ST_MAXAMMO0X            (ST_X+ST_MAXAMMOTABLEXOFF)
 #define ST_MAXAMMO0Y            (ST_Y+5)
 
 #define ST_MAXAMMO1WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO1X            (ST_X+238)
+#define ST_MAXAMMO1X            (ST_X+ST_MAXAMMOTABLEXOFF)
 #define ST_MAXAMMO1Y            (ST_Y+11)
 
 #define ST_MAXAMMO2WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO2X            (ST_X+238)
+#define ST_MAXAMMO2X            (ST_X+ST_MAXAMMOTABLEXOFF)
 #define ST_MAXAMMO2Y            (ST_Y+17)
 
 #define ST_MAXAMMO3WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO3X            (ST_X+238)
+#define ST_MAXAMMO3X            (ST_X+ST_MAXAMMOTABLEXOFF)
 #define ST_MAXAMMO3Y            (ST_Y+23)
 
 

@@ -138,7 +138,7 @@ static void R_MapPlane(uint16_t y, uint16_t x1, uint16_t x2, draw_span_vars_t *d
 
 static void R_MakeSpans(int16_t x, uint16_t t1, uint16_t b1, uint16_t t2, uint16_t b2, draw_span_vars_t *dsvars)
 {
-    static byte spanstart[VIEW_WINDOW_HEIGHT];
+    static viewx_t spanstart[VIEW_WINDOW_HEIGHT];
 
     for (; t1 < t2 && t1 <= b1; t1++)
         R_MapPlane(t1, spanstart[t1], x, dsvars);

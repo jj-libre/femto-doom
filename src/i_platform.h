@@ -44,11 +44,20 @@
 
 
 //
-// The screen, in palette indices
+// The screen, in palette indices: 240 x 160, or 320 x 200 with SCREEN_WIDTH=320
 //
 
-#define SCREEN_WIDTH  240u
+#if !defined SCREEN_WIDTH
+#define SCREEN_WIDTH  240
+#endif
+
+#if SCREEN_WIDTH == 240
 #define SCREEN_HEIGHT 160
+#elif SCREEN_WIDTH == 320
+#define SCREEN_HEIGHT 200
+#else
+#error unsupported SCREEN_WIDTH value
+#endif
 
 // I_GetTime counts tics, this many per second.
 #define TIC_RATE          35

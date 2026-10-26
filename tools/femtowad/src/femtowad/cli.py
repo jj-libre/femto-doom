@@ -1,14 +1,15 @@
 """femto-doom's data tool.
 
-`wads` builds GRAPHICS.WAD and MAPS.WAD from a Doom IWAD. The maps keep the
-IWAD's own nodes. The layout follows jWadUtil by Frenkel Smeijers, which made the WADs of
-Doom64KB, the engine femto-doom grew from.
+`wads` builds GRAPHICS.WAD and MAPS.WAD from a Doom IWAD, for the engine's screen width. The
+maps keep the IWAD's own nodes. The layout follows jWadUtil by Frenkel Smeijers, which made the
+WADs of Doom64KB, the engine femto-doom grew from.
 
 `generate` writes the engine's generated sources: info.c and info.h from info.py, the one
 source of thing types, their states and sprites, which `wads` uses too, and r_view.c and
 r_view.h, the view tables of every supported view width.
 
-usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir> [--texture-shift N] [--high-detail]
+usage: uv run --project tools/femtowad femtowad wads <doom1.wad> <out-dir>
+           [--screen-width 240|320] [--texture-shift N] [--high-detail]
        uv run --project tools/femtowad femtowad generate [--check]
 """
 
@@ -19,7 +20,7 @@ import struct
 import sys
 from pathlib import Path
 
-from .art import generate_art
+from .art import SCREENS, generate_art
 from .graphics import build_graphics, texture_names
 from .info import WAD_VERSION
 from .maps import build_maps
@@ -34,11 +35,12 @@ def find_engine() -> Path | None:
 
 def wads(args: argparse.Namespace) -> None:
     iwad = Wad.read(args.iwad)
-    graphics = build_graphics(iwad, generate_art(iwad), args.texture_shift, args.high_detail)
+    art = generate_art(iwad, args.screen_width)
+    graphics = build_graphics(iwad, art, args.texture_shift, args.high_detail)
     maps = build_maps(iwad, texture_names(iwad))
     args.out.mkdir(parents=True, exist_ok=True)
     for name, wad in (("GRAPHICS.WAD", graphics), ("MAPS.WAD", maps)):
-        wad["FEMTOWAD"] = struct.pack("<H", WAD_VERSION)
+        wad["FEMTOWAD"] = struct.pack("<HH", WAD_VERSION, args.screen_width)
         data = wad.to_bytes()
         (args.out / name).write_bytes(data)
         print(f"{args.out / name}: {len(data)} B, {len(wad)} lumps")
@@ -58,6 +60,9 @@ def main() -> None:
     wads_parser = commands.add_parser("wads", help="build the WAD pair from an IWAD")
     wads_parser.add_argument("iwad", type=Path, help="Doom IWAD, such as the shareware doom1.wad")
     wads_parser.add_argument("out", type=Path, help="directory for GRAPHICS.WAD and MAPS.WAD")
+    wads_parser.add_argument(
+        "--screen-width", type=int, choices=sorted(SCREENS), default=240, help="the engine's SCREEN_WIDTH"
+    )
     wads_parser.add_argument("--texture-shift", type=int, default=0, help="the engine's TEXTURE_SHIFT")
     wads_parser.add_argument("--high-detail", action="store_true", help="the engine is built with HIGH_DETAIL")
     wads_parser.set_defaults(run=wads)

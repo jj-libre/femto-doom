@@ -1753,7 +1753,7 @@ static boolean R_CheckOpenings(const int16_t start)
 static void R_ClearOpeningClippingDetermination(void)
 {
 	// opening / clipping determination
-	for (uint8_t i = 0; i < VIEW_WINDOW_WIDTH; i++)
+	for (viewx_t i = 0; i < VIEW_WINDOW_WIDTH; i++)
 		floorclip[i] = VIEW_WINDOW_HEIGHT, ceilingclip[i] = -1;
 }
 
@@ -2410,8 +2410,8 @@ static boolean R_CheckBBox(const int16_t* bspcoord)
     //  that touches the source post
     //  (adjacent pixels are touching).
 
-    uint8_t sx1 = viewangletox((angle16_t)(angle1 + ANG90_16) >> ANGLETOFINESHIFT_16);
-    uint8_t sx2 = viewangletox((angle16_t)(angle2 + ANG90_16) >> ANGLETOFINESHIFT_16);
+    viewx_t sx1 = viewangletox((angle16_t)(angle1 + ANG90_16) >> ANGLETOFINESHIFT_16);
+    viewx_t sx2 = viewangletox((angle16_t)(angle2 + ANG90_16) >> ANGLETOFINESHIFT_16);
     //    const cliprange_t *start;
 
     // Does not cross a pixel.
