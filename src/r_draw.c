@@ -1714,7 +1714,7 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
 static boolean R_CheckOpenings(const int16_t start)
 {
     int16_t pos = lastopening - openings;
-    int16_t need = (rw_stopx - start)*sizeof(height_t) + pos;
+    int16_t need = 2 * (rw_stopx - start) + pos;
 
 #ifdef RANGECHECK
     if(need > MAX_OPENINGS)
