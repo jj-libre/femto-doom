@@ -1,13 +1,14 @@
 # Platform interface
 
 femto-doom is the engine only. A platform builds it, hands it the two WADs, feeds it time and
-input, and draws the engine's output. The whole contract is [`src/i_platform.h`](../src/i_platform.h).
+input, and draws the engine's output. The whole contract is [`src/i_platform.h`](../src/i_platform.h);
+[`examples/host`](../examples/host/host.c) implements all of it without a screen.
 
 ## Building
 
 Add `src/` to the include path and compile every `.c` in it, with the options in
 [build.md](build.md). C11 with GNU extensions; enums must be `int`-sized (`-fno-short-enums` on
-compilers that shorten them). The engine calls `memcpy`, `memset`, `memcmp`, `memchr`, `strcpy`,
+compilers that shorten them); pointers must be 4 bytes. The engine calls `memcpy`, `memset`, `memcmp`, `memchr`, `strcpy`,
 `strncpy`, `strlen`, `strcasecmp` and `sprintf` from the C library.
 
 ## Running

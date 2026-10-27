@@ -37,7 +37,16 @@ femto-doom ships no game data. `tools/femtowad` builds its two WADs from Doom's 
 uv run --project tools/femtowad femtowad wads doom1.wad out/
 ```
 
-Then compile `src/` together with your platform layer:
+Then compile `src/` together with your platform layer. `examples/host` is one without a screen; it
+prints frame hashes and saves screenshots:
+
+```bash
+make -C examples/host
+examples/host/host out/GRAPHICS.WAD out/MAPS.WAD -shot 500 shot.ppm
+make -C examples/host check WADS=$PWD/out
+```
+
+Documentation:
 
 - [docs/platform.md](docs/platform.md): building the engine, platform interface
 - [docs/build.md](docs/build.md): build options
