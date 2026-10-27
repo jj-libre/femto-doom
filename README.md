@@ -12,6 +12,11 @@ runs Doom in 64 KB of RAM with the game data in ROM. femto-doom goes further: E1
 femto-doom is only the engine, a C library behind a single header. The platform provides game
 data, time and input, and draws the engine's output.
 
+<p>
+<img src="docs/img/fireball.png" width="49%" alt="Imps and a fireball, 240 x 160">
+<img src="docs/img/sergeant.png" width="49%" alt="A sergeant, 240 x 160">
+</p>
+
 ## Features
 
 - Shareware episode: all nine maps, all monsters
