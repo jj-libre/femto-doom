@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  DOOM1_WAD: /usr/share/games/doom/doom1.wad
+  DOOM1_SHA256: 1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771
+
+jobs:
+  femtowad:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tools/femtowad
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run mypy src tests
+      - run: uv run pytest
+
+  host:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    env:
+      CC: ${{ matrix.cc }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: sudo apt-get update && sudo apt-get install -y doom-wad-shareware gcc-multilib
+      - run: echo "$DOOM1_SHA256  $DOOM1_WAD" | sha256sum -c
+      - run: |
+          uv run --project tools/femtowad femtowad wads "$DOOM1_WAD" wads/240x160
+          uv run --project tools/femtowad femtowad wads "$DOOM1_WAD" wads/320x200 --screen 320x200
+      - name: 240 x 160
+        run: make -B -C examples/host check WADS=$PWD/wads/240x160
+      - name: 240 x 160, 4-byte pointers
+        run: make -B -C examples/host check CC="$CC -m32" WADS=$PWD/wads/240x160
+      - name: 240 x 160, W_FETCH and ST_PARTIAL_REFRESH
+        run: make -B -C examples/host check DEFINES="W_FETCH ST_PARTIAL_REFRESH" WADS=$PWD/wads/240x160
+      - name: 320 x 200
+        run: |
+          make -B -C examples/host SCREEN_WIDTH=320 SCREEN_HEIGHT=200 VIEW_WINDOW_HEIGHT=168
+          examples/host/host wads/320x200/GRAPHICS.WAD wads/320x200/MAPS.WAD -frames 1320 | tee out.txt
+          grep -q "hash 6ed21c8d6898b633$" out.txt
+      - name: Small view, low memory
+        run: |
+          make -B -C examples/host VIEW_WINDOW_WIDTH=80 VIEW_WINDOW_HEIGHT=58 \
+            DEFINES="MAX_DRAWSEGS=64 MAX_OPENINGS=512 MAX_INTERCEPTS=32 NO_LOOKUP_TABLE SMALL_TRIG SPRITE_SHIFT=2"
+          examples/host/host wads/240x160/GRAPHICS.WAD wads/240x160/MAPS.WAD -demo -frames 3000 | tee out.txt
+          grep -q "hash 1f8b3f516218ed75$" out.txt
+
+  cross-compile:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        defines:
+          - ""
+          - "-DVIEW_WINDOW_WIDTH=80 -DVIEW_WINDOW_HEIGHT=58 -DNO_LOOKUP_TABLE -DSMALL_TRIG -DW_FETCH -DST_PARTIAL_REFRESH -DNO_DEMOS"
+    steps:
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
+      - run: |
+          for f in src/*.c; do
+            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums -DFLAT_SPAN \
+              ${{ matrix.defines }} -Isrc -c "$f" -o /dev/null || exit 1
+          done
