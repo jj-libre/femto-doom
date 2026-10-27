@@ -80,7 +80,7 @@ typedef struct thinker_s
 
 } thinker_t;
 
-typedef char assertThinkerSize[sizeof(thinker_t) == 12 ? 1 : -1];
+typedef char assertThinkerSize[sizeof(void*) != 4 || sizeof(thinker_t) == 12 ? 1 : -1];
 
 
 #endif

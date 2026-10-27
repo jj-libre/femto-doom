@@ -50,7 +50,7 @@ typedef struct bmalpool_s {
 	uint32_t               used;
 } bmalpool_t;
 
-typedef char assertBmalpoolSize[sizeof(bmalpool_t) == 8 ? 1 : -1];
+typedef char assertBmalpoolSize[sizeof(void*) != 4 || sizeof(bmalpool_t) == 8 ? 1 : -1];
 
 
 inline static void* getelem(bmalpool_t* p, size_t size, size_t n)

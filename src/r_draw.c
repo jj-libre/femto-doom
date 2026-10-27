@@ -309,7 +309,6 @@ static uint32_t mulu(uint16_t a, uint16_t b) {
 }
 
 
-inline
 fixed_t CONSTFUNC FixedMul(fixed_t a, fixed_t b)
 {
 	// Is the result a negative number?
@@ -383,7 +382,6 @@ inline static fixed_t CONSTFUNC FixedMul3232(fixed_t a, fixed_t b)
 // FixedMulAngle
 // b should be coming from finesine() or finecosine(), so its high word is either 0x0000 or 0xffff
 //
-inline
 fixed_t CONSTFUNC FixedMulAngle(fixed_t a, fixed_t b)
 {
 	// Is the result a negative number?
@@ -412,7 +410,6 @@ fixed_t CONSTFUNC FixedMulAngle(fixed_t a, fixed_t b)
 }
 
 
-inline
 fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 {
 	boolean neg = a < 0;
@@ -435,7 +432,6 @@ fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 
 
 //Approx fixed point divide of a/b using reciprocal. -> a * (1/b).
-inline
 fixed_t CONSTFUNC FixedApproxDiv(fixed_t a, fixed_t b)
 {
 	if (b <= 0xffffu)

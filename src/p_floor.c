@@ -395,7 +395,7 @@ typedef struct
   int8_t direction;
 } floormove_t;
 
-typedef char assertFloormoveSize[sizeof(floormove_t) == 28 ? 1 : -1];
+typedef char assertFloormoveSize[sizeof(void*) != 4 || sizeof(floormove_t) == 28 ? 1 : -1];
 
 
 static void T_MoveFloor(floormove_t* floor)

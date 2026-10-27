@@ -68,7 +68,7 @@ typedef struct
   int8_t count;
 } lightflash_t;
 
-typedef char assertLightflashSize[sizeof(lightflash_t) == 24 ? 1 : -1];
+typedef char assertLightflashSize[sizeof(void*) != 4 || sizeof(lightflash_t) == 24 ? 1 : -1];
 
 
 static void T_LightFlash (lightflash_t* flash)
@@ -108,7 +108,7 @@ typedef struct
   int8_t darktime;
 } strobe_t;
 
-typedef char assertStrobeSize[sizeof(strobe_t) == 24 ? 1 : -1];
+typedef char assertStrobeSize[sizeof(void*) != 4 || sizeof(strobe_t) == 24 ? 1 : -1];
 
 
 static void T_StrobeFlash (strobe_t*   flash)
@@ -146,7 +146,7 @@ typedef struct
   int8_t direction;
 } glow_t;
 
-typedef char assertGlowSize[sizeof(glow_t) == 24 ? 1 : -1];
+typedef char assertGlowSize[sizeof(void*) != 4 || sizeof(glow_t) == 24 ? 1 : -1];
 
 
 static void T_Glow(glow_t* g)

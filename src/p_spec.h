@@ -197,7 +197,7 @@ typedef struct
   plattype_e type;
 } plat_t;
 
-typedef char assertPlatSize[sizeof(plat_t) == 40 ? 1 : -1];
+typedef char assertPlatSize[sizeof(void*) != 4 || sizeof(plat_t) == 40 ? 1 : -1];
 
 
 // p_ceilng
@@ -225,7 +225,7 @@ typedef struct
   int8_t lighttag;
 } vldoor_t;
 
-typedef char assertVldoorSize[sizeof(vldoor_t) == 36 ? 1 : -1];
+typedef char assertVldoorSize[sizeof(void*) != 4 || sizeof(vldoor_t) == 36 ? 1 : -1];
 
 
 ////////////////////////////////////////////////////////////////

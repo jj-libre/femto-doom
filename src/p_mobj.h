@@ -237,7 +237,7 @@ typedef struct
     mobj_t              mo;
 } mobjext_t;
 
-typedef char assertMobjExtSize[sizeof(mobjext_t) == 100 ? 1 : -1];
+typedef char assertMobjExtSize[sizeof(void*) != 4 || sizeof(mobjext_t) == 100 ? 1 : -1];
 
 static inline mobj_t* P_Mobj(zref_t ref)
 {

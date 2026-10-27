@@ -175,10 +175,6 @@
 /* Define to `int' if <sys/types.h> doesn't define. */
 /* #undef gid_t */
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
-#define inline __inline__
-
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
