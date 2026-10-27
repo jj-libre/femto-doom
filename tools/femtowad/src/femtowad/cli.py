@@ -64,7 +64,9 @@ def main() -> None:
     wads_parser.add_argument(
         "--screen", type=Screen.parse, default=Screen(240, 160), help="the engine's SCREEN_WIDTH x SCREEN_HEIGHT"
     )
-    wads_parser.add_argument("--texture-shift", type=int, default=0, help="the engine's TEXTURE_SHIFT")
+    wads_parser.add_argument(
+        "--texture-shift", type=int, default=0, choices=range(8), help="the engine's TEXTURE_SHIFT"
+    )
     wads_parser.add_argument("--high-detail", action="store_true", help="the engine is built with HIGH_DETAIL")
     wads_parser.set_defaults(run=wads)
 
