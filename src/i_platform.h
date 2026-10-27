@@ -91,8 +91,7 @@ typedef struct
     int16_t		height;
     int16_t		leftoffset;	// pixels to the left of origin
     int16_t		topoffset;	// pixels below the origin
-    int32_t		columnofs[8];	// only [width] used, upper word is always zero
-    // the [0] is &columnofs[width]
+    int32_t		columnofs[];	// width offsets from the patch, upper word always zero
 } patch_t;
 
 // A post is a run of opaque pixels in a column.
@@ -105,7 +104,10 @@ typedef struct
 // A column is a list of 0 or more posts, (byte)-1 terminated.
 typedef post_t	column_t;
 
-// One column of the 3D view to draw.
+// One column of the 3D view to draw: rows yl to yh at x. Row y shows texel
+// source[frac >> (9 + shift)] through colormap, with the 16-bit
+// frac = (texturemid >> 7) + (y - CENTER_Y) * fracstep, shift being TEXTURE_SHIFT for
+// walls and SPRITE_SHIFT for sprites.
 typedef struct {
   int16_t              x;
   int16_t              yl;
@@ -130,7 +132,7 @@ extern const uint8_t *fullcolormap;
 // The platform calls these
 //
 
-// The graphics WAD and the map WAD, as the platform maps them.
+// The graphics WAD and the map WAD, as the platform maps them, both 4-byte aligned.
 void W_SetWads(const uint8_t* iwad, const uint8_t* maps);
 
 // Sets the game up and returns; the platform then calls D_DoomStep for every frame.
@@ -146,10 +148,12 @@ void D_PostEvent(event_t* ev);
 // The platform provides these
 //
 
-// Memory for the zone allocator.
+// Memory for the zone allocator, aligned like malloc's, its size in *heapSize; at most
+// 128 KiB of it is used.
 uint8_t* I_ZoneBase(uint32_t *heapSize);
 
 void I_InitTimer(void);
+// Tics since I_InitTimer.
 int32_t I_GetTime(void);
 
 // Input: called before each tic is processed; posts what happened with D_PostEvent.
@@ -196,6 +200,8 @@ void R_DrawColumnFlat(uint8_t color, const draw_column_vars_t *dcvars);
 void V_ClearViewWindow(void);
 
 // Pictures on the screen: Scaled in Doom's 320 x 200 coordinates, NotScaled in the screen's pixels.
+// The top left corner is at x - leftoffset, y - topoffset; a picture may reach past the
+// screen's edges.
 void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t* patch);
 void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch);
 // The screen tiled with a 64 x 64 picture.

@@ -7,9 +7,9 @@ input, and draws the engine's output. The whole contract is [`src/i_platform.h`]
 ## Building
 
 Add `src/` to the include path and compile every `.c` in it, with the options in
-[build.md](build.md). C11 with GNU extensions; enums must be `int`-sized (`-fno-short-enums` on
+[build.md](build.md). C11 with GNU extensions, little-endian; enums must be `int`-sized (`-fno-short-enums` on
 compilers that shorten them). The engine calls `memcpy`, `memset`, `memcmp`, `memchr`, `strcpy`,
-`strncpy`, `strlen`, `strcmp` and `sprintf` from the C library.
+`strncpy`, `strlen`, `strcmp`, `sprintf`, `abs` and `toupper` from the C library.
 
 ## Running
 

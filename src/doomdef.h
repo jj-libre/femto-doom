@@ -68,6 +68,10 @@
 #define VIEW_WINDOW_HEIGHT 128
 #endif
 
+#if VIEW_WINDOW_WIDTH > SCREEN_WIDTH || VIEW_WINDOW_HEIGHT + ST_HEIGHT > SCREEN_HEIGHT
+#error the 3D view and the status bar must fit on the screen
+#endif
+
 
 #define SCREEN_WIDTH_VGA  320
 #define SCREEN_HEIGHT_VGA 200
