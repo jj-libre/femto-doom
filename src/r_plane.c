@@ -193,7 +193,7 @@ static void R_DoDrawPlane(visplane_t* pl)
 
 void R_DrawPlanes (void)
 {
-    static const fixed_t iprojection = (1L << FRACBITS) / (VIEW_WINDOW_WIDTH / 2);
+    static const fixed_t iprojection = (1 << FRACBITS) / (VIEW_WINDOW_WIDTH / 2);
 
     basexscale = FixedMul(viewsin,iprojection);
     baseyscale = FixedMul(viewcos,iprojection);

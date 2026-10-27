@@ -785,7 +785,7 @@ static void ST_doPartialRefresh(void)
 
 	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
 		if (ST_changed(i))
-			dirty |= 1UL << i;
+			dirty |= 1U << i;
 
 	boolean grown;
 	do
@@ -793,14 +793,14 @@ static void ST_doPartialRefresh(void)
 		grown = false;
 		for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
 		{
-			if (dirty & (1UL << i))
+			if (dirty & (1U << i))
 				continue;
 
 			for (int8_t j = 0; j < ST_NUMWIDGETS; j++)
 			{
-				if ((dirty & (1UL << j)) && ST_overlap(&st_rects[i], &st_rects[j]))
+				if ((dirty & (1U << j)) && ST_overlap(&st_rects[i], &st_rects[j]))
 				{
-					dirty |= 1UL << i;
+					dirty |= 1U << i;
 					grown = true;
 					break;
 				}
@@ -811,14 +811,14 @@ static void ST_doPartialRefresh(void)
 	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
 	{
 		const st_rect_t* r = &st_rects[i];
-		if ((dirty & (1UL << i)) && r->x0 < r->x1)
+		if ((dirty & (1U << i)) && r->x0 < r->x1)
 			V_DrawRawRect((const uint8_t*)W_GetLumpByNum(statusbarnum) + ((uint32_t)(r->y0 - ST_Y(0)) * SCREEN_WIDTH + r->x0),
 				r->x0, r->y0, r->x1 - r->x0, r->y1 - r->y0);
 	}
 
 	for (int8_t i = 0; i < ST_NUMWIDGETS; i++)
 	{
-		if (!(dirty & (1UL << i)))
+		if (!(dirty & (1U << i)))
 			continue;
 
 		if (i < ST_FIRSTICON)

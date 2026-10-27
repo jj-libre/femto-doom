@@ -36,6 +36,7 @@
  *-----------------------------------------------------------------------------*/
 
 #include <stddef.h>
+#include <inttypes.h>
 #include <stdint.h>
 
 #ifdef HAVE_CONFIG_H
@@ -293,7 +294,7 @@ void P_NextValidCount(void)
 static const int16_t CENTERX = VIEW_WINDOW_WIDTH  / 2;
        const int16_t CENTER_Y = VIEW_WINDOW_HEIGHT / 2;
 
-static const fixed_t PROJECTION = (VIEW_WINDOW_WIDTH / 2L) << FRACBITS;
+static const fixed_t PROJECTION = (VIEW_WINDOW_WIDTH / 2) << FRACBITS;
 
 static const fixed_t  PSPRITESCALE  = FRACUNIT * VIEW_WINDOW_WIDTH / SCREEN_WIDTH_VGA;
 static const fixed_t  PSPRITEISCALE = FRACUNIT * SCREEN_WIDTH_VGA / VIEW_WINDOW_WIDTH; // = FixedReciprocal(PSPRITESCALE)
@@ -1133,7 +1134,7 @@ static void R_DrawSprite (const vissprite_t* spr)
 //
 
 #define BASEXCENTER (SCREEN_WIDTH_VGA  / 2)
-#define BASEYCENTER (SCREEN_HEIGHT_VGA / 2L)
+#define BASEYCENTER (SCREEN_HEIGHT_VGA / 2)
 
 static void R_DrawPSprite (pspdef_t *psp, int16_t lightlevel)
 {
@@ -1739,7 +1740,7 @@ static boolean R_CheckOpenings(const int16_t start)
 
 #ifdef RANGECHECK
     if(need > MAX_OPENINGS)
-        I_Error("Openings overflow. Need = %ld", need);
+        I_Error("Openings overflow. Need = %d", need);
 #endif
 
     return need <= MAX_OPENINGS;

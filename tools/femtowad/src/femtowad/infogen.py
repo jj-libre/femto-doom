@@ -101,7 +101,7 @@ def info_h() -> str:
         if comment:
             flag_lines.append(f"// {comment}")
         name = f"MF_{flag.name}"
-        flag_lines.append(f"#define {name:<15} 0x{flag.value:08X}UL")
+        flag_lines.append(f"#define {name:<15} 0x{flag.value:08X}U")
     parts = [
         LICENCE,
         "#ifndef __INFO__\n#define __INFO__\n",

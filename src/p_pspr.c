@@ -757,9 +757,9 @@ static void P_BulletSlope(mobj_t* mo)
 
 	bulletslope = P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT);
 	if (!_g_linetarget)
-		bulletslope = P_AimLineAttack(mo, an += 1L << 26, 16 * 64 * FRACUNIT);
+		bulletslope = P_AimLineAttack(mo, an += 1 << 26, 16 * 64 * FRACUNIT);
 	if (!_g_linetarget)
-		bulletslope = P_AimLineAttack(mo, an -= 2L << 26, 16 * 64 * FRACUNIT);
+		bulletslope = P_AimLineAttack(mo, an -= 2 << 26, 16 * 64 * FRACUNIT);
 }
 
 

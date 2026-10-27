@@ -75,14 +75,14 @@ static musicenum_t mus_playing;
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-#define S_CLIPPING_DIST (1200L<<FRACBITS)
+#define S_CLIPPING_DIST (1200<<FRACBITS)
 
 // Distance tp origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
 // (see BLOCKMAP handling).
 // Originally: (200*0x10000).
 
-#define S_CLOSE_DIST (160L<<FRACBITS)
+#define S_CLOSE_DIST (160<<FRACBITS)
 #define S_ATTENUATOR ((S_CLIPPING_DIST-S_CLOSE_DIST)>>FRACBITS)
 
 // Adjustable by menu.

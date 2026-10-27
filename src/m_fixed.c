@@ -53,7 +53,7 @@ fixed_t CONSTFUNC FixedReciprocal(fixed_t v)
 
 
 #if !defined __GNUC__
-static int __builtin_clzl(uint32_t v)
+static int __builtin_clz(uint32_t v)
 {
 	const int bits = sizeof(v) * CHAR_BIT;
 	
@@ -68,7 +68,7 @@ static int __builtin_clzl(uint32_t v)
 
 uint16_t CONSTFUNC FixedReciprocalBig(fixed_t v)
 {
-	int s = 31 - __builtin_clzl(v) - 15;
+	int s = 31 - __builtin_clz(v) - 15;
 	return RECIPROCAL16((uint32_t)v >> s) >> s;
 }
 

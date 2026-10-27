@@ -1333,7 +1333,7 @@ void P_SpawnPlayerMissile(mobj_t* source)
 
 	slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT);
 	if (!_g_linetarget)
-		slope = P_AimLineAttack(source, an += 1L << 26, 16 * 64 * FRACUNIT);
+		slope = P_AimLineAttack(source, an += 1 << 26, 16 * 64 * FRACUNIT);
 	if (!_g_linetarget)
 		slope = P_AimLineAttack(source, an -= 2l << 26, 16 * 64 * FRACUNIT);
 	if (!_g_linetarget)

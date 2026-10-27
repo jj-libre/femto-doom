@@ -37,6 +37,7 @@
  *-----------------------------------------------------------------------------
  */
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -1089,8 +1090,8 @@ void G_CheckDemoStatus (void)
         int32_t endtime = I_GetTime();
         // killough -- added fps information and made it work for longer demos:
         uint32_t realtics = endtime - starttime;
-        uint32_t resultfps = TIC_RATE * 1000L * _g_gametic / realtics;
-        I_Error ("Timed %lu gametics in %lu realtics = %lu.%.3lu frames per second",
+        uint32_t resultfps = TIC_RATE * 1000 * _g_gametic / realtics;
+        I_Error ("Timed %" PRIu32 " gametics in %" PRIu32 " realtics = %" PRIu32 ".%.3" PRIu32 " frames per second",
                  (uint32_t) _g_gametic,realtics,
                  resultfps / 1000, resultfps % 1000);
     }

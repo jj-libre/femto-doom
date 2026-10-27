@@ -45,7 +45,7 @@
  */
 
 #define FRACBITS 16
-#define FRACUNIT (1L<<FRACBITS)
+#define FRACUNIT (1<<FRACBITS)
 
 
 typedef int32_t fixed_t;
@@ -55,7 +55,7 @@ typedef int32_t fixed_t;
  *
  */
 
-#define D_abs labs
+#define D_abs abs
 
 
 /*

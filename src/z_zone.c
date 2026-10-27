@@ -23,6 +23,7 @@
 //-----------------------------------------------------------------------------
 
 #include <stdlib.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include "z_zone.h"
 #include "doomdef.h"
@@ -113,7 +114,7 @@ zref_t Z_Ref(const void* ptr)
 
 	uint32_t offset = (const uint8_t*)ptr - _g_zonebase;
 	if (offset == 0 || offset > ZREF_SPAN || (offset & ((1 << ZREF_SHIFT) - 1)) != 0)
-		I_Error("Z_Ref: 0x%lx is not a zone address", offset);
+		I_Error("Z_Ref: 0x%" PRIx32 " is not a zone address", offset);
 
 	return offset >> ZREF_SHIFT;
 }
@@ -154,7 +155,7 @@ void Z_Init (void)
 	block->id   = ZONEID;
 #endif
 
-	I_Printf("%ld bytes allocated for zone\n", (uint32_t)block->size * ZONE_UNIT);
+	I_Printf("%" PRIu32 " bytes allocated for zone\n", (uint32_t)block->size * ZONE_UNIT);
 }
 
 
@@ -171,7 +172,7 @@ static void Z_FreeBlock(memblock_t* block)
 
 #if defined INSTRUMENTED
     running_count -= block->size * ZONE_UNIT;
-    I_Printf("Free: %ld\n", running_count);
+    I_Printf("Free: %" PRId32 "\n", running_count);
 #endif
 
     memblock_t* other = indexToPointer(block->prev);
@@ -327,7 +328,7 @@ static void* Z_TryMalloc(uint16_t size, int8_t tag)
 
 #if defined INSTRUMENTED
     running_count += base->size * ZONE_UNIT;
-    I_Printf("Alloc: %ld (%ld)\n", base->size * ZONE_UNIT, running_count);
+    I_Printf("Alloc: %" PRId32 " (%" PRId32 ")\n", (int32_t)(base->size * ZONE_UNIT), running_count);
 #endif
 
     return indexToPointer(pointerToIndex(base) + HEADER_UNITS);
@@ -337,7 +338,7 @@ static void* Z_TryMalloc(uint16_t size, int8_t tag)
 static void* Z_Malloc(uint16_t size, int8_t tag) {
 	void* ptr = Z_TryMalloc(size, tag);
 	if (!ptr)
-		I_Error ("Z_Malloc: failed to allocate %u B, max free block %li B, total free %li", size, Z_GetLargestFreeBlockSize(), Z_GetTotalFreeMemory());
+		I_Error ("Z_Malloc: failed to allocate %u B, max free block %" PRIu32 " B, total free %" PRIu32, size, Z_GetLargestFreeBlockSize(), Z_GetTotalFreeMemory());
 	return ptr;
 }
 

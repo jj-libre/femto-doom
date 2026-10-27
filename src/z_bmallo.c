@@ -72,7 +72,7 @@ inline static PUREFUNC int16_t iselem(const bmalpool_t* pool, size_t size, const
 
 
 #if !defined __GNUC__
-static size_t __builtin_ctzl(uint32_t v)
+static size_t __builtin_ctz(uint32_t v)
 {
 	int c = 0; 
 
@@ -94,8 +94,8 @@ void* Z_BMalloc(struct block_memory_alloc_s *pzone)
 		if ((*pool)->used == 0xffffffff) {
 			pool = &((*pool)->nextpool);
 		} else {
-			size_t n = __builtin_ctzl(~(*pool)->used);
-			(*pool)->used |= (1UL << n);
+			size_t n = __builtin_ctz(~(*pool)->used);
+			(*pool)->used |= (1U << n);
 			return getelem(*pool, pzone->size, n);
 		}
 	}
@@ -120,7 +120,7 @@ void Z_BFree(struct block_memory_alloc_s *pzone, void* p)
 	while (*pool != NULL) {
 		int16_t n = iselem(*pool, pzone->size, p);
 		if (n >= 0) {
-			(*pool)->used &= ~(1UL << n);
+			(*pool)->used &= ~(1U << n);
 			if ((*pool)->used == 0) {
 				// Block is all unused, can be freed
 				bmalpool_t* oldpool = *pool;

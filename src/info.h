@@ -558,48 +558,48 @@ typedef struct
 extern const mobjinfo_t mobjinfo[NUMMOBJTYPES];
 
 // Call P_SpecialThing when touched.
-#define MF_SPECIAL      0x00000001UL
+#define MF_SPECIAL      0x00000001U
 // Blocks.
-#define MF_SOLID        0x00000002UL
+#define MF_SOLID        0x00000002U
 // Can be hit.
-#define MF_SHOOTABLE    0x00000004UL
+#define MF_SHOOTABLE    0x00000004U
 // Don't use the sector links (invisible but touchable).
-#define MF_NOSECTOR     0x00000008UL
+#define MF_NOSECTOR     0x00000008U
 // Don't use the blocklinks (inert but displayable)
-#define MF_NOBLOCKMAP   0x00000010UL
+#define MF_NOBLOCKMAP   0x00000010U
 // Not to be activated by sound, deaf monster.
-#define MF_AMBUSH       0x00000020UL
+#define MF_AMBUSH       0x00000020U
 // Will try to attack right back.
-#define MF_JUSTHIT      0x00000040UL
+#define MF_JUSTHIT      0x00000040U
 // Will take at least one step before attacking.
-#define MF_JUSTATTACKED 0x00000080UL
+#define MF_JUSTATTACKED 0x00000080U
 // Don't apply gravity (every tic), that is, object will float, keeping current height or changing it actively.
-#define MF_NOGRAVITY    0x00000200UL
+#define MF_NOGRAVITY    0x00000200U
 // This allows jumps from high places.
-#define MF_DROPOFF      0x00000400UL
+#define MF_DROPOFF      0x00000400U
 // For players, will pick up items.
-#define MF_PICKUP       0x00000800UL
+#define MF_PICKUP       0x00000800U
 // Player cheat. ???
-#define MF_NOCLIP       0x00001000UL
+#define MF_NOCLIP       0x00001000U
 // Don't hit same species, explode on block. Player missiles as well as fireballs of various kinds.
-#define MF_MISSILE      0x00010000UL
+#define MF_MISSILE      0x00010000U
 // Dropped by a demon, not level spawned. E.g. ammo clips dropped by dying former humans.
-#define MF_DROPPED      0x00020000UL
+#define MF_DROPPED      0x00020000U
 // Use fuzzy draw (shadow demons or spectres), temporary player invisibility powerup.
-#define MF_SHADOW       0x00040000UL
+#define MF_SHADOW       0x00040000U
 // Don't bleed when shot (use puff), barrels and shootable furniture shall not bleed.
-#define MF_NOBLOOD      0x00080000UL
+#define MF_NOBLOOD      0x00080000U
 // Don't stop moving halfway off a step, that is, have dead bodies slide down all the way.
-#define MF_CORPSE       0x00100000UL
+#define MF_CORPSE       0x00100000U
 // On kill, count this enemy object towards intermission kill total. Happy gathering.
-#define MF_COUNTKILL    0x00400000UL
+#define MF_COUNTKILL    0x00400000U
 // On picking up, count this item object towards intermission item total.
-#define MF_COUNTITEM    0x00800000UL
-#define MF_POOLED       0x10000000UL
-#define MF_STATIC       0x20000000UL
-#define MF_REMOVED      0x40000000UL
+#define MF_COUNTITEM    0x00800000U
+#define MF_POOLED       0x10000000U
+#define MF_STATIC       0x20000000U
+#define MF_REMOVED      0x40000000U
 // Still linked where the map put it, through the load lists; sprev is its load index.
-#define MF_INPLACE      0x80000000UL
+#define MF_INPLACE      0x80000000U
 
 #define MAX_SPRITE_FRAMES 23
 
