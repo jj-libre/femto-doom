@@ -11,7 +11,6 @@ Defined on the compiler's command line; all are optional.
 | `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
 | `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |
 | `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |
-| `FLAT_SPAN` | off | floors and ceilings in one colour each; required with femtowad's WADs, which carry no flats |
 | `NUKAGE_COLOR` | 122 | colour of nukage floors |
 | `FLAT_WALL` | off | walls in one colour |
 

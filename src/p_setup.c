@@ -174,23 +174,7 @@ static void P_LoadSubsectors (int16_t lump)
 //
 
 // Sector definition, from editing.
-#if defined FLAT_SPAN
 #define P_SectorFlatNum(p) (p)
-#else
-typedef struct {
-  int16_t floorheight;
-  int16_t ceilingheight;
-  char  floorpic[8];
-  char  ceilingpic[8];
-  uint8_t lightlevel;
-  int8_t special;
-  int16_t tag;
-} mapsector_t;
-
-typedef char assertMapsectorSize[sizeof(mapsector_t) == 24 ? 1 : -1];
-
-#define P_SectorFlatNum(p) R_FlatNumForName(p)
-#endif
 
 
 uint8_t P_FlatByte(int16_t pic)
@@ -567,9 +551,6 @@ void P_SectorSoundOrg(const sector_t* sector, fixed_t* x, fixed_t* y)
 
 static void P_FreeLevelData()
 {
-#if !defined FLAT_SPAN
-    R_ResetPlanes();
-#endif
 
     Z_FreeTags();
 }

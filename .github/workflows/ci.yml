@@ -69,6 +69,6 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
       - run: |
           for f in src/*.c; do
-            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums -DFLAT_SPAN \
+            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums \
               ${{ matrix.defines }} -Isrc -c "$f" -o /dev/null || exit 1
           done

@@ -34,17 +34,11 @@
 #define COLEXTRABITS (8 - 1)
 
 
-#if defined FLAT_SPAN
 const int16_t skyflatnum = -2;
-#else
-int16_t skyflatnum;
-static int16_t skypatchnum;
-#endif
 
 static uint16_t skywidthmask;
 
 
-#if defined FLAT_SPAN
 static const patch_t* skypatch;
 
 
@@ -80,42 +74,6 @@ void R_DrawSky(draw_column_vars_t *dcvars)
 	R_DrawColumnWall(dcvars);
 }
 
-#else
-
-void R_DrawSky(visplane_t* pl)
-{
-	const patch_t* patch = W_GetLumpByNum(skypatchnum);
-
-	// Normal Doom sky, only one allowed per level
-	draw_column_vars_t dcvars;
-	dcvars.texturemid = (SCREEN_HEIGHT_VGA / 2) * FRACUNIT;    // Default y-offset
-
-	// Sky is always drawn full bright, i.e. colormaps[0] is used.
-	// Because of this hack, sky is not affected by INVUL inverse mapping.
-	// Until Boom fixed this.
-
-	if (!(dcvars.colormap = fixedcolormap))
-		dcvars.colormap = fullcolormap;
-
-	dcvars.fracstep = ((FRACUNIT * SCREEN_HEIGHT_VGA) / (VIEW_WINDOW_HEIGHT + 16)) >> COLEXTRABITS;
-
-	for (int16_t x = pl->minx; (dcvars.x = x) <= pl->maxx; x++)
-	{
-		if ((dcvars.yl = pl->top[x]) != -1 && dcvars.yl <= (dcvars.yh = pl->bottom[x])) // dropoff overflow
-		{
-			int16_t xc = viewangle >> FRACBITS;
-			xc += xtoviewangleTable[x];
-			xc >>= ANGLETOSKYSHIFT - FRACBITS;
-			xc &= skywidthmask;
-
-			const column_t* column = (const column_t*) ((const byte*)patch + W_FetchInt32(&patch->columnofs[xc]));
-
-			dcvars.source = (const byte*)column + 3;
-			R_DrawColumn(&dcvars);
-		}
-	}
-}
-#endif
 
 
 // Set the sky map.
@@ -126,15 +84,5 @@ void R_InitSky(void)
 	W_Fetch(R_GetTexture(skytexture), &tex, sizeof(tex));
 	skywidthmask = tex.widthmask;
 
-#if defined FLAT_SPAN
 	skypatch = W_GetLumpByNum(tex.patches[0].patch_num);
-#else
-	skypatchnum  = tex.patches[0].patch_num;
-
-	// First thing, we have a dummy sky texture name,
-	//  a flat. The data is in the WAD only because
-	//  we look for an actual index, instead of simply
-	//  setting one.
-	skyflatnum = R_FlatNumForName("F_SKY1");
-#endif
 }

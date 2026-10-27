@@ -118,15 +118,6 @@ typedef struct {
   const uint8_t* colormap;
 } draw_column_vars_t;
 
-#if !defined FLAT_SPAN
-// One row of a textured floor or ceiling to draw.
-typedef struct {
-  uint32_t             position;
-  uint32_t             step;
-  const byte   * source; // start of a 64*64 tile image
-  const uint8_t* colormap;
-} draw_span_vars_t;
-#endif
 
 // The row of the 3D view the horizon is on.
 extern const int16_t CENTER_Y;
@@ -202,9 +193,6 @@ void R_DrawColumnWall(const draw_column_vars_t *dcvars);
 void R_DrawColumnSprite(const draw_column_vars_t *dcvars);
 void R_DrawFuzzColumn(const draw_column_vars_t *dcvars);
 void R_DrawColumnFlat(uint8_t color, const draw_column_vars_t *dcvars);
-#if !defined FLAT_SPAN
-void R_DrawSpan(uint16_t y, uint16_t x1, uint16_t x2, const draw_span_vars_t *dsvars);
-#endif
 void V_ClearViewWindow(void);
 
 // Pictures on the screen: Scaled in Doom's 320 x 200 coordinates, NotScaled in the screen's pixels.

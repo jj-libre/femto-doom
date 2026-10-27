@@ -45,10 +45,6 @@
 extern int16_t numnodes;
 extern const mapnode_t* nodes;
 
-#if !defined FLAT_SPAN
-extern fixed_t  viewx, viewy, viewz;
-extern fixed_t  viewcos, viewsin;
-#endif
 
 extern angle_t viewangle;
 
@@ -87,12 +83,8 @@ void R_ClearPlanes(void);
 
 int16_t R_GetTextureTranslation(int16_t texture);
 
-#if defined FLAT_SPAN
 void R_LoadSkyPatch(void);
 void R_FreeSkyPatch(void);
 void R_DrawSky(draw_column_vars_t *dcvars);
-#else
-void R_DrawSky(visplane_t* pl);
-#endif
 
 #endif

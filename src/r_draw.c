@@ -186,13 +186,8 @@ static height_t* R_Clip(int16_t c)
 int16_t numnodes;
 const mapnode_t* nodes;
 
-#if defined FLAT_SPAN
 static fixed_t  viewx, viewy, viewz;
 static fixed_t  viewcos, viewsin;
-#else
-fixed_t  viewx, viewy, viewz;
-fixed_t  viewcos, viewsin;
-#endif
 
 angle_t  viewangle;
 static angle16_t viewangle16;
@@ -206,13 +201,8 @@ static sector_t * frontsector;
 static sector_t * backsector;
 static drawseg_t *ds_p;
 
-#if defined FLAT_SPAN
 static int16_t floorplane_color;
 static int16_t ceilingplane_color;
-#else
-static visplane_t* floorplane;
-static visplane_t* ceilingplane;
-#endif
 
 static angle16_t             rw_angle1;
 
@@ -1580,18 +1570,12 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
 
             if (top <= bottom)
             {
-#if defined FLAT_SPAN
                 dcvars.yl = top;
                 dcvars.yh = bottom;
                 if (ceilingplane_color == -2)
                     R_DrawSky(&dcvars);
                 else
                     R_DrawColumnFlat(ceilingplane_color, &dcvars);
-#else
-                ceilingplane->top[rw_x] = top;
-                ceilingplane->bottom[rw_x] = bottom;
-                ceilingplane->modified = true;
-#endif
             }
             // SoM: this should be set here
             cc_rwx = bottom;
@@ -1608,15 +1592,9 @@ static void R_RenderSegLoop(int16_t rw_x, boolean segtextured, boolean markfloor
 
             if (++top <= bottom)
             {
-#if defined FLAT_SPAN
                 dcvars.yl = top;
                 dcvars.yh = bottom;
                 R_DrawColumnFlat(floorplane_color, &dcvars);
-#else
-                floorplane->top[rw_x] = top;
-                floorplane->bottom[rw_x] = bottom;
-                floorplane->modified = true;
-#endif
             }
             // SoM: This should be set here to prevent overdraw
             fc_rwx = top;
@@ -2016,37 +1994,14 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     // render it
     if (markceiling)
     {
-#if defined FLAT_SPAN
         if (ceilingplane_color == -1)
             markceiling = false;
-#else
-        if (ceilingplane)   // killough 4/11/98: add NULL ptr checks
-            ceilingplane = R_CheckPlane (ceilingplane, rw_x, rw_stopx-1);
-        else
-            markceiling = false;
-#endif
     }
 
     if (markfloor)
     {
-#if defined FLAT_SPAN
         if (floorplane_color == -1)
             markfloor = false;
-#else
-        if (floorplane)     // killough 4/11/98: add NULL ptr checks
-            /* cph 2003/04/18  - ceilingplane and floorplane might be the same
-       * visplane (e.g. if both skies); R_CheckPlane doesn't know about
-       * modifications to the plane that might happen in parallel with the check
-       * being made, so we have to override it and split them anyway if that is
-       * a possibility, otherwise the floor marking would overwrite the ceiling
-       * marking, resulting in HOM. */
-            if (markceiling && ceilingplane == floorplane)
-                floorplane = R_DupPlane (floorplane, rw_x, rw_stopx-1);
-            else
-                floorplane = R_CheckPlane (floorplane, rw_x, rw_stopx-1);
-        else
-            markfloor = false;
-#endif
     }
 
     didsolidcol = false;
@@ -2296,27 +2251,12 @@ static void R_Subsector(int16_t num)
     count = mapsub.numsegs;
     line = &_g_segs[mapsub.firstseg];
 
-#if defined FLAT_SPAN
     if (SEC_FLOORHEIGHT(frontsector) < viewz)
         floorplane_color = R_GetPlaneColor(SEC_FLOORPIC(frontsector), frontsector->lightlevel);
     else
         floorplane_color = -1;
-#else
-    if(SEC_FLOORHEIGHT(frontsector) < viewz)
-    {
-        floorplane = R_FindPlane(SEC_FLOORHEIGHT(frontsector),
-                                     SEC_FLOORPIC(frontsector),
-                                     frontsector->lightlevel                // killough 3/16/98
-                                     );
-    }
-    else
-    {
-        floorplane = NULL;
-    }
-#endif
 
 
-#if defined FLAT_SPAN
     if (SEC_CEILINGSKY(frontsector)) {
         ceilingplane_color = -2;
         R_LoadSkyPatch();
@@ -2324,19 +2264,6 @@ static void R_Subsector(int16_t num)
         ceilingplane_color = R_GetPlaneColor(SEC_CEILINGPIC(frontsector), frontsector->lightlevel);
     else
         ceilingplane_color = -1;
-#else
-    if(SEC_CEILINGHEIGHT(frontsector) > viewz || (SEC_CEILINGSKY(frontsector)))
-    {
-        ceilingplane = R_FindPlane(SEC_CEILINGHEIGHT(frontsector),     // killough 3/8/98
-                                       SEC_CEILINGPIC(frontsector),
-                                       frontsector->lightlevel
-                                       );
-    }
-    else
-    {
-        ceilingplane = NULL;
-    }
-#endif
 
     R_AddSprites(num, frontsector->lightlevel);
     while (count--)
@@ -2543,9 +2470,6 @@ void R_RenderPlayerView (player_t* player)
     R_ClearDrawSegs ();
     R_ClearOpeningClippingDetermination ();
 
-#if !defined FLAT_SPAN
-    R_ClearPlanes ();
-#endif
 
     R_ClearOpenings ();
     R_ClearSprites ();
@@ -2553,11 +2477,7 @@ void R_RenderPlayerView (player_t* player)
     // The head node is the last node output.
     R_RenderBSPNode (numnodes-1);
 
-#if defined FLAT_SPAN
     R_FreeSkyPatch ();
-#else
-    R_DrawPlanes ();
-#endif
 
     R_DrawMasked ();
 }

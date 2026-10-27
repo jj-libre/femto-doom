@@ -103,7 +103,7 @@ typedef struct
   int8_t special;
 } sector_t;
 
-// A flat in a byte: 0xFD and up are the negative FLAT_SPAN flats (sky, nukage).
+// A flat in a byte: 0xFD and up are the negative flats (sky, nukage).
 static inline int16_t SEC_FLAT(uint8_t p)
 {
   return p >= 0xFD ? p - 0x100 : p;

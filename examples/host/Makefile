@@ -11,7 +11,7 @@ CFLAGS ?= -O2
 ENGINE := $(wildcard ../../src/*.c)
 
 host: host.c $(ENGINE) $(wildcard ../../src/*.h)
-	$(CC) -std=gnu11 -fno-short-enums $(CFLAGS) -I../../src -DFLAT_SPAN \
+	$(CC) -std=gnu11 -fno-short-enums $(CFLAGS) -I../../src \
 		-DSCREEN_WIDTH=$(SCREEN_WIDTH) -DSCREEN_HEIGHT=$(SCREEN_HEIGHT) \
 		-DVIEW_WINDOW_WIDTH=$(VIEW_WINDOW_WIDTH) -DVIEW_WINDOW_HEIGHT=$(VIEW_WINDOW_HEIGHT) \
 		$(addprefix -D,$(DEFINES)) -o $@ host.c $(ENGINE)
