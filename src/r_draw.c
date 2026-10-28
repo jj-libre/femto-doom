@@ -140,11 +140,7 @@ static viewx_t viewangletox(int16_t va)
 
 static const angle_t tantoangleTable[2049];
 
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]);
-#else
 static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]) + 1;
-#endif
 
 #define tantoangle(t) tantoangleTable[t]
 #define tantoangle16(t) tantoangle16Table[(t)*2]
@@ -1753,7 +1749,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     angle16_t offsetangle = rw_normalangle - rw_angle1;
 
-    if (D_abs((int32_t)((angle_t)offsetangle << FRACBITS)) > ANG90)
+    if (offsetangle > ANG90_16 && offsetangle < ANG270_16)
         offsetangle = ANG90_16;
 
     int16_t hyp = R_PointToDist(curseg.v1.x, curseg.v1.y);
