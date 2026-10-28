@@ -35,8 +35,8 @@
 #define COLEXTRABITS 7
 #define COLBITS      9
 
-#define VGA_WIDTH    320
-#define VGA_HEIGHT   200
+#define DOOM_WIDTH   320
+#define DOOM_HEIGHT  200
 
 #define QUEUE        8
 
@@ -372,10 +372,10 @@ void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t* patch)
 }
 
 
-#define DX  ((SCREEN_WIDTH << FRACBITS) / VGA_WIDTH)
-#define DXI ((uint16_t)(((VGA_WIDTH << FRACBITS) / SCREEN_WIDTH) >> 8))
-#define DY  (((SCREEN_HEIGHT << FRACBITS) + (1 << FRACBITS) - 1) / VGA_HEIGHT)
-#define DYI ((uint16_t)(((VGA_HEIGHT << FRACBITS) / SCREEN_HEIGHT) >> 8))
+#define DX  ((SCREEN_WIDTH << FRACBITS) / DOOM_WIDTH)
+#define DXI ((uint16_t)(((DOOM_WIDTH << FRACBITS) / SCREEN_WIDTH) >> 8))
+#define DY  (((SCREEN_HEIGHT << FRACBITS) + (1 << FRACBITS) - 1) / DOOM_HEIGHT)
+#define DYI ((uint16_t)(((DOOM_HEIGHT << FRACBITS) / SCREEN_HEIGHT) >> 8))
 
 
 void V_DrawPatchScaled(int16_t x0, int16_t y0, const patch_t* patch)

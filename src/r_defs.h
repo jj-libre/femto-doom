@@ -230,7 +230,7 @@ typedef enum
 
 // What play and rendering change about a line: a bit per line in each plane of
 // _g_linebits. LB_DONE says LB_CLOSED and LB_IGNORE are this tic's; at load every line
-// is done with neither, as an r_validcount of 0 was. LB_CHECKED is a line's validcount
+// is done with neither. LB_CHECKED is a line's validcount
 // matching, so each step of validcount clears it.
 enum
 {

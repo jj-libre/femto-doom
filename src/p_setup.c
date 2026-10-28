@@ -530,7 +530,7 @@ static void P_GroupLines (int16_t map)
 }
 
 
-// What P_GroupLines computed for every sector, now only for one making a sound.
+// A sector's sound origin, the centre of its lines' bounding box.
 void P_SectorSoundOrg(const sector_t* sector, fixed_t* x, fixed_t* y)
 {
     fixed_t bbox[4];

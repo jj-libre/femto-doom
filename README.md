@@ -1,16 +1,16 @@
 # femto-doom
 
-Doom was released by id Software in 1993 for DOS PCs with 4 MB of RAM. Its source code was
-published in 1997 and put under the GPL in 1999. Since then Doom has been ported to almost
-anything with a screen, but nearly always with megabytes of RAM, the game data loaded into it and
-a frame buffer.
+Doom was released by id Software in 1993 for DOS PCs, requiring at least 4 MB of RAM. Its source
+code was published in 1997 and put under the GPL in 1999. Since then Doom has been ported to
+almost anything with a screen, most ports loading the game data into RAM and drawing into a frame
+buffer.
 
 femto-doom is based on [Doom64KB](https://github.com/FrenkelS/Doom64KB) by Frenkel Smeijers, which
 runs Doom in 64 KB of RAM with the game data in ROM. femto-doom goes further: E1M1 runs in about
 16 KB of RAM, with all game data read in place from read-only memory.
 
-femto-doom is only the engine, a C library behind a single header. The platform provides game
-data, time and input, and draws the engine's output.
+femto-doom is a pure Doom engine, without any platform code. The platform hands it the game data,
+time and input, and draws what it outputs; [i_platform.h](src/i_platform.h) is the whole interface.
 
 <p>
 <img src="docs/img/fireball.png" width="49%" alt="Imps and a fireball, 240 x 160">
@@ -20,42 +20,43 @@ data, time and input, and draws the engine's output.
 ## Features
 
 - Shareware episode: all nine maps, all monsters
-- A few KB of RAM: packed map data, sleeping monsters take no memory, decorations little, no recursion
-- Game data read in place, never loaded
-- WAD reads optionally through the platform, e.g. from external flash
-- No frame buffer: columns, rows and pictures go straight to the platform
-- Any screen size
-- 3D view up to 320 pixels wide
-- Detail traded for memory at build time: wall and sprite resolution, table sizes, partial status bar refresh
-- Rotating automap over the 3D view
-- Untextured floors and ceilings
-- No light diminishing
+- Little RAM: packed map data, compact things, sleeping monsters take almost none, no recursion
+- Game data read in place, never loaded; optionally through the platform, e.g. from external flash
+- No frame buffer: the 3D view column by column and pictures go straight to the platform
+- Any screen size, 3D view up to 320 pixels wide
+- Build options trade detail and speed for memory: wall and sprite resolution, lookup tables, per-frame limits
+- C11 with GNU extensions, no operating system needed
+- Automap over the 3D view, rotating with the player
+- Floors and ceilings in one colour, light per sector without darkening with distance
 - Sound effects as events, samples from the platform
-- No music, no saving, no multiplayer
+- No music, saving or multiplayer
 
 ## Getting started
 
-femto-doom ships no game data. `tools/femtowad` builds its two WADs from Doom's shareware IWAD,
-`doom1.wad`:
+femto-doom ships no game data. [femtowad](tools/femtowad) builds its two WADs from Doom's
+shareware `doom1.wad`:
 
 ```bash
-uv run --project tools/femtowad femtowad wads doom1.wad out/
+uv tool install ./tools/femtowad
+femtowad wads doom1.wad wads/
 ```
 
-Then compile `src/` together with your platform layer. `examples/host` is one without a screen; it
-prints frame hashes and saves screenshots:
+A platform compiles [src](src) together with its own code; see [platform.md](docs/platform.md).
+
+- [platform.md](docs/platform.md): building the engine and the platform interface
+- [build.md](docs/build.md): build options
+- [wad-format.md](docs/wad-format.md): the WADs and the tool that builds them
+
+## Example
+
+[host](examples/host) is a platform without a screen: it draws into memory, prints frame hashes
+and saves screenshots.
 
 ```bash
 make -C examples/host
-examples/host/host out/GRAPHICS.WAD out/MAPS.WAD -shot 500 shot.ppm
-make -C examples/host check WADS=$PWD/out
+examples/host/host wads/GRAPHICS.WAD wads/MAPS.WAD -shot 500 shot.ppm
+make -C examples/host check WADS=$PWD/wads
 ```
-
-Documentation:
-
-- [docs/platform.md](docs/platform.md): building the engine, platform interface
-- [docs/build.md](docs/build.md): build options
-- [docs/wad-format.md](docs/wad-format.md): the WADs and the tool that builds them
 
 ## Licence
 

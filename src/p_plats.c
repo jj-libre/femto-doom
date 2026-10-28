@@ -287,7 +287,7 @@ static void P_RemoveActivePlat(plat_t* plat)
   if (list->prev && (*list->prev = list->next))
     list->next->prev = list->prev;
 
-  // Every node used to name activeplats as its zone user, so freeing one cleared it.
+  // As in Doom64KB, removing any plat empties the list.
   Z_Free(list);
   activeplats = NULL;
 }
@@ -301,6 +301,6 @@ static void P_RemoveActivePlat(plat_t* plat)
 //
 void P_RemoveAllActivePlats(void)
 {
-  // The level's nodes went with its zone blocks.
+  // The nodes are freed with the level's zone blocks.
   activeplats = NULL;
 }
