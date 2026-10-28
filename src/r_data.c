@@ -129,7 +129,7 @@ texcols_t R_GetTexCols(int16_t texture)
 static int16_t R_GetTextureNumForName(const char* tex_name)
 {
     char name8[8];
-    strncpy(name8, tex_name, sizeof(name8));
+    Z_CopyName(name8, tex_name);
 
     const int32_t* maptex = W_GetLumpByName("TEXTURE1");
     const int32_t* directory = maptex+1;

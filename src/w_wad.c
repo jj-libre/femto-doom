@@ -114,7 +114,7 @@ uint16_t PUREFUNC W_MapLumpLength(int16_t num)
 int16_t PUREFUNC W_GetNumForName(const char *name)
 {
 	char name8[8];
-	strncpy(name8, name, sizeof(name8));
+	Z_CopyName(name8, name);
 
 	const wadinfo_t *header = (const wadinfo_t*)&doom_iwad[0];
 	const int16_t numlumps = W_FetchInt16(&header->numlumps);
@@ -135,7 +135,7 @@ int16_t PUREFUNC W_GetNumForName(const char *name)
 int16_t PUREFUNC W_GetMapNumForName(const char *name)
 {
 	char name8[8];
-	strncpy(name8, name, sizeof(name8));
+	Z_CopyName(name8, name);
 
 	const wadinfo_t *mapheader = (const wadinfo_t*)&doom_iwad_maps[0];
 	const filelump_t* mapfileinfo = W_MapFileInfo();

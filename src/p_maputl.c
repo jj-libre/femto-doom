@@ -94,7 +94,7 @@ static int16_t PUREFUNC P_PointOnLineCopySide(fixed_t x, fixed_t y, const line_t
     !line->dx ? x <= (fixed_t)line->v1.x<<FRACBITS ? line->dy > 0 : line->dy < 0 :
     !line->dy ? y <= (fixed_t)line->v1.y<<FRACBITS ? line->dx < 0 : line->dx > 0 :
     //FixedMul(y-((fixed_t)line->v1.y<<FRACBITS), line->dx>>FRACBITS) >= FixedMul(line->dy>>FRACBITS, x-((fixed_t)line->v1.x<<FRACBITS));
-    ((y - ((fixed_t)line->v1.y<<FRACBITS) >> 8)) * line->dx >= line->dy * ((x - ((fixed_t)line->v1.x<<FRACBITS)) >> 8);
+    ((y - ((fixed_t)line->v1.y<<FRACBITS)) >> 8) * line->dx >= line->dy * ((x - ((fixed_t)line->v1.x<<FRACBITS)) >> 8);
 }
 
 int16_t P_PointOnLineSide(fixed_t x, fixed_t y, const line_t* line)
@@ -376,7 +376,7 @@ static const mobj_t staticproxy = { .flags = MF_STATIC };
 void P_BeginLoadThings(int16_t map)
 {
   char name[9];
-  sprintf(name, "E1M%dTL", map);
+  sprintf(name, "E1M%cTL", '0' + map);
   tl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
   loadheader_t h;
@@ -556,7 +556,7 @@ static void P_StaticPhase(int16_t slot, mobj_t* mobj)
     }
   }
   mobj->state  = state;
-  mobj->tics   = tics < 0 ? -1 : tics - n;
+  mobj->tics   = tics < 0 ? -1 : (int16_t)(tics - n);
   mobj->frame  = states[state].frame;
   mobj->sprite = states[state].sprite;
 }

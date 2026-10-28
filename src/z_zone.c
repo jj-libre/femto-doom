@@ -106,6 +106,15 @@ boolean Z_EqualNames(const char* farName, const char* nearName)
 	return memcmp(farName, nearName, 8) == 0;
 }
 
+void Z_CopyName(char* name8, const char* name)
+{
+	int16_t i = 0;
+	for (; i < 8 && name[i]; i++)
+		name8[i] = name[i];
+	for (; i < 8; i++)
+		name8[i] = 0;
+}
+
 
 zref_t Z_Ref(const void* ptr)
 {

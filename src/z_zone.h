@@ -41,6 +41,7 @@ void Z_FreeTags(void);
 void Z_CheckHeap(void);
 
 boolean Z_EqualNames(const char* farName, const char* nearName);
+void Z_CopyName(char* name8, const char* name);
 
 // A zone address in units of 1 << ZREF_SHIFT bytes. 0 is NULL: the zone
 // starts with a block header, so no object lives at offset 0.

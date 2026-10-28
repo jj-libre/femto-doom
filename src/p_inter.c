@@ -254,6 +254,8 @@ boolean P_GivePower(player_t *player, powertype_t power)
         if (player->powers[pw_allmap])
           return false;
         break;
+      default:
+        break;
     }
 
   // Unless player has infinite duration cheat, set duration (killough)

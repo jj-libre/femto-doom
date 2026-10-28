@@ -93,7 +93,7 @@ static const char* const par = "WIPAR";
  */
 static void WI_levelNameLump(int16_t map, char* buf)
 {
-	sprintf(buf, "WILV0%d", map);
+	sprintf(buf, "WILV0%c", '0' + map);
 }
 
 

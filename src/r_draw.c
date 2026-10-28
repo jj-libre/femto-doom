@@ -391,7 +391,7 @@ fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 //Approx fixed point divide of a/b using reciprocal. -> a * (1/b).
 fixed_t CONSTFUNC FixedApproxDiv(fixed_t a, fixed_t b)
 {
-	if (b <= 0xffffu)
+	if ((uint32_t)b <= 0xffffu)
 		return FixedMul(a, FixedReciprocalSmall(b));
 	else
 		return FixedMul3216(a, FixedReciprocalBig(b));
@@ -1753,7 +1753,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
 
     angle16_t offsetangle = rw_normalangle - rw_angle1;
 
-    if (D_abs((angle_t)offsetangle << FRACBITS) > ANG90)
+    if (D_abs((int32_t)((angle_t)offsetangle << FRACBITS)) > ANG90)
         offsetangle = ANG90_16;
 
     int16_t hyp = R_PointToDist(curseg.v1.x, curseg.v1.y);

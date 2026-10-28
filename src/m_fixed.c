@@ -35,7 +35,7 @@
 
 fixed_t CONSTFUNC FixedReciprocal(fixed_t v)
 {
-	if (v <= 0xffffu)
+	if ((uint32_t)v <= 0xffffu)
 		return FixedReciprocalSmall(v);
 	else
 		return FixedReciprocalBig(v);

@@ -131,7 +131,7 @@ void F_Ticker(void)
     {
         int32_t speed = Get_TextSpeed();
         /* killough 2/28/98: changed to allow acceleration */
-        if (finalecount > strlen(E1TEXT)*speed/100 +
+        if (finalecount > (int32_t)strlen(E1TEXT)*speed/100 +
                 (midstage ? NEWTEXTWAIT : TEXTWAIT) ||
                 (midstage && _g_acceleratestage))
         {

@@ -92,7 +92,7 @@ static uint16_t PUREFUNC P_InterceptVector2(const divline_t *v2, const divline_t
 		return 0;
 
 	fixed_t r = (num << 4) / (den >> 12);
-	return (uint32_t)r <= 0xffffu ? r : 0xffffu;
+	return (uint32_t)r <= 0xffffu ? r : (fixed_t)0xffff;
 }
 
 
@@ -337,8 +337,7 @@ boolean P_CheckSight(mobj_t* t1, mobj_t* t2)
   else
     los.bbox[BOXTOP] = t2->y, los.bbox[BOXBOTTOM] = t1->y;
 
-
-    los.maxz = INT32_MAX; los.minz = INT32_MIN;
+  los.maxz = INT32_MAX; los.minz = INT32_MIN;
 
   // the head node is the last node output
   prevr = P_CrossBSPNode(numnodes-1);

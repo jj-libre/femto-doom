@@ -156,7 +156,7 @@ static st_number_t w_maxammo[4];
 static st_number_t  st_armor;
 
 // used for evil grin
-static boolean  oldweaponsowned[NUMWEAPONS];
+static int16_t  oldweaponsowned[NUMWEAPONS];
 
  // count until face changes
 static int16_t      st_facecount;
@@ -924,24 +924,24 @@ static void ST_loadData(void)
     // Load the numbers, tall and short
     for (i=0;i<10;i++)
     {
-		sprintf(namebuf, "STGANUM%d", i);
+		sprintf(namebuf, "STGANUM%c", '0' + i);
         tallnum[i] = W_GetNumForName(namebuf);
 
-        sprintf(namebuf, "STYSNUM%d", i);
+        sprintf(namebuf, "STYSNUM%c", '0' + i);
         shortnum[i] = W_GetNumForName(namebuf);
     }
 
     // key cards
     for (i=0;i<NUMCARDS;i++)
     {
-        sprintf(namebuf, "STKEYS%d", i);
+        sprintf(namebuf, "STKEYS%c", '0' + i);
         keys[i] = W_GetNumForName(namebuf);
     }
 
     // arms ownership widgets
     for (i=0;i<6;i++)
     {
-        sprintf(namebuf, "STGNUM%d", i+2);
+        sprintf(namebuf, "STGNUM%c", '0' + i + 2);
 
         // gray #
         arms[i][0] = W_GetNumForName(namebuf);
@@ -957,18 +957,18 @@ static void ST_loadData(void)
     {
         for (int8_t j=0;j<ST_NUMSTRAIGHTFACES;j++)
         {
-            sprintf(namebuf, "STFST%d%d", i, j);
+            sprintf(namebuf, "STFST%c%c", '0' + i, '0' + j);
             faces[facenum++] = W_GetNumForName(namebuf);
         }
-        sprintf(namebuf, "STFTR%d0", i);	// turn right
+        sprintf(namebuf, "STFTR%c0", '0' + i);	// turn right
         faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFTL%d0", i);	// turn left
+        sprintf(namebuf, "STFTL%c0", '0' + i);	// turn left
         faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFOUCH%d", i);	// ouch!
+        sprintf(namebuf, "STFOUCH%c", '0' + i);	// ouch!
         faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFEVL%d", i);	// evil grin ;)
+        sprintf(namebuf, "STFEVL%c", '0' + i);	// evil grin ;)
         faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFKILL%d", i);	// pissed off
+        sprintf(namebuf, "STFKILL%c", '0' + i);	// pissed off
         faces[facenum++] = W_GetNumForName(namebuf);
     }
     faces[facenum++] = W_GetNumForName("STFGOD0");

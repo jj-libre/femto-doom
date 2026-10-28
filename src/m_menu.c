@@ -268,7 +268,7 @@ static void M_NewGame(int16_t choice)
 static void M_VerifyNightmare(boolean affirmative)
 {
     if (affirmative)
-        G_DeferedInitNew(nightmare);
+        G_DeferedInitNew(sk_nightmare);
 }
 
 static void M_ChooseSkill(int16_t choice)

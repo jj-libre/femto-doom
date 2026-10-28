@@ -63,7 +63,7 @@ inline static PUREFUNC int16_t iselem(const bmalpool_t* pool, size_t size, const
 
 	dif -= sizeof(bmalpool_t);
 	dif /= size;
-	return dif >= CHAR_BIT * sizeof(uint32_t) ? -1 : dif;
+	return (uint32_t)dif >= CHAR_BIT * sizeof(uint32_t) ? -1 : dif;
 }
 
 

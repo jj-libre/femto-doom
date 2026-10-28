@@ -506,16 +506,10 @@ static void M_AddToBox(fixed_t* box,fixed_t x,fixed_t y)
 
 static void P_GroupLines (int16_t map)
 {
-    const line_t* li;
-    sector_t* sector;
-    int16_t i, total = _g_numlines;
-    int16_t j;
-
-
     // the lines of each sector, from the map WAD's E1MxGL
     {
         char name[9];
-        sprintf(name, "E1M%dGL", map);
+        sprintf(name, "E1M%cGL", '0' + map);
         const byte* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
         struct { uint16_t numsectors, numsubsectors; uint32_t first, lines, subsecsector; } h;
@@ -589,7 +583,7 @@ void P_SetupLevel(int16_t map)
     if (map == 6)
         map = 1;
 #endif
-    sprintf(lumpname, "E1M%d", map);   // killough 1/24/98: simplify
+    sprintf(lumpname, "E1M%c", '0' + map);   // killough 1/24/98: simplify
 
     lumpnum = W_GetMapNumForName(lumpname);
 

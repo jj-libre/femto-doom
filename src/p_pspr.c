@@ -171,6 +171,8 @@ weapontype_t P_SwitchWeapon(player_t *player)
         if (player->weaponowned[wp_chainsaw])
           newweapon = wp_chainsaw;
         break;
+      default:
+        break;
       }
   while (newweapon==currentweapon && --i);          // killough 5/2/98
   return newweapon;
@@ -227,6 +229,9 @@ static weapontype_t P_CheckCanSwitchWeapon(weapontype_t weapon, player_t* player
             return wp_chainsaw;
         }
         break;
+
+        default:
+            break;
     }
 
     return wp_nochange;
@@ -270,6 +275,8 @@ weapontype_t P_WeaponCycleUp(player_t *player)
 			{
 				w = wp_pistol;
 			}
+			break;
+			default:
 			break;
 		}
 
@@ -323,6 +330,8 @@ weapontype_t P_WeaponCycleDown(player_t *player)
 				w = wp_bfg;
 			}
 			break;
+			default:
+			break;
 		}
 
         if(!player->weaponowned[w])
@@ -373,7 +382,7 @@ boolean P_CheckAmmo(player_t *player)
 // spread from.
 //
 
-static boolean P_FloodSector(sector_t* sec, int16_t soundblocks, mobj_t* soundtarget)
+static boolean P_FloodSector(sector_t* sec, int16_t soundblocks)
 {
   // wake up all monsters in this sector
   const int16_t s = sec - _g_sectors;
@@ -398,7 +407,7 @@ static void P_RecursiveSound(sector_t* sec, mobj_t* soundtarget)
       I_Error("P_RecursiveSound: second sound target");
     _g_soundtarget = Z_Ref(soundtarget);
   }
-  boolean flooded = P_FloodSector(sec, 0, soundtarget);
+  boolean flooded = P_FloodSector(sec, 0);
   while (flooded)
   {
     flooded = false;
@@ -426,10 +435,10 @@ static void P_RecursiveSound(sector_t* sec, mobj_t* soundtarget)
           other=SIDE_SECTOR(LN_SIDENUM(check, SIDE_SECTOR(LN_SIDENUM(check, 0))==sec));
 
           if (!(LN_FLAGS(check) & ML_SOUNDBLOCK))
-            flooded |= P_FloodSector(other, soundblocks, soundtarget);
+            flooded |= P_FloodSector(other, soundblocks);
           else
             if (!soundblocks)
-              flooded |= P_FloodSector(other, 1, soundtarget);
+              flooded |= P_FloodSector(other, 1);
         }
     }
   }
@@ -715,7 +724,7 @@ void A_Saw(player_t *player, pspdef_t *psp)
 	angle = R_PointToAngle2(player->mo->x, player->mo->y, _g_linetarget->x, _g_linetarget->y);
 
 	if (angle - player->mo->angle > ANG180) {
-		if (angle - player->mo->angle < -ANG90/20)
+		if (angle - player->mo->angle < (angle_t)(-ANG90/20))
 			player->mo->angle = angle + ANG90/21;
 		else
 			player->mo->angle -= ANG90/20;
