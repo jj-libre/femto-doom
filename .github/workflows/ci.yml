@@ -31,9 +31,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cc: [gcc, clang]
+        include:
+          - cc: gcc
+          - cc: clang
+            warnings: -Wno-deprecated-non-prototype
     env:
       CC: ${{ matrix.cc }}
+      CFLAGS: -O2 -Wall -Wextra -Werror ${{ matrix.warnings }}
       WADS: ${{ github.workspace }}/wads/240x160
     steps:
       - uses: actions/checkout@v5
@@ -89,6 +93,6 @@ jobs:
       - name: Compile
         run: |
           for f in src/*.c; do
-            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums \
+            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums -Wall -Wextra -Werror \
               ${{ matrix.defines }} -Isrc -c "$f" -o /dev/null || exit 1
           done
