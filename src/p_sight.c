@@ -269,7 +269,7 @@ static uint32_t linearAddress(const void* ptr)
 
 // Which thing the last result was for. A map thing's mobj can change while it sleeps, so it is
 // known by its load index.
-static uint32_t P_SightKey(const mobj_t* t)
+static uint32_t P_SightKey(mobj_t* t)
 {
   if (!(t->flags & MF_STATIC) && P_Ext(t)->loadthing)
     return 0xffff0000U | (uint16_t)P_Ext(t)->loadthing;

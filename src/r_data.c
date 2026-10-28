@@ -105,7 +105,7 @@ static const byte* texcols;
 
 const texture_t* R_GetTexture(int16_t texture)
 {
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
     if (texture >= numtextures)
         I_Error("R_GetTexture: Texture %d not in range.", texture);
 #endif

@@ -122,7 +122,7 @@ static height_t* lastopening;
 
 static viewx_t viewangletox(int16_t va)
 {
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
 	if (va < 0)
 		I_Error("viewangletox: va < 0: %i", va);
 	else if (va >= 4096)
@@ -1286,7 +1286,7 @@ static vissprite_t *R_NewVisSprite(void)
 {
     if (num_vissprite >= MAXVISSPRITES)
     {
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
         I_Error("Vissprite overflow.");
 #endif
         return NULL;
@@ -1716,7 +1716,7 @@ static boolean R_CheckOpenings(const int16_t start)
     int16_t pos = lastopening - openings;
     int16_t need = 2 * (rw_stopx - start) + pos;
 
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
     if(need > MAX_OPENINGS)
         I_Error("Openings overflow. Need = %d", need);
 #endif
@@ -1769,7 +1769,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
     // don't overflow and crash
     if (ds_p == &_s_drawsegs[MAX_DRAWSEGS])
     {
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
         I_Error("Drawsegs overflow.");
 #endif
         return;

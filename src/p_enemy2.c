@@ -49,8 +49,8 @@ static boolean P_Move(mobj_t* actor)
   if (P_Ext(actor)->movedir == DI_NODIR)
     return false;
 
-#ifdef RANGECHECK
-  if (actor->movedir >= 8)
+#ifdef RANGE_CHECK
+  if (P_Ext(actor)->movedir >= 8)
     I_Error ("P_Move: Weird actor->movedir!");
 #endif
 

@@ -40,5 +40,5 @@ Defined on the compiler's command line; all are optional.
 
 ## Debugging
 
-`RANGECHECK` checks table indices, `INSTRUMENTED` logs zone use on every allocation, `DEBUG` checks zone block ids,
+`RANGE_CHECK` checks table indices, `INSTRUMENTED` logs zone use on every allocation, `DEBUG` checks zone block ids,
 `ONE_WALL_TEXTURE` draws every wall with one texture.

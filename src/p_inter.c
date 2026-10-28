@@ -95,7 +95,7 @@ static boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int16_t num)
   if (ammo == am_noammo)
     return false;
 
-#ifdef RANGECHECK
+#ifdef RANGE_CHECK
   if (ammo < 0 || ammo > NUMAMMO)
     I_Error ("P_GiveAmmo: bad type %i", ammo);
 #endif
