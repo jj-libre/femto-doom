@@ -60,9 +60,6 @@
 #include "globdata.h"
 
 
-#define DISABLE_SAVE_GAME
-#define DISABLE_SOUND_OPTIONS
-
 
 //
 // MENU TYPEDEFS
@@ -137,8 +134,6 @@ static const char skullName[2][9] = {"M_SKULL1","M_SKULL2"};
 //
 static void M_NewGame(int16_t choice);
 static void M_ChooseSkill(int16_t choice);
-static void M_LoadGame(int16_t choice);
-static void M_SaveGame(int16_t choice);
 static void M_Options(int16_t choice);
 static void M_EndGame(int16_t choice);
 static void M_QuitDOOM(int16_t choice);
@@ -147,20 +142,10 @@ static void M_QuitDOOM(int16_t choice);
 static void M_ChangeMessages(int16_t choice);
 static void M_ChangeAlwaysRun(int16_t choice);
 static void M_ChangeGamma(int16_t choice);
-static void M_SfxVol(int16_t choice);
-static void M_MusicVol(int16_t choice);
-static void M_Sound(int16_t choice);
-
-static void M_LoadSelect(int16_t choice);
-static void M_SaveSelect(int16_t choice);
-static void M_ReadSaveStrings(void);
 
 static void M_DrawMainMenu(void);
 static void M_DrawNewGame(void);
 static void M_DrawOptions(void);
-static void M_DrawSound(void);
-static void M_DrawLoad(void);
-static void M_DrawSave(void);
 
 static void M_SetupNextMenu(const menu_t *menudef);
 static void M_DrawThermo(int16_t x, int16_t y, int16_t thermWidth, int16_t thermDot);
@@ -189,10 +174,6 @@ enum
 {
   newgame = 0,
   options,
-#if !defined DISABLE_SAVE_GAME
-  loadgame,
-  savegame,
-#endif
   quitdoom,
   main_end
 };
@@ -208,10 +189,6 @@ static const menuitem_t MainMenu[]=
 {
   {1,"M_NGAME", M_NewGame},
   {1,"M_OPTION",M_Options},
-#if !defined DISABLE_SAVE_GAME
-  {1,"M_LOADG", M_LoadGame},
-  {1,"M_SAVEG", M_SaveGame},
-#endif
   {1,"M_QUITG", M_QuitDOOM}
 };
 
@@ -310,205 +287,6 @@ static void M_ChooseSkill(int16_t choice)
 
 /////////////////////////////
 //
-// LOAD GAME MENU
-//
-
-// numerical values for the Load Game slots
-
-enum
-{
-    load1,
-    load2,
-    load3,
-    load4,
-    load5,
-    load6,
-    load7,
-    load8,
-    load_end
-};
-
-// The definitions of the Load Game screen
-
-static const menuitem_t LoadMenue[]=
-{
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-    {1,"", M_LoadSelect},
-};
-
-static const menu_t LoadDef =
-{
-  load_end,
-  LoadMenue,
-  M_DrawLoad,
-  64,34, //jff 3/15/98 move menu up
-  &MainDef,2,
-};
-
-#define LOADGRAPHIC_Y 8
-
-//
-// M_LoadGame & Cie.
-//
-
-static void M_DrawSaveLoad(const char* name)
-{
-#if !defined DISABLE_SAVE_GAME
-	int8_t i, j;
-
-	V_DrawNamePatchScaled(72 ,LOADGRAPHIC_Y, name);
-
-	const patch_t* lpatch = W_GetLumpByName("M_LSLEFT");
-	const patch_t* mpatch = W_GetLumpByName("M_LSCNTR");
-	const patch_t* rpatch = W_GetLumpByName("M_LSRGHT");
-
-	for (i = 0; i < load_end; i++)
-	{
-		//
-		// Draw border for the savegame description
-		//
-		int16_t x = LoadDef.x;
-		const int16_t y = 27 + 13 * i + 7;
-		V_DrawPatchNotScaled(x - 8, y, lpatch);
-		for (j = 0; j < 12; j++)
-		{
-			V_DrawPatchNotScaled(x, y, mpatch);
-			x += 8;
-		}
-		V_DrawPatchNotScaled(x, y, rpatch);
-
-		M_WriteText(LoadDef.x, y - 7, _g_savegamestrings[i]);
-	}
-#endif
-}
-
-static void M_DrawLoad(void)
-{
-	M_DrawSaveLoad("M_LOADG");
-}
-
-
-//
-// User wants to load this game
-//
-
-static void M_LoadSelect(int16_t choice)
-{
-  // CPhipps - Modified so savegame filename is worked out only internal
-  //  to g_game.c, this only passes the slot.
-
-  G_LoadGame(choice); // killough 3/16/98: add slot
-
-  M_ClearMenus ();
-}
-
-//
-// Selected from DOOM menu
-//
-
-static void M_LoadGame (int16_t choice)
-{
-	UNUSED(choice);
-
-	/* killough 5/26/98: exclude during demo recordings
-	 * cph - unless a new demo */
-
-	M_SetupNextMenu(&LoadDef);
-	M_ReadSaveStrings();
-}
-
-/////////////////////////////
-//
-// SAVE GAME MENU
-//
-
-// The definitions of the Save Game screen
-
-static const menuitem_t SaveMenu[]=
-{
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect},
-  {1,"", M_SaveSelect}, //jff 3/15/98 extend number of slots
-  {1,"", M_SaveSelect},
-};
-
-static const menu_t SaveDef =
-{
-  load_end, // same number of slots as the Load Game screen
-  SaveMenu,
-  M_DrawSave,
-  80,34, //jff 3/15/98 move menu up
-  &MainDef,3,
-};
-
-//
-// M_ReadSaveStrings
-//  read the strings from the savegame files
-//
-static void M_ReadSaveStrings(void)
-{
-
-}
-
-//
-//  M_SaveGame & Cie.
-//
-static void M_DrawSave(void)
-{
-	M_DrawSaveLoad("M_SAVEG");
-}
-
-//
-// M_Responder calls this when user is finished
-//
-static void M_DoSave(int16_t slot)
-{
-  G_SaveGame (slot);
-  M_ClearMenus ();
-}
-
-//
-// User wants to save. Start string input for M_Responder
-//
-static void M_SaveSelect(int16_t choice)
-{
-    M_DoSave(choice);
-}
-
-//
-// Selected from DOOM menu
-//
-static void M_SaveGame (int16_t choice)
-{
-	UNUSED(choice);
-
-	// killough 10/6/98: allow savegames during single-player demo playback
-	if (!_g_usergame && (!_g_demoplayback))
-	{
-		M_StartMessage(SAVEDEAD, NULL);
-		return;
-	}
-
-	if (_g_gamestate != GS_LEVEL)
-		return;
-
-	M_SetupNextMenu(&SaveDef);
-	M_ReadSaveStrings();
-}
-
-
-/////////////////////////////
-//
 // QUIT DOOM
 //
 
@@ -539,9 +317,6 @@ enum
   messages,
   alwaysrun,
   gamma,
-#if !defined DISABLE_SOUND_OPTIONS
-  soundvol,
-#endif
   opt_end
 };
 
@@ -554,9 +329,6 @@ static const menuitem_t OptionsMenu[]=
   {1,"M_MESSG",  M_ChangeMessages},
   {1,"M_ARUN",   M_ChangeAlwaysRun},
   {2,"M_GAMMA",  M_ChangeGamma},
-#if !defined DISABLE_SOUND_OPTIONS
-  {1,"M_SVOL",   M_Sound}
-#endif
 };
 
 static const menu_t OptionsDef =
@@ -592,101 +364,6 @@ static void M_Options(int16_t choice)
 	UNUSED(choice);
 
 	M_SetupNextMenu(&OptionsDef);
-}
-
-/////////////////////////////
-//
-// SOUND VOLUME MENU
-//
-
-// numerical values for the Sound Volume menu items
-// The 'empty' slots are where the sliding scales appear.
-
-enum
-{
-  sfx_vol,
-  sfx_empty1,
-  music_vol,
-  sfx_empty2,
-  sound_end
-};
-
-// The definitions of the Sound Volume menu
-
-static const menuitem_t SoundMenu[]=
-{
-  {2,"M_SFXVOL",M_SfxVol},
-  {-1,"",0},
-  {2,"M_MUSVOL",M_MusicVol},
-  {-1,"",0}
-};
-
-static const menu_t SoundDef =
-{
-  sound_end,
-  SoundMenu,
-  M_DrawSound,
-  80,64,
-  &OptionsDef,4,
-};
-
-//
-// Change Sfx & Music volumes
-//
-
-static void M_DrawSound(void)
-{
-  // CPhipps - patch drawing updated
-  V_DrawNamePatchScaled(60, 38, "M_SVOL");
-
-  M_DrawThermo(SoundDef.x, SoundDef.y + LINEHEIGHT * (sfx_vol   + 1), 16, snd_SfxVolume);
-
-  M_DrawThermo(SoundDef.x, SoundDef.y + LINEHEIGHT * (music_vol + 1), 16, snd_MusicVolume);
-}
-
-static void M_Sound(int16_t choice)
-{
-	UNUSED(choice);
-
-	M_SetupNextMenu(&SoundDef);
-}
-
-static void M_SfxVol(int16_t choice)
-{
-  switch(choice)
-    {
-    case 0:
-      if (snd_SfxVolume)
-        snd_SfxVolume--;
-      break;
-    case 1:
-      if (snd_SfxVolume < 15)
-        snd_SfxVolume++;
-      break;
-    }
-
-  G_SaveSettings();
-
-  S_SetSfxVolume(snd_SfxVolume /* *8 */);
-}
-
-static void M_MusicVol(int16_t choice)
-{
-  switch(choice)
-    {
-    case 0:
-      if (snd_MusicVolume)
-        snd_MusicVolume--;
-      break;
-    case 1:
-      if (snd_MusicVolume < 15)
-        snd_MusicVolume++;
-      break;
-    }
-
-  G_SaveSettings();
-
-  S_SetMusicVolume(snd_MusicVolume /* *8 */);
 }
 
 /////////////////////////////
@@ -1245,7 +922,6 @@ void M_Init(void)
 
 	font_lump_offset = W_GetNumForName(HU_FONTSTART_LUMP) - HU_FONTSTART;
 
-	G_UpdateSaveGameStrings();
 }
 
 //

@@ -40,7 +40,6 @@
 /* m_menu.c */
 #define PRESSKEY    "Press a key."
 #define PRESSYN     "Press A or B."
-#define SAVEDEAD    "You can't save if\nyou aren't playing!\n\n"PRESSKEY
 
 #define NIGHTMARE \
   "Are you sure? This skill level\n"\

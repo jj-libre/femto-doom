@@ -98,12 +98,6 @@ static boolean gamekeydown[NUMKEYS];
 static skill_t d_skill;
 
 
-#define DISABLE_SAVE_GAME
-
-#if !defined DISABLE_SAVE_GAME
-char _g_savegamestrings[8][8];
-static byte  savegameslot;         // Slot to load if gameaction == ga_loadgame
-#endif
 
 
 static boolean secretexit;
@@ -154,25 +148,10 @@ static const int16_t angleturn[3]  = {640, 1280, 320};  // + slow turn
 static void G_DoReborn (void);
 static void G_DoCompleted(void);
 static void G_DoWorldDone(void);
-static void G_DoLoadGame(void);
-static void G_DoSaveGame (void);
 static void G_DoNewGame (void);
 static void G_DoPlayDemo(void);
 static void G_InitNew(skill_t skill, int16_t map);
 static void G_ReadDemoTiccmd (void);
-
-
-typedef struct save_data_t
-{
-    int32_t save_present;
-    skill_t gameskill;
-    int32_t gamemap;
-    int32_t totalleveltimes;
-
-    int32_t weaponowned[NUMWEAPONS];
-    int32_t ammo[NUMAMMO];
-    int32_t maxammo[NUMAMMO];
-} save_data_t;
 
 
 typedef struct save_settings_t
@@ -186,8 +165,6 @@ typedef struct save_settings_t
 } save_settings_t;
 
 static const uint32_t settings_cookie = 0xbaddead1;
-
-static const uint16_t settings_offset = sizeof(save_data_t) * 8;
 
 //
 // G_BuildTiccmd
@@ -406,12 +383,6 @@ void G_Ticker (void)
             break;
         case ga_newgame:
             G_DoNewGame ();
-            break;
-        case ga_loadgame:
-            G_DoLoadGame ();
-            break;
-        case ga_savegame:
-            G_DoSaveGame ();
             break;
         case ga_playdemo:
             G_DoPlayDemo ();
@@ -670,147 +641,19 @@ static void G_DoWorldDone (void)
 #define MIN_MAXPLAYERS 4
 
 
-inline static void LoadSaveData(byte* data, uint16_t size, uint16_t offset)
+inline static void LoadSaveData(byte* data, uint16_t size)
 {
 	UNUSED(data);
 	UNUSED(size);
-	UNUSED(offset);
 }
 
 
-//
-// Update the strings displayed in the load-save menu.
-//
-void G_UpdateSaveGameStrings(void)
-{
-#if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(save_data_t) * 8;
-
-
-    byte* loadbuffer = Z_MallocStatic(savebuffersize);
-
-    LoadSaveData(loadbuffer, savebuffersize, 0);
-
-    save_data_t* saveslots = (save_data_t*)loadbuffer;
-
-    for(int16_t i = 0; i < 8; i++)
-    {
-        if(saveslots[i].save_present != 1)
-        {
-            strcpy(_g_savegamestrings[i], "EMPTY");
-        }
-        else
-        {
-            strcpy(_g_savegamestrings[i], "E1My");
-
-            _g_savegamestrings[i][3] = '0' + saveslots[i].gamemap;
-        }
-    }
-
-    Z_Free(loadbuffer);
-#endif
-}
-
-// killough 3/16/98: add slot info
-void G_LoadGame(int16_t slot)
-{
-#if !defined DISABLE_SAVE_GAME
-    savegameslot = slot;
-    _g_demoplayback = false;
-
-    G_DoLoadGame();
-#endif
-}
-
-static void G_DoLoadGame(void)
-{
-#if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(save_data_t) * 8;
-
-
-    byte* loadbuffer = Z_MallocStatic(savebuffersize);
-
-    LoadSaveData(loadbuffer, savebuffersize, 0);
-
-    save_data_t* saveslots = (save_data_t*)loadbuffer;
-
-    save_data_t* savedata = &saveslots[savegameslot];
-
-    if(savedata->save_present != 1)
-        return;
-
-    _g_gameskill = savedata->gameskill;
-    _g_gamemap = savedata->gamemap;
-	
-    G_InitNew (_g_gameskill, _g_gamemap);
-
-    totalleveltimes = savedata->totalleveltimes;
-    memcpy(_g_player.weaponowned, savedata->weaponowned, sizeof(savedata->weaponowned));
-    memcpy(_g_player.ammo, savedata->ammo, sizeof(savedata->ammo));
-    memcpy(_g_player.maxammo, savedata->maxammo, sizeof(savedata->maxammo));
-	
-    //If stored maxammo is more than no backpack ammo, player had a backpack.
-    if(_g_player.maxammo[am_clip] > maxammo[am_clip])
-		_g_player.backpack = true;
-
-    Z_Free(loadbuffer);
-#endif
-}
-
-//
-// G_SaveGame
-// Called by the menu task.
-//
-
-void G_SaveGame(int16_t slot)
-{
-#if !defined DISABLE_SAVE_GAME
-    savegameslot = slot;
-    G_DoSaveGame();
-#endif
-}
-
-
-inline static void StoreSaveData(const byte* data, uint16_t size, uint16_t offset)
+inline static void StoreSaveData(const byte* data, uint16_t size)
 {
 	UNUSED(data);
 	UNUSED(size);
-	UNUSED(offset);
 }
 
-
-static void G_DoSaveGame(void)
-{
-#if !defined DISABLE_SAVE_GAME
-    uint16_t savebuffersize = sizeof(save_data_t) * 8;
-
-    byte* savebuffer = Z_MallocStatic(savebuffersize);
-
-    LoadSaveData(savebuffer, savebuffersize, 0);
-
-    save_data_t* saveslots = (save_data_t*)savebuffer;
-
-    save_data_t* savedata = &saveslots[savegameslot];
-
-    savedata->save_present = 1;
-
-    savedata->gameskill = _g_gameskill;
-    savedata->gamemap = _g_gamemap;
-    savedata->totalleveltimes = totalleveltimes;
-
-    memcpy(savedata->weaponowned, _g_player.weaponowned, sizeof(savedata->weaponowned));
-    memcpy(savedata->ammo, _g_player.ammo, sizeof(savedata->ammo));
-    memcpy(savedata->maxammo, _g_player.maxammo, sizeof(savedata->maxammo));
-
-    StoreSaveData(savebuffer, savebuffersize, 0);
-
-    Z_Free(savebuffer);
-
-    _g_player.message = GGSAVED;
-
-    G_UpdateSaveGameStrings();
-#endif
-}
 
 void G_SaveSettings()
 {
@@ -826,14 +669,14 @@ void G_SaveSettings()
     settings.musicVolume = snd_MusicVolume;
     settings.soundVolume = snd_SfxVolume;
 
-    StoreSaveData((byte*)&settings, sizeof(settings), settings_offset);
+    StoreSaveData((byte*)&settings, sizeof(settings));
 }
 
 void G_LoadSettings()
 {
     save_settings_t settings = {0};
 
-    LoadSaveData((byte*)&settings, sizeof(settings), settings_offset);
+    LoadSaveData((byte*)&settings, sizeof(settings));
 
     if(settings.cookie == settings_cookie)
     {
@@ -1015,9 +858,7 @@ static const byte* G_ReadDemoHeader(const byte* demo_p)
     demo_p += MIN_MAXPLAYERS - MAXPLAYERS;
 
 
-    if (_g_gameaction != ga_loadgame) { /* killough 12/98: support -loadgame */
-        G_InitNew(skill, map);
-    }
+    G_InitNew(skill, map);
 
     _g_player.cheats = 0;
 
