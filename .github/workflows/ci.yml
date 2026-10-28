@@ -61,7 +61,7 @@ jobs:
       - name: 80 x 58 view, small limits and tables
         run: |
           make -B -C examples/host VIEW_WINDOW_WIDTH=80 VIEW_WINDOW_HEIGHT=58 \
-            DEFINES="MAX_DRAWSEGS=64 MAX_OPENINGS=512 MAX_INTERCEPTS=32 NO_LOOKUP_TABLE SMALL_TRIG SPRITE_SHIFT=2"
+            DEFINES="MAX_DRAWSEGS=64 MAX_OPENINGS=512 MAX_INTERCEPTS=32 SMALL_TRIG SPRITE_SHIFT=2"
           examples/host/host "$WADS/GRAPHICS.WAD" "$WADS/MAPS.WAD" -demo -frames 3000 | tee out.txt
           grep -q "hash 1f8b3f516218ed75$" out.txt
 
@@ -76,7 +76,7 @@ jobs:
             defines: ""
           - name: small
             defines: >-
-              -DVIEW_WINDOW_WIDTH=80 -DVIEW_WINDOW_HEIGHT=58 -DNO_LOOKUP_TABLE -DSMALL_TRIG
+              -DVIEW_WINDOW_WIDTH=80 -DVIEW_WINDOW_HEIGHT=58 -DSMALL_TRIG
               -DW_FETCH -DST_PARTIAL_REFRESH -DNO_DEMOS
           - name: debug
             defines: -DRANGE_CHECK -DINSTRUMENTED -DDEBUG

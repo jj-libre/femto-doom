@@ -23,8 +23,7 @@ Defined on the compiler's command line; all are optional.
 | `MAX_INTERCEPTS` | 64 | lines and things one trace can cross |
 | `THING_POOL_RESERVE` | 0 | thing slots kept free at map load |
 | `MIN_FRAGMENT` | 16 | smallest free zone fragment split off a block |
-| `NO_LOOKUP_TABLE` | off | divide instead of using the 256 KB reciprocal table |
-| `RECIPROCAL_DIV(v)` | `0xffffffff / v` | the division used without the table |
+| `RECIPROCAL_DIV(v)` | `0xffffffff / v` | the division behind reciprocals, e.g. through a divider unit |
 | `SMALL_TRIG` | off | half-size tangent table |
 | `W_FETCH` | off | WAD reads go through the platform's `W_Fetch`, see [platform.md](platform.md) |
 
