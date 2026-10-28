@@ -335,36 +335,6 @@ fixed_t CONSTFUNC FixedMul(fixed_t a, fixed_t b)
 }
 
 
-inline static fixed_t CONSTFUNC FixedMul3232(fixed_t a, fixed_t b)
-{
-	// Is the result a negative number?
-	uint32_t neg = (a ^ b) < 0 ? 0xffff : 0;
-
-	uint16_t alw, ahw, blw, bhw;
-	uint32_t hh, hl, lh, ll;
-	int32_t result;
-
-	// Only work with unsigned numbers.
-	a = D_abs(a);
-	b = D_abs(b);
-	alw = a;
-	ahw = a >> FRACBITS;
-	blw = b;
-	bhw = b >> FRACBITS;
-
-	hh = mulu(ahw, bhw) << FRACBITS;
-	hl = mulu(ahw, blw);
-	lh = mulu(alw, bhw);
-
-	// Make sure we round towards -inf
-	ll = (mulu(alw, blw) + neg) >> FRACBITS;
-
-	result = hh + hl + lh + ll;
-	if (neg) result = -result;
-	return result;
-}
-
-
 //
 // FixedMulAngle
 // b should be coming from finesine() or finecosine(), so its high word is either 0x0000 or 0xffff
@@ -422,7 +392,7 @@ fixed_t CONSTFUNC FixedMul3216(fixed_t a, uint16_t blw)
 fixed_t CONSTFUNC FixedApproxDiv(fixed_t a, fixed_t b)
 {
 	if (b <= 0xffffu)
-		return FixedMul3232(a, FixedReciprocalSmall(b));
+		return FixedMul(a, FixedReciprocalSmall(b));
 	else
 		return FixedMul3216(a, FixedReciprocalBig(b));
 }
