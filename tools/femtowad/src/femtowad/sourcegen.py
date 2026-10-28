@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """The engine sources femtowad writes, and checking that they are current."""
 
 from __future__ import annotations

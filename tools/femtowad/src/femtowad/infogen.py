@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """info.c and info.h written from info.py."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """The header comment of every C file femtowad writes."""
 
 from __future__ import annotations

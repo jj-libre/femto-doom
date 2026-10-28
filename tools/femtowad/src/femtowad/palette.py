@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """Palette colours and nearest-colour search."""
 
 from __future__ import annotations

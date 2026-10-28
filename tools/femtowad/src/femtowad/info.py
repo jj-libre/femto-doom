@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """Thing types, their states and sprites: the one source of femto-doom's info.c and info.h.
 
 Edit this file, then write the C again with `uv run --project tools/femtowad femtowad generate`.

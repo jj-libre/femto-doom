@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """The graphics WAD: the IWAD's lumps the engine reads, in the layout it reads in place.
 
 Walls keep every 4th column and sprites every 2nd, and pictures store equal columns once.

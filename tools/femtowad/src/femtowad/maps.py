@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """The map WAD: each map in the layout the engine reads in place, vertexes folded into lines and
 segs, sides shared and numbered by byte, flats replaced by colours, blockmap lists shared, then
 the thing and geometry lists of every map."""

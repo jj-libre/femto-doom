@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """Doom pictures: column-major images made of posts, the format of patches and sprites."""
 
 from __future__ import annotations

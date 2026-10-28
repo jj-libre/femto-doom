@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 """r_view.c and r_view.h: the tangent table and, per supported view width, the tables that map
 view angles to screen columns and back, as Doom's R_InitTextureMapping computes them."""
 
