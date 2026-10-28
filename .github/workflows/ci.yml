@@ -17,10 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
-      - run: uv run ruff check
-      - run: uv run ruff format --check
-      - run: uv run mypy src tests
-      - run: uv run pytest
+      - name: Lint
+        run: uv run ruff check
+      - name: Format
+        run: uv run ruff format --check
+      - name: Types
+        run: uv run mypy src tests
+      - name: Tests
+        run: uv run pytest
 
   host:
     runs-on: ubuntu-24.04
@@ -30,44 +34,60 @@ jobs:
         cc: [gcc, clang]
     env:
       CC: ${{ matrix.cc }}
+      WADS: ${{ github.workspace }}/wads/240x160
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
-      - run: sudo apt-get update && sudo apt-get install -y doom-wad-shareware gcc-multilib
-      - run: echo "$DOOM1_SHA256  $DOOM1_WAD" | sha256sum -c
-      - run: |
+      - name: Install doom1.wad and gcc-multilib
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doom-wad-shareware gcc-multilib
+          echo "$DOOM1_SHA256  $DOOM1_WAD" | sha256sum -c
+      - name: Build the WADs
+        run: |
           uv run --project tools/femtowad femtowad wads "$DOOM1_WAD" wads/240x160
           uv run --project tools/femtowad femtowad wads "$DOOM1_WAD" wads/320x200 --screen 320x200
       - name: 240 x 160
-        run: make -B -C examples/host check WADS=$PWD/wads/240x160
+        run: make -B -C examples/host check
       - name: 240 x 160, 4-byte pointers
-        run: make -B -C examples/host check CC="$CC -m32" WADS=$PWD/wads/240x160
+        run: make -B -C examples/host check CC="$CC -m32"
       - name: 240 x 160, W_FETCH and ST_PARTIAL_REFRESH
-        run: make -B -C examples/host check DEFINES="W_FETCH ST_PARTIAL_REFRESH" WADS=$PWD/wads/240x160
+        run: make -B -C examples/host check DEFINES="W_FETCH ST_PARTIAL_REFRESH"
       - name: 320 x 200
         run: |
           make -B -C examples/host SCREEN_WIDTH=320 SCREEN_HEIGHT=200 VIEW_WINDOW_HEIGHT=168
           examples/host/host wads/320x200/GRAPHICS.WAD wads/320x200/MAPS.WAD -frames 1320 | tee out.txt
           grep -q "hash 6ed21c8d6898b633$" out.txt
-      - name: Small view, low memory
+      - name: 80 x 58 view, small limits and tables
         run: |
           make -B -C examples/host VIEW_WINDOW_WIDTH=80 VIEW_WINDOW_HEIGHT=58 \
             DEFINES="MAX_DRAWSEGS=64 MAX_OPENINGS=512 MAX_INTERCEPTS=32 NO_LOOKUP_TABLE SMALL_TRIG SPRITE_SHIFT=2"
-          examples/host/host wads/240x160/GRAPHICS.WAD wads/240x160/MAPS.WAD -demo -frames 3000 | tee out.txt
+          examples/host/host "$WADS/GRAPHICS.WAD" "$WADS/MAPS.WAD" -demo -frames 3000 | tee out.txt
           grep -q "hash 1f8b3f516218ed75$" out.txt
 
   cross-compile:
+    name: cross-compile (${{ matrix.name }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        defines:
-          - ""
-          - "-DVIEW_WINDOW_WIDTH=80 -DVIEW_WINDOW_HEIGHT=58 -DNO_LOOKUP_TABLE -DSMALL_TRIG -DW_FETCH -DST_PARTIAL_REFRESH -DNO_DEMOS"
+        include:
+          - name: defaults
+            defines: ""
+          - name: small
+            defines: >-
+              -DVIEW_WINDOW_WIDTH=80 -DVIEW_WINDOW_HEIGHT=58 -DNO_LOOKUP_TABLE -DSMALL_TRIG
+              -DW_FETCH -DST_PARTIAL_REFRESH -DNO_DEMOS
+          - name: debug
+            defines: -DRANGE_CHECK -DINSTRUMENTED -DDEBUG
     steps:
       - uses: actions/checkout@v5
-      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
-      - run: |
+      - name: Install arm-none-eabi-gcc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+      - name: Compile
+        run: |
           for f in src/*.c; do
             arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums \
               ${{ matrix.defines }} -Isrc -c "$f" -o /dev/null || exit 1
