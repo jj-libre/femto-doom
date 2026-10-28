@@ -25,7 +25,7 @@ time and input, and draws what it outputs; [i_platform.h](src/i_platform.h) is t
 - No frame buffer: the 3D view column by column and pictures go straight to the platform
 - Any screen size, 3D view up to 320 pixels wide
 - Build options trade detail and speed for memory: wall and sprite resolution, lookup tables, per-frame limits
-- C11 with GNU extensions, no operating system needed
+- Plain C11, no operating system needed
 - Automap over the 3D view, rotating with the player
 - Floors and ceilings in one colour, light per sector without darkening with distance
 - Sound effects as events, samples from the platform

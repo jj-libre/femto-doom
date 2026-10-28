@@ -220,4 +220,5 @@ void R_Init(void)
   R_InitSky();
   R_InitSpriteLumps();
   R_InitColormaps();
+  R_InitClipArrays();
 }

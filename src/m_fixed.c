@@ -42,9 +42,25 @@ fixed_t CONSTFUNC FixedReciprocal(fixed_t v)
 }
 
 
+static int LeadingZeros(uint32_t v)
+{
+#if defined __GNUC__
+	return __builtin_clz(v);
+#else
+	int n = 0;
+	while (!(v & 0x80000000u))
+	{
+		v <<= 1;
+		n++;
+	}
+	return n;
+#endif
+}
+
+
 uint16_t CONSTFUNC FixedReciprocalBig(fixed_t v)
 {
-	int s = 31 - __builtin_clz(v) - 15;
+	int s = 31 - LeadingZeros(v) - 15;
 	return RECIPROCAL16((uint32_t)v >> s) >> s;
 }
 

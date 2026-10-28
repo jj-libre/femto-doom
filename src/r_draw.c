@@ -156,9 +156,9 @@ static height_t floorclip[VIEW_WINDOW_WIDTH];
 static height_t ceilingclip[VIEW_WINDOW_WIDTH];
 
 
-static height_t screenheightarray[VIEW_WINDOW_WIDTH] = { [0 ... VIEW_WINDOW_WIDTH - 1] = VIEW_WINDOW_HEIGHT };
+static height_t screenheightarray[VIEW_WINDOW_WIDTH];
 
-static height_t negonearray[VIEW_WINDOW_WIDTH] = { [0 ... VIEW_WINDOW_WIDTH - 1] = -1 };
+static height_t negonearray[VIEW_WINDOW_WIDTH];
 
 // A drawseg's clip list: an offset into openings, or one of these.
 #define CLIP_NONE   INT16_MIN
@@ -788,6 +788,19 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
 void R_InitColormaps(void)
 {
 	fullcolormap = W_GetLumpByName("COLORMAP");
+}
+
+
+//
+// R_InitClipArrays
+//
+void R_InitClipArrays(void)
+{
+	for (int16_t x = 0; x < VIEW_WINDOW_WIDTH; x++)
+	{
+		screenheightarray[x] = VIEW_WINDOW_HEIGHT;
+		negonearray[x] = -1;
+	}
 }
 
 

@@ -60,10 +60,15 @@ typedef uint8_t byte;
 #endif
 
 
+#if defined __GNUC__
 #define CONSTFUNC __attribute__((const))
 #define PUREFUNC __attribute__((pure))
-
 #define NOINLINE __attribute__((noinline))
+#else
+#define CONSTFUNC
+#define PUREFUNC
+#define NOINLINE
+#endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
 #include <limits.h>

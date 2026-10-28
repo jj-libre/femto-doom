@@ -67,6 +67,22 @@ inline static PUREFUNC int16_t iselem(const bmalpool_t* pool, size_t size, const
 }
 
 
+static int TrailingZeros(uint32_t v)
+{
+#if defined __GNUC__
+	return __builtin_ctz(v);
+#else
+	int n = 0;
+	while (!(v & 1))
+	{
+		v >>= 1;
+		n++;
+	}
+	return n;
+#endif
+}
+
+
 void* Z_BMalloc(struct block_memory_alloc_s *pzone)
 {
 	bmalpool_t** pool = (bmalpool_t**)&(pzone->firstpool);
@@ -74,7 +90,7 @@ void* Z_BMalloc(struct block_memory_alloc_s *pzone)
 		if ((*pool)->used == 0xffffffff) {
 			pool = &((*pool)->nextpool);
 		} else {
-			size_t n = __builtin_ctz(~(*pool)->used);
+			size_t n = TrailingZeros(~(*pool)->used);
 			(*pool)->used |= (1U << n);
 			return getelem(*pool, pzone->size, n);
 		}

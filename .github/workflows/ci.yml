@@ -93,6 +93,6 @@ jobs:
       - name: Compile
         run: |
           for f in src/*.c; do
-            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=gnu11 -fno-short-enums -Wall -Wextra -Werror \
+            arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -Os -std=c11 -fno-short-enums -Wall -Wextra -Werror \
               ${{ matrix.defines }} -Isrc -c "$f" -o /dev/null || exit 1
           done
