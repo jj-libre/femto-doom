@@ -13,8 +13,9 @@ femto-doom is a pure Doom engine, without any platform code. The platform hands 
 time and input, and draws what it outputs; [i_platform.h](src/i_platform.h) is the whole interface.
 
 <p>
-<img src="docs/img/fireball.png" width="49%" alt="Imps and a fireball, 240 x 160">
-<img src="docs/img/sergeant.png" width="49%" alt="A sergeant, 240 x 160">
+<img src="docs/img/title.png" width="32%" alt="The title screen, 240 x 160">
+<img src="docs/img/fireball.png" width="32%" alt="Imps and a fireball, 240 x 160">
+<img src="docs/img/sergeant.png" width="32%" alt="A sergeant, 240 x 160">
 </p>
 
 ## Features
