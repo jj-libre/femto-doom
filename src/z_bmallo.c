@@ -33,10 +33,6 @@
  *-----------------------------------------------------------------------------
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <string.h>
 
 #include "doomtype.h"
@@ -69,22 +65,6 @@ inline static PUREFUNC int16_t iselem(const bmalpool_t* pool, size_t size, const
 	dif /= size;
 	return dif >= CHAR_BIT * sizeof(uint32_t) ? -1 : dif;
 }
-
-
-#if !defined __GNUC__
-static size_t __builtin_ctz(uint32_t v)
-{
-	int c = 0; 
-
-	v = (v ^ (v - 1)) >> 1;
-	while (v)
-	{
-		v >>= 1;
-		c++;
-	}
-	return c;
-}
-#endif
 
 
 void* Z_BMalloc(struct block_memory_alloc_s *pzone)

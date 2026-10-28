@@ -194,7 +194,7 @@ typedef struct
 typedef char assertSideSize[sizeof(side_t) == 4 ? 1 : -1];
 
 
-typedef PACKEDATTR_PRE struct {
+typedef struct {
   int16_t textureoffset;
   uint8_t rowoffset;
    int8_t toptexture;
@@ -202,7 +202,7 @@ typedef PACKEDATTR_PRE struct {
    int8_t midtexture;
   uint8_t sector;  // Front sector, towards viewer.
   uint8_t changeable;
-} PACKEDATTR_POST mapsidedef_t;
+} mapsidedef_t;
 
 typedef char assertMapsidedefSize[sizeof(mapsidedef_t) == 8 ? 1 : -1];
 
@@ -247,7 +247,7 @@ enum
 #define LN_SETBIT(p, i) (_g_linebits[(p) * _g_linebytes + ((i) >> 3)] |= (1 << ((i) & 7)))
 #define LN_CLRBIT(p, i) (_g_linebits[(p) * _g_linebytes + ((i) >> 3)] &= ~(1 << ((i) & 7)))
 
-typedef PACKEDATTR_PRE struct line_s
+typedef struct line_s
 {
 	vertex16_t v1;
 	vertex16_t v2;			// Vertices, from v1 to v2.
@@ -261,7 +261,7 @@ typedef PACKEDATTR_PRE struct line_s
 	uint8_t flags;			// Animation related.
 	int8_t slopetype;		// To aid move clipping.
 	int16_t const_special;
-} PACKEDATTR_POST line_t;
+} line_t;
 
 typedef char assertLineSize[sizeof(line_t) == 32 ? 1 : -1];
 

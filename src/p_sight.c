@@ -261,12 +261,6 @@ static boolean P_CrossBSPNode(int16_t bspnum)
 }
 
 
-static uint32_t linearAddress(const void* ptr)
-{
-	return (uint32_t)(uintptr_t)ptr;
-}
-
-
 // Which thing the last result was for. A map thing's mobj can change while it sleeps, so it is
 // known by its load index.
 static uint32_t P_SightKey(mobj_t* t)
@@ -275,7 +269,7 @@ static uint32_t P_SightKey(mobj_t* t)
     return 0xffff0000U | (uint16_t)P_Ext(t)->loadthing;
   if ((t->flags & (MF_STATIC | MF_INPLACE)) == (MF_STATIC | MF_INPLACE))
     return 0xffff0000U | (uint16_t)(t->sprev + 1);
-  return linearAddress(t);
+  return (uint32_t)(uintptr_t)t;
 }
 
 //

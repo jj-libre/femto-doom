@@ -205,8 +205,8 @@ static void P_LoadSectors (int16_t lump)
       mapsector_t ms;
       W_Fetch(_g_mapsectors + i, &ms, sizeof(ms));
 
-      ss->floorheight   = P_PlaneHeight((fixed_t)SHORT(ms.floorheight) << FRACBITS);
-      ss->ceilingheight = P_PlaneHeight((fixed_t)SHORT(ms.ceilingheight) << FRACBITS);
+      ss->floorheight   = P_PlaneHeight((fixed_t)ms.floorheight << FRACBITS);
+      ss->ceilingheight = P_PlaneHeight((fixed_t)ms.ceilingheight << FRACBITS);
       ss->floorpic   = P_FlatByte(P_SectorFlatNum(ms.floorpic));
       ss->ceilingpic = P_FlatByte(P_SectorFlatNum(ms.ceilingpic));
 

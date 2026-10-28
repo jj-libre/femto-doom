@@ -34,15 +34,6 @@
  *-----------------------------------------------------------------------------
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include "m_swap.h"
 #include "i_sound.h"
 #include "w_wad.h"
 #include "s_sound.h"

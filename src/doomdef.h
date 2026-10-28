@@ -37,11 +37,6 @@
 #ifndef __DOOMDEF__
 #define __DOOMDEF__
 
-/* use config.h if autoconf made one -- josh */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdint.h>
 
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
@@ -53,7 +48,6 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include "m_swap.h"
 #include "i_platform.h"
 
 

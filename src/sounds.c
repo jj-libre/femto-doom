@@ -36,10 +36,6 @@
 
 #include <stddef.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "doomtype.h"
 #include "sounds.h"
 

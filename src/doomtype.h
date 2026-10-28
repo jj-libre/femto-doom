@@ -40,10 +40,6 @@
 #include <stdint.h>
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
 /* Fixed to use builtin bool type with C++. */
@@ -64,19 +60,10 @@ typedef uint8_t byte;
 #endif
 
 
-#ifdef __GNUC__
 #define CONSTFUNC __attribute__((const))
 #define PUREFUNC __attribute__((pure))
-#else
-#define CONSTFUNC
-#define PUREFUNC
-#endif
 
-#if defined __GNUC__ || defined __clang__
 #define NOINLINE __attribute__((noinline))
-#else
-#define NOINLINE
-#endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
 #include <limits.h>

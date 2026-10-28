@@ -36,7 +36,6 @@
 #ifndef __M_FIXED__
 #define __M_FIXED__
 
-#include "config.h"
 #include "doomtype.h"
 
 

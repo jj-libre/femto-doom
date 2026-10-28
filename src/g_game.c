@@ -43,10 +43,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "d_player.h"
 #include "f_finale.h"
 #include "doomtype.h"
