@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """femto-doom's data tool.
 
 `wads` builds GRAPHICS.WAD and MAPS.WAD from a Doom IWAD, for the engine's screen size. The

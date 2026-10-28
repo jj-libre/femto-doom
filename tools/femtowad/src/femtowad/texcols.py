@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """TEXCOLS: every wall texture as columns at a fixed stride, the bytes R_DrawColumnWall samples,
 so drawing a wall column needs no patch, directory or column offset lookup.
 

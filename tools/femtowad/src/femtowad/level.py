@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """A map as the engine reads it, its lumps, and the engine's geometry queries on it with the
 engine's integer wrapping."""
 

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """The header comment of every C file femtowad writes."""
 
 from __future__ import annotations
@@ -16,6 +17,8 @@ TEMPLATE = """\
  *  Florian Schulze, Colin Phipps, Neil Stevens, Andrey Budko
  *  Copyright 2023-2026 by
  *  Frenkel Smeijers
+ *  Copyright 2026 by
+ *  Jakob Jungreuthmayer
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License

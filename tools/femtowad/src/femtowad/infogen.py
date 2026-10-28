@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """info.c and info.h written from info.py."""
 
 from __future__ import annotations

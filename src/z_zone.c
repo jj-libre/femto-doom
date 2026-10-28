@@ -5,6 +5,7 @@
 //
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 2023-2026 by Frenkel Smeijers
+// Copyright (C) 2026 by Jakob Jungreuthmayer
 //
 // This source is available for distribution and/or modification
 // only under the terms of the DOOM Source Code License as

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """id's tangent table, FINEANGLES / 2 entries from -90 to +90 degrees in fixed point.
 
 Kept as id made it: computing it with today's floating point differs in a few entries.

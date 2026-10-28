@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """WAD files: reading any little-endian IWAD or PWAD, writing femto-doom's layout."""
 
 from __future__ import annotations

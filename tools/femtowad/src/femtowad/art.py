@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """Lumps femto-doom reads that a Doom IWAD lacks or holds at another size, made from the IWAD.
 
 Pictures the platform scales are kept as they are. Full-screen pictures become raw images of the

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """Per map lumps that spare the engine the memory of spawning things and grouping lines.
 
 E1MxTL holds the map's things, spawned in advance: each thing's spawn data, subsector

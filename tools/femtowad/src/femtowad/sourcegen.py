@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright 2026 Jakob Jungreuthmayer
 """The engine sources femtowad writes, and checking that they are current."""
 
 from __future__ import annotations

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Builds femto-doom's WAD pair from a Doom IWAD"
 requires-python = ">=3.12"
 license = "GPL-2.0-or-later"
+authors = [{ name = "Jakob Jungreuthmayer" }]
 dependencies = []
 
 [project.scripts]
