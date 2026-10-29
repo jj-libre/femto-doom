@@ -61,8 +61,7 @@ void M_Ticker (void);
 
 void M_Drawer (void);
 
-// Called by D_DoomInit,
-// loads the config file.
+// Called by D_DoomInit.
 
 void M_Init (void);
 

@@ -24,7 +24,7 @@ Defined on the compiler's command line; all are optional.
 | `THING_POOL_RESERVE` | 0 | thing slots kept free at map load |
 | `MIN_FRAGMENT` | 16 | smallest free zone fragment split off a block |
 | `RECIPROCAL_DIV(v)` | `0xffffffff / v` | the division behind reciprocals, e.g. through a divider unit |
-| `SMALL_TRIG` | off | half-size tangent table |
+| `SMALL_TRIG` | off | a quarter of the sine table, half of the tangent table |
 | `W_FETCH` | off | WAD reads go through the platform's `W_Fetch`, see [platform.md](platform.md) |
 
 ## Features
