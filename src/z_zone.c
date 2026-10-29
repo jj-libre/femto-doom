@@ -62,8 +62,8 @@
 
 #define	ZONEID	0x1dea
 
-// Blocks are addressed by index, in 4-byte units from _g_zonebase.
-#define ZONE_UNIT	4
+// Blocks are addressed by index, in units from _g_zonebase that keep pointers aligned.
+#define ZONE_UNIT	(sizeof(void*) > 4 ? 8 : 4)
 typedef uint16_t zindex_t;
 
 typedef struct
