@@ -7,7 +7,7 @@ Defined on the compiler's command line; all are optional.
 | Option | Default | Effect |
 |---|---|---|
 | `SCREEN_WIDTH`, `SCREEN_HEIGHT` | 240, 160 | the screen in pixels; must match `femtowad wads --screen` |
-| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | 60, 128 | the 3D view in pixels; the width must be in `VIEW_WIDTHS` in femtowad's `viewgen.py` |
+| `VIEW_WINDOW_WIDTH`, `VIEW_WINDOW_HEIGHT` | the screen above the status bar | the 3D view in pixels; the width must be in `VIEW_WIDTHS` in femtowad's `viewgen.py` |
 | `MAP_WIDTH` | `SCREEN_WIDTH` | automap width |
 | `TEXTURE_SHIFT`, `SPRITE_SHIFT` | 0 | walls and sprites keep every 2^n-th row; `TEXTURE_SHIFT` must match `femtowad wads --texture-shift` |
 | `HIGH_DETAIL` | off | composed wall textures keep every column instead of every 4th; must match `femtowad wads --high-detail` |

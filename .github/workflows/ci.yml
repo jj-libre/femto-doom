@@ -59,7 +59,7 @@ jobs:
         run: make -B -C examples/host check DEFINES="W_FETCH ST_PARTIAL_REFRESH"
       - name: 320 x 200
         run: |
-          make -B -C examples/host SCREEN_WIDTH=320 SCREEN_HEIGHT=200 VIEW_WINDOW_HEIGHT=168
+          make -B -C examples/host SCREEN_WIDTH=320 SCREEN_HEIGHT=200
           examples/host/host wads/320x200/GRAPHICS.WAD wads/320x200/MAPS.WAD -frames 1320 | tee out.txt
           grep -q "hash 6ed21c8d6898b633$" out.txt
       - name: 80 x 58 view, small limits and tables
