@@ -433,8 +433,9 @@ typedef struct {
 typedef char assertScrollSize[sizeof(void*) != 4 || sizeof(scroll_t) == 16 ? 1 : -1];
 
 
-static void T_Scroll(scroll_t* s)
+static void T_Scroll(thinker_t* th)
 {
+	scroll_t* s = (scroll_t*)th;
 	(*s->textureoffset)++;
 }
 

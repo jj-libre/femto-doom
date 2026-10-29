@@ -85,19 +85,19 @@ weapontype_t P_WeaponCycleUp(struct player_s *player);
 weapontype_t P_WeaponCycleDown(struct player_s *player);
 
 
-void A_Light0();
-void A_WeaponReady();
-void A_Lower();
-void A_Raise();
-void A_Punch();
-void A_ReFire();
-void A_FirePistol();
-void A_Light1();
-void A_FireShotgun();
-void A_Light2();
-void A_FireCGun();
-void A_GunFlash();
-void A_FireMissile();
-void A_Saw();
+void A_Light0(struct player_s* player, pspdef_t* psp);
+void A_WeaponReady(struct player_s* player, pspdef_t* psp);
+void A_Lower(struct player_s* player, pspdef_t* psp);
+void A_Raise(struct player_s* player, pspdef_t* psp);
+void A_Punch(struct player_s* player, pspdef_t* psp);
+void A_ReFire(struct player_s* player, pspdef_t* psp);
+void A_FirePistol(struct player_s* player, pspdef_t* psp);
+void A_Light1(struct player_s* player, pspdef_t* psp);
+void A_FireShotgun(struct player_s* player, pspdef_t* psp);
+void A_Light2(struct player_s* player, pspdef_t* psp);
+void A_FireCGun(struct player_s* player, pspdef_t* psp);
+void A_GunFlash(struct player_s* player, pspdef_t* psp);
+void A_FireMissile(struct player_s* player, pspdef_t* psp);
+void A_Saw(struct player_s* player, pspdef_t* psp);
 
 #endif

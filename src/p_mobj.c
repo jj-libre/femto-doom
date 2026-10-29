@@ -82,7 +82,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
         // Call action functions when the state is set
         if(st->action)
         {
-            stateactions[st->action](mobj);
+            ((void (*)(mobj_t*))stateactions[st->action])(mobj);
         }
 
         state = st->nextstate;

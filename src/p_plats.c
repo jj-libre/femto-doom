@@ -71,8 +71,9 @@ static void P_RemoveActivePlat(plat_t* plat);
 // No return
 //
 
-void T_PlatRaise(plat_t* plat)
+void T_PlatRaise(thinker_t* th)
 {
+  plat_t* plat = (plat_t*)th;
   result_e      res;
 
   // handle plat moving, up, down, or waiting

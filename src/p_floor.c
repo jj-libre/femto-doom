@@ -400,8 +400,9 @@ typedef struct
 typedef char assertFloormoveSize[sizeof(void*) != 4 || sizeof(floormove_t) == 28 ? 1 : -1];
 
 
-static void T_MoveFloor(floormove_t* floor)
+static void T_MoveFloor(thinker_t* th)
 {
+  floormove_t* floor = (floormove_t*)th;
   result_e      res;
 
   // move the floor

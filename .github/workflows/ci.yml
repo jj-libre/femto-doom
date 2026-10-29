@@ -34,10 +34,9 @@ jobs:
         include:
           - cc: gcc
           - cc: clang
-            warnings: -Wno-deprecated-non-prototype
     env:
       CC: ${{ matrix.cc }}
-      CFLAGS: -O2 -Wall -Wextra -Werror ${{ matrix.warnings }}
+      CFLAGS: -O2 -Wall -Wextra -Werror
       WADS: ${{ github.workspace }}/wads/240x160
     steps:
       - uses: actions/checkout@v5

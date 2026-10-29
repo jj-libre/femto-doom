@@ -73,8 +73,9 @@ typedef struct
 typedef char assertLightflashSize[sizeof(void*) != 4 || sizeof(lightflash_t) == 24 ? 1 : -1];
 
 
-static void T_LightFlash (lightflash_t* flash)
+static void T_LightFlash(thinker_t* th)
 {
+  lightflash_t* flash = (lightflash_t*)th;
   if (--flash->count)
     return;
 
@@ -113,8 +114,9 @@ typedef struct
 typedef char assertStrobeSize[sizeof(void*) != 4 || sizeof(strobe_t) == 24 ? 1 : -1];
 
 
-static void T_StrobeFlash (strobe_t*   flash)
+static void T_StrobeFlash(thinker_t* th)
 {
+  strobe_t* flash = (strobe_t*)th;
   if (--flash->count)
     return;
 
@@ -151,8 +153,9 @@ typedef struct
 typedef char assertGlowSize[sizeof(void*) != 4 || sizeof(glow_t) == 24 ? 1 : -1];
 
 
-static void T_Glow(glow_t* g)
+static void T_Glow(thinker_t* th)
 {
+  glow_t* g = (glow_t*)th;
   int16_t lightlevel = g->sector->lightlevel;
   switch(g->direction)
   {

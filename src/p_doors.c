@@ -103,8 +103,9 @@ static void EV_LightTurnOnPartway(const line_t* line, fixed_t level)
 // Returns nothing.
 //
 
-void T_VerticalDoor(vldoor_t* door)
+void T_VerticalDoor(thinker_t* th)
 {
+  vldoor_t* door = (vldoor_t*)th;
   result_e  res;
 
   // Is the door waiting, going up, or going down?

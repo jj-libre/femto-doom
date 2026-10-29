@@ -70,21 +70,20 @@ void P_NewChaseDir(mobj_t* actor);
 // modified for years by Dehacked enthusiasts.  The new BEX format
 // allows more extensive changes (see d_deh.c)
 
-// Doesn't work with g++, needs actionf_p1
-void A_Explode();
-void A_Pain();
-void A_PlayerScream();
-void A_Fall();
-void A_XScream();
-void A_Look();
-void A_Chase();
-void A_FaceTarget();
-void A_PosAttack();
-void A_Scream();
-void A_SPosAttack();
-void A_BossDeath();
-void A_TroopAttack();
-void A_SargAttack();
-void A_BruisAttack();
+void A_Explode(mobj_t* actor);
+void A_Pain(mobj_t* actor);
+void A_PlayerScream(mobj_t* actor);
+void A_Fall(mobj_t* actor);
+void A_XScream(mobj_t* actor);
+void A_Look(mobj_t* actor);
+void A_Chase(mobj_t* actor);
+void A_FaceTarget(mobj_t* actor);
+void A_PosAttack(mobj_t* actor);
+void A_Scream(mobj_t* actor);
+void A_SPosAttack(mobj_t* actor);
+void A_BossDeath(mobj_t* actor);
+void A_TroopAttack(mobj_t* actor);
+void A_SargAttack(mobj_t* actor);
+void A_BruisAttack(mobj_t* actor);
 
 #endif // __P_ENEMY__

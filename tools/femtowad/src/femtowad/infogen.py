@@ -128,7 +128,7 @@ def info_h() -> str:
 
 
 def info_c() -> str:
-    actions = "".join(f"  A_{a},\n" for a in ACTIONS)
+    actions = "".join(f"  (actionf_t)A_{a},\n" for a in ACTIONS)
     states = []
     for state in STATES:
         frame = f"FF_FULLBRIGHT|{state.frame}" if state.bright else str(state.frame)

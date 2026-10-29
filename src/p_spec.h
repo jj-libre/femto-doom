@@ -260,11 +260,11 @@ void P_ChangeSwitchTexture(const line_t* line, boolean useAgain);
 
 // p_plats
 
-void T_PlatRaise(plat_t* plat);
+void T_PlatRaise(thinker_t* th);
 
 // p_doors
 
-void T_VerticalDoor(vldoor_t* door);
+void T_VerticalDoor(thinker_t* th);
 
 // p_floor
 
