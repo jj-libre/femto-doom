@@ -48,7 +48,8 @@
 #ifdef __cplusplus
 typedef bool boolean;
 #else
-typedef enum {false, true} boolean;
+#include <stdbool.h>
+typedef int boolean;
 #endif
 typedef uint8_t byte;
 #endif
