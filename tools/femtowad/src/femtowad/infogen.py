@@ -114,7 +114,7 @@ def info_h() -> str:
         enum(["AC_NULL", *(f"AC_{a}" for a in ACTIONS)], "NUMACTIONS"),
         "extern const actionf_t stateactions[NUMACTIONS];\n",
         STATE_STRUCT,
-        "extern const state_t  states[NUMSTATES];\nextern const char* const sprnames[];\n",
+        "extern const state_t  states[NUMSTATES];\n",
         enum([*(f"MT_{m.name}" for m in MOBJS), f"MT_{FREE_SLOT}"], "NUMMOBJTYPES"),
         "typedef int8_t mobjtype_t;\n",
         MOBJINFO_STRUCT,
@@ -128,8 +128,6 @@ def info_h() -> str:
 
 
 def info_c() -> str:
-    names = [f'"{s}",' for s in SPRITES]
-    sprnames = "".join("  " + " ".join(names[i : i + 12]) + "\n" for i in range(0, len(names), 12))
     actions = "".join(f"  A_{a},\n" for a in ACTIONS)
     states = []
     for state in STATES:
@@ -144,7 +142,6 @@ def info_c() -> str:
             f'#include "{h}"\n'
             for h in ("doomdef.h", "sounds.h", "m_fixed.h", "p_mobj.h", "p_enemy.h", "p_pspr.h", "info.h")
         ),
-        f"const char * const sprnames[NUMSPRITES] = {{\n{sprnames}}};\n",
         f"const actionf_t stateactions[NUMACTIONS] = {{\n  NULL,\n{actions}}};\n",
         f"const state_t states[NUMSTATES] = {{\n{''.join(states)}}};\n",
         f"const mobjinfo_t mobjinfo[NUMMOBJTYPES] = {{\n{''.join(mobjinfo_entry(m) for m in MOBJS)}}};\n",

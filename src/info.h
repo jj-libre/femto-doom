@@ -472,7 +472,6 @@ typedef struct
 } state_t;
 
 extern const state_t  states[NUMSTATES];
-extern const char* const sprnames[];
 
 enum
 {

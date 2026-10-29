@@ -33,7 +33,6 @@
 #include "doomtype.h"
 
 void Z_Init(void);
-void* Z_TryMallocStatic(uint16_t size);
 void* Z_MallocStatic(uint16_t size);
 void* Z_MallocLevel(uint16_t size);
 void* Z_CallocLevel(uint16_t size);

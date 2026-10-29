@@ -43,14 +43,6 @@
 #include "p_pspr.h"
 #include "info.h"
 
-const char * const sprnames[NUMSPRITES] = {
-  "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "CHGG", "CHGF", "MISG", "MISF", "SAWG", "BLUD",
-  "PUFF", "BAL1", "MISL", "TFOG", "PLAY", "POSS", "SPOS", "SARG", "BAL7", "BOSS", "ARM1", "ARM2",
-  "BAR1", "BEXP", "BON1", "BON2", "BKEY", "RKEY", "YKEY", "STIM", "MEDI", "SOUL", "PINS", "SUIT",
-  "PMAP", "PVIS", "CLIP", "AMMO", "ROCK", "BROK", "SHEL", "SBOX", "BPAK", "MGUN", "CSAW", "LAUN",
-  "SHOT", "COLU", "POL5", "CAND", "CBRA", "ELEC", "TRED",
-};
-
 const actionf_t stateactions[NUMACTIONS] = {
   NULL,
   A_Light0,

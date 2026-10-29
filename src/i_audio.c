@@ -102,15 +102,6 @@ void I_InitSound2(void)
 }
 
 
-void I_ShutdownSound(void)
-{
-	if (nosfxparm)
-		return;
-
-	DMX_Shutdown();
-}
-
-
 void I_PlaySong(musicenum_t handle, boolean looping)
 {
 	UNUSED(handle);

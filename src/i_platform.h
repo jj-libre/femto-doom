@@ -192,7 +192,6 @@ void W_Fetch(const void* src, void* dst, uint16_t len);
 void DMX_Init(void);
 void DMX_Init2(void);
 void DMX_Play(sfxenum_t id);
-void DMX_Shutdown(void);
 
 void I_InitGraphics(void);
 

@@ -34,7 +34,7 @@ Values are i16 unless noted.
 | `TEXTUREP` | an offset (u16) per texture, then per texture: width mask (u16), width, height, whether patches overlap (u8), patch count (u8), and per patch x, y, lump number, patch width |
 | `TEXHEIGH` | height of every texture |
 | `TEXCOLS` | every wall texture's columns, ready to draw. Header: `TEXTURE_SHIFT` (u8), `HIGH_DETAIL` (u8), log2 of rows per column (u8), 0 (u8), texture count (u16), 0 (u16); per texture: offset of its columns (u32), width mask (u16), column shift (u8, 2 when four columns share one), 0 (u8); then the columns, 128 >> `TEXTURE_SHIFT` bytes each |
-| `SPRITES` | per sprite, in the order of `sprnames` in `info.c`, and per frame up to `MAX_SPRITE_FRAMES`: the lump of rotations 1–8, a flip mask (u8), a rotate flag (u8) |
+| `SPRITES` | per sprite, in the order of the `SPR_` numbers in `info.h`, and per frame up to `MAX_SPRITE_FRAMES`: the lump of rotations 1–8, a flip mask (u8), a rotate flag (u8) |
 | `TITLEPIC`, `HELP2`, `WIMAP0` | title screen, help screen, intermission map: raw pixels, the size of the screen |
 | `STBAR` | status bar background: raw pixels, the screen's width × `ST_HEIGHT`; Doom's bar with the arms panel and percent signs drawn in, scaled |
 | `FLOOR4_8` | finale background: 64 × 64 raw pixels |

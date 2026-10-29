@@ -354,12 +354,6 @@ static void* Z_Malloc(uint16_t size, int8_t tag) {
 }
 
 
-void* Z_TryMallocStatic(uint16_t size)
-{
-	return Z_TryMalloc(size, PU_STATIC);
-}
-
-
 void* Z_MallocStatic(uint16_t size)
 {
 	return Z_Malloc(size, PU_STATIC);

@@ -88,12 +88,6 @@ void W_Init(void)
 }
 
 
-const char* PUREFUNC W_GetNameForNum(int16_t num)
-{
-	return fileinfo[num].name;
-}
-
-
 uint16_t PUREFUNC W_LumpLength(int16_t num)
 {
 	return W_FetchUInt16(&fileinfo[num].size);
@@ -154,13 +148,6 @@ int16_t PUREFUNC W_GetMapNumForName(const char *name)
 
 	I_Error("W_GetMapNumForName: %.8s not found", name);
 	return -1;
-}
-
-
-void W_ReadLumpByNum(int16_t num, void* ptr)
-{
-	const filelump_t* lump = &fileinfo[num];
-	W_Fetch(&doom_iwad[W_FetchInt32(&lump->filepos)], ptr, W_FetchUInt16(&lump->size));
 }
 
 

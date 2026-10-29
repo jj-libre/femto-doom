@@ -43,8 +43,6 @@
 void I_InitSound(void);
 void I_InitSound2(void);
 
-void I_ShutdownSound(void);
-
 //
 //  SFX I/O
 //

@@ -171,11 +171,6 @@ void DMX_Play(sfxenum_t id)
 }
 
 
-void DMX_Shutdown(void)
-{
-}
-
-
 //
 // Frame
 //
