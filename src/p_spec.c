@@ -399,8 +399,6 @@ void P_SpawnSpecials (void)
     }
   }
 
-  P_RemoveAllActivePlats();
-
   for (i = 0;i < MAXBUTTONS;i++)
     memset(&_g_buttonlist[i],0,sizeof(button_t));
 

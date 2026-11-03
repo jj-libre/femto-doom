@@ -188,7 +188,6 @@ typedef struct
 {
   thinker_t thinker;
   sector_t* sector;
-  struct platlist* list;
   fixed_t speed;
   fixed_t low;
   fixed_t high;
@@ -199,7 +198,7 @@ typedef struct
   plattype_e type;
 } plat_t;
 
-typedef char assertPlatSize[sizeof(void*) != 4 || sizeof(plat_t) == 40 ? 1 : -1];
+typedef char assertPlatSize[sizeof(void*) != 4 || sizeof(plat_t) == 36 ? 1 : -1];
 
 
 // p_ceilng
@@ -336,11 +335,6 @@ void P_SpawnLightFlash(sector_t* sector);
 void P_SpawnStrobeFlash(sector_t* sector, int8_t fastOrSlow, boolean inSync);
 
 void P_SpawnGlowingLight(sector_t* sector);
-
-// p_plats
-
-void P_RemoveAllActivePlats
-( void );    // killough
 
 
 #endif

@@ -48,19 +48,7 @@
 #include "globdata.h"
 
 
-// New limit-free plat structure -- killough
-
-typedef struct platlist {
-  plat_t* plat;
-  struct platlist* next;
-  struct platlist** prev;
-} platlist_t;
-
-
-static platlist_t* activeplats;
-
-
-static void P_RemoveActivePlat(plat_t* plat);
+static void P_RemovePlat(plat_t* plat);
 
 //
 // T_PlatRaise()
@@ -111,7 +99,7 @@ void T_PlatRaise(thinker_t* th)
           {
             case downWaitUpStay:
             case raiseToNearestAndChange:
-              P_RemoveActivePlat(plat);     // killough
+              P_RemovePlat(plat);
             default:
               break;
           }
@@ -137,7 +125,7 @@ void T_PlatRaise(thinker_t* th)
           switch(plat->type)
           {
             case raiseToNearestAndChange:
-              P_RemoveActivePlat(plat);
+              P_RemovePlat(plat);
             default:
               break;
           }
@@ -169,8 +157,6 @@ void T_PlatRaise(thinker_t* th)
 // Passed the linedef that activated the plat and the type of plat action.
 // Returns true if a thinker is started
 //
-
-static void P_AddActivePlat(plat_t* plat);
 
 boolean EV_DoPlat(const line_t* line, plattype_e type)
 {
@@ -238,72 +224,21 @@ boolean EV_DoPlat(const line_t* line, plattype_e type)
       default:
         break;
     }
-    P_AddActivePlat(plat);  // add plat to list of active plats
   }
   return rtn;
 }
 
-// The following were all rewritten by Lee Killough
-// to use the new structure which places no limits
-// on active plats. It also avoids spending as much
-// time searching for active plats. Previously a
-// fixed-size array was used, with NULL indicating
-// empty entries, while now a doubly-linked list
-// is used.
-
 //
-// P_AddActivePlat()
+// P_RemovePlat()
 //
-// Add a plat to the head of the active plat list
-//
-// Passed a pointer to the plat to add
-// Returns nothing
-//
-static void P_AddActivePlat(plat_t* plat)
-{
-    platlist_t* old_head = activeplats;
-
-    platlist_t* list = activeplats = Z_MallocLevel(sizeof *list);
-    list->plat = plat;
-    plat->list = list;
-    if ((list->next = old_head))
-        list->next->prev = &list->next;
-
-    list->prev = (platlist_t**)old_head; // FIXME this is suspicious
-}
-
-//
-// P_RemoveActivePlat()
-//
-// Remove a plat from the active plat list
+// Remove a plat that has finished moving
 //
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-static void P_RemoveActivePlat(plat_t* plat)
+static void P_RemovePlat(plat_t* plat)
 {
-  platlist_t* list = plat->list;
   P_Mover(plat->sector)->floordata = Z_Ref(0); //jff 2/23/98 multiple thinkers
 
   P_RemoveThinker(&plat->thinker);
-
-  if (list->prev && (*list->prev = list->next))
-    list->next->prev = list->prev;
-
-  // As in Doom64KB, removing any plat empties the list.
-  Z_Free(list);
-  activeplats = NULL;
-}
-
-//
-// P_RemoveAllActivePlats()
-//
-// Remove all plats from the active plat list
-//
-// Passed nothing, returns nothing
-//
-void P_RemoveAllActivePlats(void)
-{
-  // The nodes are freed with the level's zone blocks.
-  activeplats = NULL;
 }
