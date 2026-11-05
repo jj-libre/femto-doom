@@ -461,10 +461,6 @@ void D_DoomInit(int argc, const char * const * argv)
     myargv = argv;
 
     // init subsystems
-    I_InitKeyboard();
-
-    I_InitTimer();
-
     I_InitSound();
 
     I_Printf("Z_Init: Init zone memory allocation daemon.\n");
@@ -502,7 +498,6 @@ void D_DoomInit(int argc, const char * const * argv)
 
     _g_fps_show = false;
 
-    I_InitGraphics();
     V_LoadPalettes();
     V_SetPalette(0);
 

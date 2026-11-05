@@ -82,19 +82,9 @@ static uint32_t clock_ms(void)
 }
 
 
-void I_InitTimer(void)
-{
-}
-
-
 int32_t I_GetTime(void)
 {
 	return (int32_t)((uint64_t)(clock_ms() - start_ms) * TIC_RATE / 1000);
-}
-
-
-void I_InitKeyboard(void)
-{
 }
 
 
@@ -175,11 +165,6 @@ void DMX_Play(sfxenum_t id)
 //
 // Frame
 //
-
-void I_InitGraphics(void)
-{
-}
-
 
 void I_SetPalette(const uint8_t* pal)
 {

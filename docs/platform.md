@@ -33,9 +33,9 @@ hands the platform point into the WADs too; the platform reads them the same way
 
 | Group | Functions |
 |---|---|
-| system | `I_ZoneBase`, `I_InitTimer`, `I_GetTime`, `I_InitKeyboard`, `I_StartTic`, `I_Quit`, `I_Log`, `I_Fatal`, `W_Fetch` with `W_FETCH` |
+| system | `I_ZoneBase`, `I_GetTime`, `I_StartTic`, `I_Quit`, `I_Log`, `I_Fatal`, `W_Fetch` with `W_FETCH` |
 | sound | `DMX_Init`, `DMX_Init2`, `DMX_Play` |
-| frame | `I_InitGraphics`, `I_SetPalette`, `I_FinishUpdate`, `wipe_StartScreen`, `D_Wipe` |
+| frame | `I_SetPalette`, `I_FinishUpdate`, `wipe_StartScreen`, `D_Wipe` |
 | 3D view | `R_DrawColumnWall`, `R_DrawColumnSprite`, `R_DrawFuzzColumn`, `R_DrawColumnFlat`, `V_ClearViewWindow` |
 | pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` with `ST_PARTIAL_REFRESH` |
 | automap | `V_InitDrawLine`, `V_DrawLine`, `V_ShutdownDrawLine` |

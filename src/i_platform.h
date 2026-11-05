@@ -168,12 +168,10 @@ _Noreturn void I_Error(const char *error, ...) PRINTF_FORMAT(1, 2);
 // 128 KiB of it is used.
 uint8_t* I_ZoneBase(uint32_t *heapSize);
 
-void I_InitTimer(void);
-// Tics since I_InitTimer.
+// Tics, counting from 0 when the platform calls D_DoomInit.
 int32_t I_GetTime(void);
 
 // Input: called before each tic is processed; posts what happened with D_PostEvent.
-void I_InitKeyboard(void);
 void I_StartTic(void);
 
 _Noreturn void I_Quit(void);
@@ -194,10 +192,8 @@ void DMX_Init(void);
 void DMX_Init2(void);
 void DMX_Play(sfxenum_t id);
 
-void I_InitGraphics(void);
-
-// 256 RGB triples, inside the graphics WAD; called after I_InitGraphics. A platform may hold a
-// new palette back until the next I_FinishUpdate.
+// 256 RGB triples, inside the graphics WAD. A platform may hold a new palette back until the
+// next I_FinishUpdate.
 void I_SetPalette(const uint8_t* palette);
 
 // The frame is complete.
