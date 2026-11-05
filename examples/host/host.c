@@ -19,7 +19,6 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,13 +129,15 @@ void I_Quit(void)
 }
 
 
-void I_Error(const char* error, ...)
+void I_Log(const char* text)
 {
-	va_list argptr;
+	fputs(text, stdout);
+}
 
-	va_start(argptr, error);
-	vfprintf(stderr, error, argptr);
-	va_end(argptr);
+
+void I_Fatal(const char* message)
+{
+	fputs(message, stderr);
 	fputc('\n', stderr);
 
 	exit(1);

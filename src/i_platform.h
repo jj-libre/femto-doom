@@ -154,6 +154,11 @@ _Noreturn void D_DoomMain(int argc, const char * const * argv);
 
 void D_PostEvent(event_t* ev);
 
+// Log output and fatal errors, formatted like printf with %c, %d, %i, %s, %u, %x, a precision
+// and the l modifier, and handed to I_Log and I_Fatal; the engine's messages fit 95 characters.
+void I_Printf(const char *format, ...) PRINTF_FORMAT(1, 2);
+_Noreturn void I_Error(const char *error, ...) PRINTF_FORMAT(1, 2);
+
 
 //
 // The platform provides these
@@ -172,15 +177,11 @@ void I_InitKeyboard(void);
 void I_StartTic(void);
 
 _Noreturn void I_Quit(void);
-_Noreturn void I_Error(const char *error, ...);
 
-// Log output; defining I_Printf names the platform's function, else it is printf.
-#if defined I_Printf
-void I_Printf(const char *format, ...);
-#else
-#include <stdio.h>
-#define I_Printf printf
-#endif
+// A line of log output, ending in a newline.
+void I_Log(const char *text);
+// A fatal error's message.
+_Noreturn void I_Fatal(const char *message);
 
 // With W_FETCH defined, every read of WAD memory goes through W_Fetch, src being an address
 // inside one of the two WADs.

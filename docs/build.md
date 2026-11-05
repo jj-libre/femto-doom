@@ -35,7 +35,6 @@ Defined on the compiler's command line; all are optional.
 | `LOW_MEMORY` | off | maps other than E1M1 and E1M8 spawn only player starts and keys, E1M6 plays E1M1, demos play E1M1 |
 | `ST_PARTIAL_REFRESH` | off | the status bar redraws only widgets that changed |
 | `DISABLE_STATUS_BAR` | off | no status bar |
-| `I_Printf` | `printf` | name of the platform's log function |
 
 ## Debugging
 

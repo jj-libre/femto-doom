@@ -67,10 +67,12 @@ typedef uint8_t byte;
 #define CONSTFUNC __attribute__((const))
 #define PUREFUNC __attribute__((pure))
 #define NOINLINE __attribute__((noinline))
+#define PRINTF_FORMAT(f, a) __attribute__((format(printf, f, a)))
 #else
 #define CONSTFUNC
 #define PUREFUNC
 #define NOINLINE
+#define PRINTF_FORMAT(f, a)
 #endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
