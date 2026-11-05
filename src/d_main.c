@@ -31,7 +31,7 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *  DOOM set-up (D_DoomInit), one game step (D_DoomStep) and main loop (D_DoomMain),
+ *  DOOM set-up (D_DoomInit) and one game step (D_DoomStep),
  *  plus functions to
  *  parse command line parameters, configure game parameters (turbo),
  *  and call the startup functions.
@@ -513,15 +513,3 @@ void D_DoomInit(int argc, const char * const * argv)
     }
 }
 
-
-//
-// D_DoomMain
-//
-
-_Noreturn void D_DoomMain(int argc, const char * const * argv)
-{
-    D_DoomInit(argc, argv);
-
-    for (;;)
-        D_DoomStep();
-}

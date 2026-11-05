@@ -20,9 +20,6 @@ for (;;)
     D_DoomStep();                   /* runs the tics that are due, draws one frame */
 ```
 
-`D_DoomMain(argc, argv)` does the same and never returns, for a platform with nothing to do
-between frames.
-
 Input goes in from `I_StartTic` as `event_t`s posted with `D_PostEvent`, the keys being `KEYD_*`.
 
 With `W_FETCH` defined, every read of WAD memory goes through the platform's
