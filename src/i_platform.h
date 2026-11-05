@@ -188,8 +188,6 @@ void W_Fetch(const void* src, void* dst, uint16_t len);
 #endif
 
 // Sound effects.
-void DMX_Init(void);
-void DMX_Init2(void);
 void DMX_Play(sfxenum_t id);
 
 // 256 RGB triples, inside the graphics WAD. A platform may hold a new palette back until the

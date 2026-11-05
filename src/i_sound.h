@@ -41,7 +41,6 @@
 
 // Init at program start...
 void I_InitSound(void);
-void I_InitSound2(void);
 
 //
 //  SFX I/O

@@ -86,19 +86,8 @@ void I_InitSound(void)
 	if (nomusicparm && nosfxparm)
 		return;
 
-	DMX_Init();
-
 	// Finished initialization.
 	I_Printf("I_InitSound: sound ready\n");
-}
-
-
-void I_InitSound2(void)
-{
-	if (nosfxparm)
-		return;
-
-	DMX_Init2();
 }
 
 

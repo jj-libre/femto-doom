@@ -471,8 +471,6 @@ void D_DoomInit(int argc, const char * const * argv)
     I_Printf("W_Init: Init WADfiles.\n");
     W_Init(); // CPhipps - handling of wadfiles init changed
 
-    I_InitSound2();
-
     D_Init();
     F_Init();
     WI_Init();
