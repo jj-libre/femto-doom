@@ -38,7 +38,7 @@ hands the platform point into the WADs too; the platform reads them the same way
 | frame | `I_SetPalette`, `I_FinishUpdate`, `wipe_StartScreen`, `D_Wipe` |
 | 3D view | `R_DrawColumnWall`, `R_DrawColumnSprite`, `R_DrawFuzzColumn`, `R_DrawColumnFlat`, `V_ClearViewWindow` |
 | pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` with `ST_PARTIAL_REFRESH` |
-| automap | `V_InitDrawLine`, `V_DrawLine`, `V_ShutdownDrawLine` |
+| automap | `V_DrawLine` |
 
 The screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT` palette indices, the status bar its bottom
 `ST_HEIGHT` rows; the 3D view is `VIEW_WINDOW_WIDTH` × `VIEW_WINDOW_HEIGHT`. `V_DrawPatchScaled`

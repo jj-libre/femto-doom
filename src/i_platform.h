@@ -220,8 +220,6 @@ void V_DrawRawRect(const uint8_t* pixels, int16_t x, int16_t y, int16_t w, int16
 #endif
 
 // Automap lines.
-void V_InitDrawLine(void);
-void V_ShutdownDrawLine(void);
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color);
 
 // Screen wipe between game states; may just finish the frame.

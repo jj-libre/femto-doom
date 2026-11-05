@@ -275,16 +275,6 @@ void V_ClearViewWindow(void)
 // Automap
 //
 
-void V_InitDrawLine(void)
-{
-}
-
-
-void V_ShutdownDrawLine(void)
-{
-}
-
-
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 {
 	int dx  =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
