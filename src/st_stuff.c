@@ -919,34 +919,35 @@ void ST_Drawer(void)
 static void ST_loadData(void)
 {
     int8_t  i, facenum;
-    char namebuf[9];
 
     statusbarnum = W_GetNumForName("STBAR");
 
     // Load the numbers, tall and short
+    char tallname[] = "STGANUM0";
+    char shortname[] = "STYSNUM0";
     for (i=0;i<10;i++)
     {
-		sprintf(namebuf, "STGANUM%c", '0' + i);
-        tallnum[i] = W_GetNumForName(namebuf);
-
-        sprintf(namebuf, "STYSNUM%c", '0' + i);
-        shortnum[i] = W_GetNumForName(namebuf);
+        tallname[7] = shortname[7] = '0' + i;
+        tallnum[i] = W_GetNumForName(tallname);
+        shortnum[i] = W_GetNumForName(shortname);
     }
 
     // key cards
+    char keyname[] = "STKEYS0";
     for (i=0;i<NUMCARDS;i++)
     {
-        sprintf(namebuf, "STKEYS%c", '0' + i);
-        keys[i] = W_GetNumForName(namebuf);
+        keyname[6] = '0' + i;
+        keys[i] = W_GetNumForName(keyname);
     }
 
     // arms ownership widgets
+    char armname[] = "STGNUM0";
     for (i=0;i<6;i++)
     {
-        sprintf(namebuf, "STGNUM%c", '0' + i + 2);
+        armname[6] = '0' + i + 2;
 
         // gray #
-        arms[i][0] = W_GetNumForName(namebuf);
+        arms[i][0] = W_GetNumForName(armname);
 
         // yellow #
         arms[i][1] = shortnum[i+2];
@@ -955,23 +956,25 @@ static void ST_loadData(void)
     // face states
     facenum = 0;
 
+    char straight[] = "STFST00";
+    char right[] = "STFTR00";	// turn right
+    char left[] = "STFTL00";	// turn left
+    char ouch[] = "STFOUCH0";	// ouch!
+    char evil[] = "STFEVL0";	// evil grin ;)
+    char kill[] = "STFKILL0";	// pissed off
     for (i=0;i<ST_NUMPAINFACES;i++)
     {
+        straight[5] = right[5] = left[5] = evil[6] = ouch[7] = kill[7] = '0' + i;
         for (int8_t j=0;j<ST_NUMSTRAIGHTFACES;j++)
         {
-            sprintf(namebuf, "STFST%c%c", '0' + i, '0' + j);
-            faces[facenum++] = W_GetNumForName(namebuf);
+            straight[6] = '0' + j;
+            faces[facenum++] = W_GetNumForName(straight);
         }
-        sprintf(namebuf, "STFTR%c0", '0' + i);	// turn right
-        faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFTL%c0", '0' + i);	// turn left
-        faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFOUCH%c", '0' + i);	// ouch!
-        faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFEVL%c", '0' + i);	// evil grin ;)
-        faces[facenum++] = W_GetNumForName(namebuf);
-        sprintf(namebuf, "STFKILL%c", '0' + i);	// pissed off
-        faces[facenum++] = W_GetNumForName(namebuf);
+        faces[facenum++] = W_GetNumForName(right);
+        faces[facenum++] = W_GetNumForName(left);
+        faces[facenum++] = W_GetNumForName(ouch);
+        faces[facenum++] = W_GetNumForName(evil);
+        faces[facenum++] = W_GetNumForName(kill);
     }
     faces[facenum++] = W_GetNumForName("STFGOD0");
     faces[facenum++] = W_GetNumForName("STFDEAD0");

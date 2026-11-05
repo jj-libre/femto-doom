@@ -377,8 +377,8 @@ static const mobj_t staticproxy = { .flags = MF_STATIC };
 
 void P_BeginLoadThings(int16_t map)
 {
-  char name[9];
-  sprintf(name, "E1M%cTL", '0' + map);
+  char name[] = "E1M0TL";
+  name[3] = '0' + map;
   tl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
   loadheader_t h;

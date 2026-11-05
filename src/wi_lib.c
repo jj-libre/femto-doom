@@ -85,19 +85,6 @@ static const char* const total = "WIMSTT";
 static const char* const par = "WIPAR";
 
 
-/* ====================================================================
- * WI_levelNameLump
- * Purpore: Returns the name of the graphic lump containing the name of
- *          the given level.
- * Args:    Level, and buffer (must by 9 chars) to write to
- * Returns: void
- */
-static void WI_levelNameLump(int16_t map, char* buf)
-{
-	sprintf(buf, "WILV0%c", '0' + map);
-}
-
-
 // ====================================================================
 // WI_drawLF
 // Purpose: Draw the "Finished" level name before showing stats
@@ -107,10 +94,10 @@ static void WI_levelNameLump(int16_t map, char* buf)
 void WI_drawLF(int16_t map)
 {
 	int16_t y = WI_TITLEY;
-	char lname[9];
+	char lname[] = "WILV00";
+	lname[5] = '0' + map;
 
 	// draw <LevelName>
-	WI_levelNameLump(map, lname);
 	const patch_t* patch = W_GetLumpByName(lname);
 	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 
@@ -131,9 +118,9 @@ void WI_drawLF(int16_t map)
 void WI_drawEL(int16_t map)
 {
 	int16_t y = WI_TITLEY;
-	char lname[9];
+	char lname[] = "WILV00";
+	lname[5] = '0' + map;
 
-	WI_levelNameLump(map, lname);
 	const patch_t* patch = W_GetLumpByName(lname);
 
 	// draw "Entering"
@@ -185,13 +172,13 @@ void WI_drawPercentSign(int16_t x, int16_t y)
 
 int16_t WI_drawNum(int16_t x, int16_t y, int16_t n, int16_t digits)
 {
-	char      name[9];  // limited to 8 characters
+	char name[] = "WINUM0";
 
 	// draw the new number
 	while (digits--)
 	{
 		x -= fontwidth;
-		sprintf(name, "WINUM%d", n % 10);
+		name[5] = '0' + n % 10;
 		V_DrawNamePatchScaled(x, y, name);
 		n /= 10;
 	}

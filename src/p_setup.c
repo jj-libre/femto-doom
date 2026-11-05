@@ -510,8 +510,8 @@ static void P_GroupLines (int16_t map)
 {
     // the lines of each sector, from the map WAD's E1MxGL
     {
-        char name[9];
-        sprintf(name, "E1M%cGL", '0' + map);
+        char name[] = "E1M0GL";
+        name[3] = '0' + map;
         const byte* gl = W_GetMapLumpByNum(W_GetMapNumForName(name));
 
         struct { uint16_t numsectors, numsubsectors; uint32_t first, lines, subsecsector; } h;
@@ -558,7 +558,7 @@ static void P_FreeLevelData()
 void P_SetupLevel(int16_t map)
 {
     int_fast8_t   i;
-    char  lumpname[9];
+    char  lumpname[] = "E1M0";
     int16_t   lumpnum;
 
     _g_totallive = _g_totalkills = _g_totalitems = _g_totalsecret = 0;
@@ -585,7 +585,7 @@ void P_SetupLevel(int16_t map)
     if (map == 6)
         map = 1;
 #endif
-    sprintf(lumpname, "E1M%c", '0' + map);   // killough 1/24/98: simplify
+    lumpname[3] = '0' + map;
 
     lumpnum = W_GetMapNumForName(lumpname);
 
