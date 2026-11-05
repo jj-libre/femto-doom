@@ -36,7 +36,6 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#include <inttypes.h>
 #include <stdint.h>
 
 #include "d_player.h"
@@ -256,7 +255,7 @@ static void* P_CallocPool(int16_t count, uint16_t size)
 {
 	uint32_t bytes = (uint32_t)count * size;
 	if (bytes > UINT16_MAX)
-		I_Error("P_CallocPool: %" PRIu32 " B", bytes);
+		I_Error("P_CallocPool: %lu B", (unsigned long)bytes);
 	return Z_CallocLevel(bytes);
 }
 

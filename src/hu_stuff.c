@@ -120,6 +120,16 @@ static const char *const mapnames[] =
 };
 
 
+static void HUlib_setText(hu_textline_t* textline, const char* text)
+{
+	size_t len = 0;
+	for (; text[len] && len < HU_MAXLINELENGTH; len++)
+		textline->lineoftext[len] = text[len];
+	textline->lineoftext[len] = 0;
+	textline->len = len;
+}
+
+
 //
 // HU_Start(void)
 //
@@ -142,8 +152,7 @@ void HU_Start(void)
 	w_message.lineoftext[0] = 0;
 
 	// create the map title widget - map title display in lower left of automap
-	w_title.len       = strlen(mapnames[_g_gamemap - 1]);
-	strcpy(w_title.lineoftext, mapnames[_g_gamemap - 1]);
+	HUlib_setText(&w_title, mapnames[_g_gamemap - 1]);
 }
 
 
@@ -163,7 +172,7 @@ static void HUlib_drawTextLine(hu_textline_t* textline)
 	int16_t x = 0;
 	for (size_t i = 0; i < textline->len; i++)
 	{
-		char c = toupper(textline->lineoftext[i]); //jff insure were not getting a cheap toupper conv.
+		char c = D_toupper(textline->lineoftext[i]);
 
 		if (HU_FONTSTART <= c && c <= HU_FONTEND)
 		{
@@ -239,8 +248,7 @@ void HU_Ticker(void)
 		if (plr->message)
 		{
 			//post the message to the message widget
-			w_message.len = strlen(plr->message);
-			strcpy(w_message.lineoftext, plr->message);
+			HUlib_setText(&w_message, plr->message);
 
 			// clear the message to avoid posting multiple times
 			plr->message = NULL;

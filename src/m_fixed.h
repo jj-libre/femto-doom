@@ -56,7 +56,10 @@ typedef int32_t fixed_t;
  *
  */
 
-#define D_abs abs
+static inline int32_t D_abs(int32_t x)
+{
+	return x < 0 ? -x : x;
+}
 
 
 /*

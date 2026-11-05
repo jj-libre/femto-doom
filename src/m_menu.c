@@ -39,7 +39,6 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#include <stdio.h>
 #include <stdint.h>
 
 #include "doomdef.h"
@@ -662,11 +661,13 @@ void M_StartControlPanel (void)
 
 static char* Z_Strdup(const char* s)
 {
-    const size_t len = strlen(s);
+    size_t len = 0;
+    while (s[len])
+        len++;
 
     char* ptr = Z_MallocStatic(len+1);
 
-    strcpy(ptr, s);
+    memcpy(ptr, s, len+1);
 
     return ptr;
 }
@@ -843,10 +844,9 @@ static int16_t M_StringWidth(const char* string)
 {
 	int16_t	w = 0;
 
-	for (size_t i = 0; i < strlen(string); i++)
+	for (size_t i = 0; string[i]; i++)
 	{
-		char c = string[i];
-		c = toupper(c);
+		char c = D_toupper(string[i]);
 		if (HU_FONTSTART <= c && c <= HU_FONTEND)
 		{
 			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);
@@ -891,7 +891,7 @@ static void M_WriteText (int16_t x, int16_t y, const char* string)
 			continue;
 		}
 
-		c = toupper(c);
+		c = D_toupper(c);
 		if (HU_FONTSTART <= c && c <= HU_FONTEND)
 		{
 			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);

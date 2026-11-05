@@ -62,6 +62,11 @@ typedef uint8_t byte;
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
+static inline char D_toupper(char c)
+{
+	return c >= 'a' && c <= 'z' ? c - 'a' + 'A' : c;
+}
+
 
 #if defined __GNUC__
 #define CONSTFUNC __attribute__((const))

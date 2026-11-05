@@ -38,7 +38,6 @@
  *-----------------------------------------------------------------------------*/
 
 #include <stddef.h>
-#include <inttypes.h>
 #include <stdint.h>
 
 #include "d_player.h"
@@ -2088,6 +2087,15 @@ static void R_RecalcLineFlags(int16_t n)
 }
 
 
+// The first column from first to last whose solidcol is value, else last.
+static int16_t R_FindSolidcol(int16_t first, int16_t last, byte value)
+{
+    while (first < last && solidcol[first] != value)
+        first++;
+    return first;
+}
+
+
 // CPhipps -
 // R_ClipWallSegment
 //
@@ -2096,23 +2104,15 @@ static void R_RecalcLineFlags(int16_t n)
 
 static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
 {
-    byte *p;
     while (first < last)
     {
         if (solidcol[first])
         {
-            if (!(p = memchr(solidcol+first, 0, last-first)))
-                return; // All solid
-
-            first = p - solidcol;
+            first = R_FindSolidcol(first, last, 0);
         }
         else
         {
-            int16_t to;
-            if (!(p = memchr(solidcol+first, 1, last-first)))
-                to = last;
-            else
-                to = p - solidcol;
+            int16_t to = R_FindSolidcol(first, last, 1);
 
             R_StoreWallRange(first, to-1);
 
@@ -2319,7 +2319,7 @@ static boolean R_CheckBBox(const int16_t* bspcoord)
     if (sx1 == sx2)
         return false;
 
-    if (!memchr(solidcol+sx1, 0, sx2-sx1)) return false;
+    if (R_FindSolidcol(sx1, sx2, 0) == sx2) return false;
     // All columns it covers are already solidly covered
 
 

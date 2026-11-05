@@ -425,10 +425,20 @@ void D_StartTitle (void)
 static int myargc;
 static const char * const * myargv;
 
+static boolean M_EqualStrings(const char* a, const char* b)
+{
+	while (*a && *a == *b)
+	{
+		a++;
+		b++;
+	}
+	return *a == *b;
+}
+
 int16_t M_CheckParm(char *check)
 {
 	for (int16_t i = 1; i < myargc; i++)
-		if (!strcmp(check, myargv[i]))
+		if (M_EqualStrings(check, myargv[i]))
 			return i;
 
 	return 0;

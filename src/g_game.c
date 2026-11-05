@@ -39,11 +39,7 @@
  *-----------------------------------------------------------------------------
  */
 
-#include <inttypes.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
 
 #include "d_player.h"
 #include "f_finale.h"
@@ -870,7 +866,11 @@ static const byte* G_ReadDemoHeader(const byte* demo_p)
 
 static void ExtractFileBase (const char *path, char *dest)
 {
-    const char *src = path + strlen(path) - 1;
+    const char *src = path;
+    while (*src)
+        src++;
+    if (src != path)
+        src--;
     int16_t length;
 
     // back up until a \ or the start
@@ -887,7 +887,7 @@ static void ExtractFileBase (const char *path, char *dest)
 
     while ((*src) && (*src != '.') && (++length<9))
     {
-        *dest++ = toupper(*src);
+        *dest++ = D_toupper(*src);
         src++;
     }
     /* cph - length check removed, just truncate at 8 chars.
@@ -930,9 +930,9 @@ void G_CheckDemoStatus (void)
         // killough -- added fps information and made it work for longer demos:
         uint32_t realtics = endtime - starttime;
         uint32_t resultfps = TIC_RATE * 1000 * _g_gametic / realtics;
-        I_Error ("Timed %" PRIu32 " gametics in %" PRIu32 " realtics = %" PRIu32 ".%.3" PRIu32 " frames per second",
-                 (uint32_t) _g_gametic,realtics,
-                 resultfps / 1000, resultfps % 1000);
+        I_Error ("Timed %lu gametics in %lu realtics = %lu.%.3lu frames per second",
+                 (unsigned long)_g_gametic, (unsigned long)realtics,
+                 (unsigned long)(resultfps / 1000), (unsigned long)(resultfps % 1000));
     }
 
     if (_g_demoplayback)

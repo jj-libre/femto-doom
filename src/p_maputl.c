@@ -48,7 +48,6 @@
 #include "m_random.h"
 #include "w_wad.h"
 #include "p_tick.h"
-#include <stdio.h>
 
 #include "globdata.h"
 
