@@ -218,8 +218,9 @@ void V_DrawRawRect(const uint8_t* pixels, int16_t x, int16_t y, int16_t w, int16
 // Automap lines.
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color);
 
-// Screen wipe between game states; may just finish the frame.
-void wipe_StartScreen(void);
-void D_Wipe(void);
+// Screen wipe between game states: I_StartWipe comes before a new state's first frame is drawn,
+// I_FinishWipe in place of I_FinishUpdate after it, and may just finish the frame.
+void I_StartWipe(void);
+void I_FinishWipe(void);
 
 #endif

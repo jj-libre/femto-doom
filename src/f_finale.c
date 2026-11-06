@@ -169,7 +169,6 @@ void F_Drawer (boolean all)
 		if (count < 0)
 			count = 0;
 
-		// The text only grows.
 		if (all)
 		{
 			V_DrawBackground(W_GetLumpByNum(backgroundnum));

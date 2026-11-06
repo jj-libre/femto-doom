@@ -156,7 +156,7 @@ static void D_Display (void)
     boolean wipe = (_g_gamestate != wipegamestate);
 
     if (wipe)
-        wipe_StartScreen();
+        I_StartWipe();
 
     // The screen keeps its pixels: static content is drawn again only after the content in
     // front of it or the palette changed.
@@ -168,7 +168,6 @@ static void D_Display (void)
         if (oldgamestate == GS_LEVEL)
             V_SetPalette(0); // cph - use default (basic) palette
 
-        // Under the menu, a changing screen is drawn in full, the menu over it
         if (_g_menuactive && _g_gamestate != GS_DEMOSCREEN)
             redraw = true;
 
@@ -191,7 +190,6 @@ static void D_Display (void)
     else if (_g_gametic != _g_basetic)
     { // In a level
 
-        // Nothing in the level moves while the menu pauses the game
         boolean hudchanged = HU_Changed();
         boolean drawlevel = redraw || hudchanged || _g_leveltime != drawnleveltime;
         drawnleveltime = _g_leveltime;
@@ -224,7 +222,7 @@ static void D_Display (void)
 
     if (wipe)
         // wipe update
-        D_Wipe();
+        I_FinishWipe();
     else
         // normal update
         I_FinishUpdate ();              // page flip or blit buffer

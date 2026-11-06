@@ -175,12 +175,12 @@ void I_FinishUpdate(void)
 }
 
 
-void wipe_StartScreen(void)
+void I_StartWipe(void)
 {
 }
 
 
-void D_Wipe(void)
+void I_FinishWipe(void)
 {
 	I_FinishUpdate();
 }
