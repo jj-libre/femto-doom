@@ -35,6 +35,7 @@
 #ifndef __HU_STUFF_H__
 #define __HU_STUFF_H__
 
+#include "doomtype.h"
 
 #define HU_FONT_HEIGHT       7
 #define HU_FONT_SPACE_WIDTH  4
@@ -53,5 +54,8 @@ void HU_Start(void);
 void HU_Ticker(void);
 void HU_Drawer(void);
 void HU_Erase(void);
+
+// Whether a message came up or went away since the last call.
+boolean HU_Changed(void);
 
 #endif

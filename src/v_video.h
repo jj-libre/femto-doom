@@ -65,5 +65,8 @@ void V_DrawNumPatchNotScaled(int16_t x, int16_t y, int16_t lump);
 void V_LoadPalettes(void);
 void V_SetPalette(int8_t pal);
 
+// Whether V_SetPalette was called since the last call.
+boolean V_PaletteChanged(void);
+
 
 #endif

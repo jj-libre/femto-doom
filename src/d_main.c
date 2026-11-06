@@ -147,6 +147,7 @@ gamestate_t wipegamestate = GS_DEMOSCREEN; // wipegamestate can be set to -1 to 
 static void D_Display (void)
 {
     static gamestate_t oldgamestate = GS_LEVEL;
+    static int32_t drawnleveltime = -1;
 
     if (nodrawers)                    // for comparative timing / profiling
         return;
@@ -157,6 +158,12 @@ static void D_Display (void)
     if (wipe)
         wipe_StartScreen();
 
+    // The screen keeps its pixels: static content is drawn again only after the content in
+    // front of it or the palette changed.
+    boolean menuchanged = M_Changed();
+    boolean palettechanged = V_PaletteChanged();
+    boolean redraw = menuchanged || palettechanged || _g_gamestate != oldgamestate;
+
     if (_g_gamestate != GS_LEVEL) { // Not a level
         if (oldgamestate == GS_LEVEL)
             V_SetPalette(0); // cph - use default (basic) palette
@@ -165,12 +172,15 @@ static void D_Display (void)
         {
             case GS_INTERMISSION:
                 WI_Drawer();
+                redraw = true;
                 break;
             case GS_FINALE:
                 F_Drawer();
+                redraw = true;
                 break;
             case GS_DEMOSCREEN:
-                D_PageDrawer();
+                if (redraw)
+                    D_PageDrawer();
                 break;
             default:
                 break;
@@ -179,26 +189,34 @@ static void D_Display (void)
     else if (_g_gametic != _g_basetic)
     { // In a level
 
+        // Nothing in the level moves while the menu pauses the game
+        boolean hudchanged = HU_Changed();
+        boolean drawlevel = redraw || hudchanged || _g_leveltime != drawnleveltime;
+        drawnleveltime = _g_leveltime;
+
         // Work out if the player view is visible, and if there is a border
         boolean viewactive = (!(automapmode & am_active) || (automapmode & am_overlay));
 
         // Now do the drawing
-        if (viewactive)
+        if (drawlevel && viewactive)
             R_RenderPlayerView (&_g_player);
 
-        if (automapmode & am_active)
+        if (drawlevel && (automapmode & am_active))
             AM_Drawer();
 
         ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
-        ST_Drawer();
+        ST_Drawer(redraw);
 
-        HU_Drawer();
+        if (drawlevel)
+            HU_Drawer();
+
+        redraw = drawlevel;
     }
 
     oldgamestate = wipegamestate = _g_gamestate;
 
     // menus go directly to the screen
-    M_Drawer();          // menu is drawn even on top of everything
+    M_Drawer(redraw);    // menu is drawn even on top of everything
 
     D_BuildNewTiccmds();
 

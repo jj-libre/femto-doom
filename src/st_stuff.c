@@ -898,15 +898,13 @@ static boolean ST_NeedUpdate(void)
 }
 
 
-void ST_Drawer(void)
+void ST_Drawer(boolean all)
 {
 #if defined ST_PARTIAL_REFRESH
-	static boolean menuwasactive;
-	if (menuwasactive)
+	if (all)
 		ST_ForceRefresh();
-	menuwasactive = _g_menuactive;
 #endif
-	if (ST_NeedUpdate())
+	if (all || ST_NeedUpdate())
 		ST_doRefresh();
 }
 

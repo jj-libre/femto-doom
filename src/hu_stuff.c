@@ -70,6 +70,7 @@ static hu_textline_t  w_message;
 
 // boolean stating whether to update window
 static boolean    message_on;
+static boolean    message_changed;
 boolean    _g_message_dontfuckwithme;
 
 
@@ -218,6 +219,14 @@ void HU_Drawer(void)
 }
 
 
+boolean HU_Changed(void)
+{
+	boolean changed = message_changed;
+	message_changed = false;
+	return changed;
+}
+
+
 //
 // HU_Ticker()
 //
@@ -238,6 +247,7 @@ void HU_Ticker(void)
 	if (message_counter && !--message_counter)
 	{
 		message_on = false;
+		message_changed = true;
 	}
 
 	// if messages on, or "Messages Off" is being displayed
@@ -254,6 +264,7 @@ void HU_Ticker(void)
 			plr->message = NULL;
 			// note a message is displayed
 			message_on = true;
+			message_changed = true;
 			// start the message persistence counter
 			message_counter = HU_MSGTIMEOUT;
 

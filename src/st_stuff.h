@@ -40,6 +40,7 @@
 #ifndef __STSTUFF_H__
 #define __STSTUFF_H__
 
+#include "doomtype.h"
 
 //
 // STATUS BAR
@@ -51,8 +52,8 @@ void ST_Ticker(void);
 void ST_initPalette(void);
 void ST_doPaletteStuff(void);
 
-// Called by main loop: redraws what changed, all of it after the menu was up.
-void ST_Drawer(void);
+// Called by main loop: redraws the changed widgets, or all of them.
+void ST_Drawer(boolean all);
 
 // Called when the console player is spawned on each level.
 void ST_Start(void);

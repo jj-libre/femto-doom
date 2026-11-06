@@ -111,6 +111,7 @@ static int16_t whichSkull;       // which skull to draw (he blinks)
 
 boolean _g_menuactive;    // The menus are up
 static boolean messageNeedsInput; // timed message = no input from user
+static boolean menuchanged;       // for M_Changed
 
 
 int16_t showMessages = 1;
@@ -483,7 +484,7 @@ static void M_InitDefaults(void)
 // action based on the state of the system.
 //
 
-boolean M_Responder (event_t* ev)
+static boolean M_Respond (event_t* ev)
 {
     int16_t    ch;
 
@@ -627,6 +628,21 @@ boolean M_Responder (event_t* ev)
     return false;
 }
 
+boolean M_Responder (event_t* ev)
+{
+    boolean eaten = M_Respond(ev);
+    if (eaten)
+        menuchanged = true;
+    return eaten;
+}
+
+boolean M_Changed (void)
+{
+    boolean changed = menuchanged;
+    menuchanged = false;
+    return changed;
+}
+
 //
 // End of M_Responder
 //
@@ -656,6 +672,7 @@ void M_StartControlPanel (void)
 
   _g_menuactive = true;
   currentMenu = &MainDef;         // JDC
+  menuchanged = true;
 }
 
 
@@ -681,12 +698,18 @@ static char* Z_Strdup(const char* s)
 // killough 9/29/98: Significantly reformatted source
 //
 
-void M_Drawer (void)
+void M_Drawer (boolean all)
 {
+    static int16_t drawnSkull;
+
     // Horiz. & Vertically center string and print it.
     // killough 9/29/98: simplified code, removed 40-character width limit
     if (messageToPrint)
     {
+        if (!all)
+            return;
+
+
         /* cph - strdup string to writable memory */
         char* ms = Z_Strdup(messageString);
         char* p = ms;
@@ -711,26 +734,35 @@ void M_Drawer (void)
         {
             int16_t x,y,max,i;
 
-            if (currentMenu->routine)
-                currentMenu->routine();     // call Draw routine
-
-            // DRAW MENU
-
             x = currentMenu->x;
-            y = currentMenu->y;
-            max = currentMenu->numitems;
 
-            for (i=0;i<max;i++)
+            if (all)
             {
-                if (currentMenu->menuitems[i].name[0])
-                    V_DrawNamePatchScaled(x,y,currentMenu->menuitems[i].name);
-                y += LINEHEIGHT;
+                if (currentMenu->routine)
+                    currentMenu->routine();     // call Draw routine
+
+                // DRAW MENU
+
+                y = currentMenu->y;
+                max = currentMenu->numitems;
+
+                for (i=0;i<max;i++)
+                {
+                    if (currentMenu->menuitems[i].name[0])
+                        V_DrawNamePatchScaled(x,y,currentMenu->menuitems[i].name);
+                    y += LINEHEIGHT;
+                }
             }
 
             // DRAW SKULL
 
-            // CPhipps - patch drawing updated
-            V_DrawNamePatchScaled(x + SKULLXOFF, currentMenu->y - 5 + itemOn*LINEHEIGHT, skullName[whichSkull]);
+            // Both skulls cover the same pixels, so one is drawn over the other.
+            if (all || whichSkull != drawnSkull)
+            {
+                // CPhipps - patch drawing updated
+                V_DrawNamePatchScaled(x + SKULLXOFF, currentMenu->y - 5 + itemOn*LINEHEIGHT, skullName[whichSkull]);
+                drawnSkull = whichSkull;
+            }
         }
 }
 

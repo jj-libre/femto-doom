@@ -43,3 +43,7 @@ takes Doom's 320 × 200 coordinates, `V_DrawPatchNotScaled` the screen's pixels.
 
 The engine never draws the border around a view smaller than the screen above the status bar;
 clearing it is up to the platform.
+
+The screen keeps its pixels between frames. Static content, such as the title screen under the
+menu or the paused game, is drawn again only after the content in front of it or the palette
+changed.

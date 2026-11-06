@@ -57,9 +57,14 @@ boolean M_Responder (event_t *ev);
 void M_Ticker (void);
 
 // Called by main loop,
-// draws the menus directly into the screen buffer.
+// draws the menus directly into the screen buffer:
+// all of them if the screen under them was drawn, else only their changes.
 
-void M_Drawer (void);
+void M_Drawer (boolean all);
+
+// Whether the menus look different since the last call.
+
+boolean M_Changed (void);
 
 // Called by D_DoomInit.
 

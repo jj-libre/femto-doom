@@ -79,8 +79,22 @@ void V_LoadPalettes(void)
 }
 
 
+static boolean palettechanged;
+
+
 void V_SetPalette(int8_t pal)
 {
 	if (palettelump >= 0)
+	{
 		I_SetPalette((const uint8_t*)W_GetLumpByNum(palettelump) + pal * 256 * 3);
+		palettechanged = true;
+	}
+}
+
+
+boolean V_PaletteChanged(void)
+{
+	boolean changed = palettechanged;
+	palettechanged = false;
+	return changed;
 }
