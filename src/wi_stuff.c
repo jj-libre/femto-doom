@@ -288,9 +288,17 @@ static void WI_updateShowNextLoc(void)
 // Args:    none
 // Returns: void
 //
-static void WI_drawShowNextLoc(void)
+static void WI_drawShowNextLoc(boolean all)
 {
-    WI_slamBackground();
+    static boolean  drawnpointer;
+    static wi_box_t pointerbox;
+
+    if (all)
+        WI_slamBackground();
+    else if (snl_pointeron != drawnpointer)
+        WI_restoreBox(&pointerbox, W_GetLumpByNum(wimap0num));
+    else
+        return;
 
     int16_t last = (wbs->last == 8) ? wbs->next - 1 : wbs->last;
 
@@ -303,11 +311,51 @@ static void WI_drawShowNextLoc(void)
         WI_drawSplat(8);
 
     // draw flashing ptr
+    WI_startBox();
     if (snl_pointeron)
         WI_drawYouAreHere(wbs->next);
+    pointerbox = WI_box();
+    drawnpointer = snl_pointeron;
 
     // draws which level you are entering..
     WI_drawEL(wbs->next);
+}
+
+// ====================================================================
+// WI_drawStats
+// Purpose: Show the level's name and the stats counting up; numbers that
+//          changed are drawn again on the background
+// Args:    all -- draw everything
+// Returns: void
+//
+static void WI_drawStats(boolean all)
+{
+    static int32_t  drawn[WI_NUMSTATS];
+    static wi_box_t boxes[WI_NUMSTATS];
+
+    const int32_t values[WI_NUMSTATS] = {cnt_kills, cnt_items, cnt_secret, cnt_time, cnt_total_time, cnt_par};
+
+    if (all)
+    {
+        WI_slamBackground();
+        WI_drawLF(wbs->last);
+        WI_drawStatLabels();
+    }
+
+    for (int8_t i = 0; i < WI_NUMSTATS; i++)
+    {
+        if (!all)
+        {
+            if (values[i] == drawn[i])
+                continue;
+            WI_restoreBox(&boxes[i], W_GetLumpByNum(wimap0num));
+        }
+
+        WI_startBox();
+        WI_drawStat(i, values[i]);
+        boxes[i] = WI_box();
+        drawn[i] = values[i];
+    }
 }
 
 // ====================================================================
@@ -316,10 +364,10 @@ static void WI_drawShowNextLoc(void)
 // Args:    none
 // Returns: void
 //
-static void WI_drawNoState(void)
+static void WI_drawNoState(boolean all)
 {
   snl_pointeron = true;
-  WI_drawShowNextLoc();
+  WI_drawShowNextLoc(all);
 }
 
 // ====================================================================
@@ -539,22 +587,26 @@ void WI_Ticker(void)
 // Args:    none
 // Returns: void
 //
-void WI_Drawer (void)
+void WI_Drawer (boolean all)
 {
+  static stateenum_t drawnstate;
+
+  if (state != drawnstate)
+    all = true;
+  drawnstate = state;
+
   switch (state)
   {
     case StatCount:
-           WI_slamBackground();
-           WI_drawLF(wbs->last);
-           WI_drawStats(cnt_kills, cnt_items, cnt_secret, cnt_time, cnt_total_time, cnt_par);
+         WI_drawStats(all);
          break;
 
     case ShowNextLoc:
-         WI_drawShowNextLoc();
+         WI_drawShowNextLoc(all);
          break;
 
     case NoState:
-         WI_drawNoState();
+         WI_drawNoState(all);
          break;
   }
 }

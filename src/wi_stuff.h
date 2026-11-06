@@ -42,8 +42,9 @@
 void WI_Ticker (void);
 
 // Called by main loop,
-// draws the intermission directly into the screen buffer.
-void WI_Drawer (void);
+// draws the intermission directly into the screen buffer:
+// all of it, or only its changes.
+void WI_Drawer (boolean all);
 
 // Setup for an intermission screen.
 void WI_Start(wbstartstruct_t*   wbstartstruct);

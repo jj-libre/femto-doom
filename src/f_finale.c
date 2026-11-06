@@ -154,19 +154,32 @@ void F_Ticker(void)
 // function so that the speed of writing the text can be
 // increased, and there's still time to read what's written.
 //
-void F_Drawer (void)
+void F_Drawer (boolean all)
 {
+	static boolean drawnstage;
+	static int32_t drawncount;
+
+	if (finalestage != drawnstage)
+		all = true;
+	drawnstage = finalestage;
+
 	if (!finalestage)
 	{
-		V_DrawBackground(W_GetLumpByNum(backgroundnum));
-
 		int32_t count = (finalecount - 10) * 100 / Get_TextSpeed();
 		if (count < 0)
 			count = 0;
 
-		F_TextWrite(count);
+		// The text only grows.
+		if (all)
+		{
+			V_DrawBackground(W_GetLumpByNum(backgroundnum));
+			drawncount = 0;
+		}
+
+		F_TextWrite(drawncount, count);
+		drawncount = count;
 	}
-	else
+	else if (all)
 		V_DrawRawFullScreen(help2num);
 }
 

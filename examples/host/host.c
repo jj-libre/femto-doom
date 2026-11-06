@@ -388,14 +388,12 @@ void V_DrawRaw(uint32_t offset, const uint8_t* pixels, uint32_t length)
 }
 
 
-#if defined ST_PARTIAL_REFRESH
 void V_DrawRawRect(const uint8_t* pixels, int16_t x, int16_t y, int16_t w, int16_t h)
 {
 	for (int dy = 0; dy < h; dy++)
 		for (int dx = 0; dx < w; dx++)
 			screen_pixel(x + dx, y + dy, pixels[dy * SCREEN_WIDTH + dx]);
 }
-#endif
 
 
 //

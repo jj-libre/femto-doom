@@ -27,6 +27,21 @@
 #ifndef __WI_LIB__
 #define __WI_LIB__
 
+#include <stdint.h>
+
+// Part of Doom's 320 x 200 screen; x1 and y1 are just outside it.
+typedef struct
+{
+	int16_t x0, y0, x1, y1;
+} wi_box_t;
+
+// The area covered by the pictures drawn since WI_startBox.
+void WI_startBox(void);
+wi_box_t WI_box(void);
+
+// Draws the raw full-screen picture over box.
+void WI_restoreBox(const wi_box_t* box, const uint8_t* raw);
+
 void WI_drawLF(int16_t map);
 void WI_drawEL(int16_t map);
 
@@ -36,7 +51,11 @@ void WI_drawSucks(int16_t x, int16_t y);
 void WI_drawPercentSign(int16_t x, int16_t y);
 
 int16_t WI_drawNum(int16_t x, int16_t y, int16_t n, int16_t digits);
-void WI_drawStats(int16_t cnt_kills, int16_t cnt_items, int16_t cnt_secret, int32_t cnt_time, int32_t cnt_total_time, int16_t cnt_par);
+
+// Kills, items and secrets as percentages, then time, total time and par time.
+#define WI_NUMSTATS 6
+void WI_drawStatLabels(void);
+void WI_drawStat(int8_t i, int32_t value);
 
 void WI_drawSplat(int16_t i);
 void WI_drawYouAreHere(int16_t i);

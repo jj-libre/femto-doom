@@ -35,11 +35,8 @@
 //
 // F_TextWrite
 //
-// This program displays the background and text at end-mission
-// text time. It draws both repeatedly so that other displays,
-// like the main menu, can be drawn over it dynamically and
-// erased dynamically.
-void F_TextWrite(int32_t count)
+// Draws characters first to count - 1 of the end-mission text.
+void F_TextWrite(int32_t first, int32_t count)
 {
 	int16_t font_lump_offset = W_GetNumForName(HU_FONTSTART_LUMP) - HU_FONTSTART;
 
@@ -48,7 +45,7 @@ void F_TextWrite(int32_t count)
 	int16_t         cy = 10;
 	const char* ch = E1TEXT;
 
-	for ( ; count ; count-- )
+	for (int32_t i = 0; i < count; i++)
 	{
 		char c = *ch++;
 
@@ -64,7 +61,8 @@ void F_TextWrite(int32_t count)
 		c = D_toupper(c);
 		if (HU_FONTSTART <= c && c <= HU_FONTEND) {
 			const patch_t* patch = W_GetLumpByNum(c + font_lump_offset);
-			V_DrawPatchNotScaled(cx, cy, patch);
+			if (i >= first)
+				V_DrawPatchNotScaled(cx, cy, patch);
 			cx += W_FetchInt16(&patch->width);
 		} else {
 			cx += HU_FONT_SPACE_WIDTH;

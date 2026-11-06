@@ -40,8 +40,8 @@
 /* Called by main loop. */
 void F_Ticker (void);
 
-/* Called by main loop. */
-void F_Drawer (void);
+/* Called by main loop: draws the whole finale, or only its changes. */
+void F_Drawer (boolean all);
 
 void F_StartFinale (void);
 

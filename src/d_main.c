@@ -168,15 +168,17 @@ static void D_Display (void)
         if (oldgamestate == GS_LEVEL)
             V_SetPalette(0); // cph - use default (basic) palette
 
+        // Under the menu, a changing screen is drawn in full, the menu over it
+        if (_g_menuactive && _g_gamestate != GS_DEMOSCREEN)
+            redraw = true;
+
         switch (_g_gamestate)
         {
             case GS_INTERMISSION:
-                WI_Drawer();
-                redraw = true;
+                WI_Drawer(redraw);
                 break;
             case GS_FINALE:
-                F_Drawer();
-                redraw = true;
+                F_Drawer(redraw);
                 break;
             case GS_DEMOSCREEN:
                 if (redraw)

@@ -34,7 +34,7 @@ hands the platform point into the WADs too; the platform reads them the same way
 | sound | `DMX_Play` |
 | frame | `I_SetPalette`, `I_FinishUpdate`, `wipe_StartScreen`, `D_Wipe` |
 | 3D view | `R_DrawColumnWall`, `R_DrawColumnSprite`, `R_DrawFuzzColumn`, `R_DrawColumnFlat`, `V_ClearViewWindow` |
-| pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` with `ST_PARTIAL_REFRESH` |
+| pictures | `V_DrawPatchScaled`, `V_DrawPatchNotScaled`, `V_DrawBackground`, `V_DrawRaw`, `V_DrawRawRect` |
 | automap | `V_DrawLine` |
 
 The screen is `SCREEN_WIDTH` × `SCREEN_HEIGHT` palette indices, the status bar its bottom
@@ -45,5 +45,5 @@ The engine never draws the border around a view smaller than the screen above th
 clearing it is up to the platform.
 
 The screen keeps its pixels between frames. Static content, such as the title screen under the
-menu or the paused game, is drawn again only after the content in front of it or the palette
-changed.
+menu, the paused game or the intermission behind its numbers, is drawn again only after the
+content in front of it or the palette changed.

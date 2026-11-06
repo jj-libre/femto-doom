@@ -31,6 +31,68 @@
 #include "wi_lib.h"
 
 
+static wi_box_t box;
+
+
+void WI_startBox(void)
+{
+	box.x0 = box.y0 = INT16_MAX;
+	box.x1 = box.y1 = INT16_MIN;
+}
+
+
+wi_box_t WI_box(void)
+{
+	return box;
+}
+
+
+static void WI_drawPatch(int16_t x, int16_t y, const patch_t* patch)
+{
+	V_DrawPatchScaled(x, y, patch);
+
+	x -= W_FetchInt16(&patch->leftoffset);
+	y -= W_FetchInt16(&patch->topoffset);
+	int16_t x1 = x + W_FetchInt16(&patch->width);
+	int16_t y1 = y + W_FetchInt16(&patch->height);
+
+	if (x < box.x0)
+		box.x0 = x;
+	if (y < box.y0)
+		box.y0 = y;
+	if (x1 > box.x1)
+		box.x1 = x1;
+	if (y1 > box.y1)
+		box.y1 = y1;
+}
+
+
+static void WI_drawNamePatch(int16_t x, int16_t y, const char* name)
+{
+	WI_drawPatch(x, y, W_GetLumpByName(name));
+}
+
+
+// Doom coordinate v on a screen axis len pixels long, rounded down or, with up, up; on the screen.
+static int16_t WI_toScreen(int16_t v, int16_t len, int16_t vgalen, boolean up)
+{
+	int32_t s = ((int32_t)v * len + (up ? vgalen - 1 : 0)) / vgalen;
+	return s < 0 ? 0 : s > len ? len : s;
+}
+
+
+void WI_restoreBox(const wi_box_t* b, const uint8_t* raw)
+{
+	int16_t x0 = WI_toScreen(b->x0, SCREEN_WIDTH,  SCREEN_WIDTH_VGA,  false);
+	int16_t y0 = WI_toScreen(b->y0, SCREEN_HEIGHT, SCREEN_HEIGHT_VGA, false);
+	int16_t x1 = WI_toScreen(b->x1, SCREEN_WIDTH,  SCREEN_WIDTH_VGA,  true);
+	int16_t y1 = WI_toScreen(b->y1, SCREEN_HEIGHT, SCREEN_HEIGHT_VGA, true);
+
+	if (x0 < x1 && y0 < y1)
+		V_DrawRawRect(raw + (uint32_t)y0 * SCREEN_WIDTH + x0, x0, y0, x1 - x0, y1 - y0);
+}
+
+
 // GLOBAL LOCATIONS
 #define WI_TITLEY      2
 
@@ -71,20 +133,6 @@ static const char* const yah = "WIURH0";
 static const char* const splat = "WISPLAT";
 
 
-// "Kills", "Items"
-static const char* const kills = "WIOSTK";
-static const char* const items = "WIOSTI";
-
-
-// "secret"
-static const char* const sp_secret = "WISCRT2";
-
-
-static const char* const time1 = "WITIME";
-static const char* const total = "WIMSTT";
-static const char* const par = "WIPAR";
-
-
 // ====================================================================
 // WI_drawLF
 // Purpose: Draw the "Finished" level name before showing stats
@@ -99,13 +147,13 @@ void WI_drawLF(int16_t map)
 
 	// draw <LevelName>
 	const patch_t* patch = W_GetLumpByName(lname);
-	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
+	WI_drawPatch((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 
 	y += (5 * W_FetchInt16(&patch->height)) / 4;
 
 	// draw "Finished!"
 	const patch_t* finishedpatch = W_GetLumpByName(finished);
-	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&finishedpatch->width))/2, y, finishedpatch);
+	WI_drawPatch((SCREEN_WIDTH_VGA - W_FetchInt16(&finishedpatch->width))/2, y, finishedpatch);
 }
 
 
@@ -125,11 +173,11 @@ void WI_drawEL(int16_t map)
 
 	// draw "Entering"
 	const patch_t* enteringpatch = W_GetLumpByName(entering);
-	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&enteringpatch->width))/2, y, enteringpatch);
+	WI_drawPatch((SCREEN_WIDTH_VGA - W_FetchInt16(&enteringpatch->width))/2, y, enteringpatch);
 
 	// draw level
 	y += (5 * W_FetchInt16(&patch->height)) / 4;
-	V_DrawPatchScaled((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
+	WI_drawPatch((SCREEN_WIDTH_VGA - W_FetchInt16(&patch->width))/2, y, patch);
 }
 
 
@@ -141,20 +189,20 @@ int16_t WI_getColonWidth(void)
 
 void WI_drawColon(int16_t x, int16_t y)
 {
-	V_DrawNamePatchScaled(x, y, colon);
+	WI_drawNamePatch(x, y, colon);
 }
 
 
 void WI_drawSucks(int16_t x, int16_t y)
 {
 	const patch_t* patch = W_GetLumpByName(sucks);
-	V_DrawPatchScaled(x - W_FetchInt16(&patch->width), y, patch);
+	WI_drawPatch(x - W_FetchInt16(&patch->width), y, patch);
 }
 
 
 void WI_drawPercentSign(int16_t x, int16_t y)
 {
-	V_DrawNamePatchScaled(x, y, percent);
+	WI_drawNamePatch(x, y, percent);
 }
 
 
@@ -179,7 +227,7 @@ int16_t WI_drawNum(int16_t x, int16_t y, int16_t n, int16_t digits)
 	{
 		x -= fontwidth;
 		name[5] = '0' + n % 10;
-		V_DrawNamePatchScaled(x, y, name);
+		WI_drawNamePatch(x, y, name);
 		n /= 10;
 	}
 
@@ -196,26 +244,35 @@ int16_t WI_drawNum(int16_t x, int16_t y, int16_t n, int16_t digits)
 //lineHeight = (3 * num[0]->height) / 2;
 #define lineHeight 18
 
-void WI_drawStats(int16_t cnt_kills, int16_t cnt_items, int16_t cnt_secret, int32_t cnt_time, int32_t cnt_total_time, int16_t cnt_par)
+static const struct
 {
-	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY, kills);
-	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY, cnt_kills);
+	const char* label;
+	int16_t     x, y;   // of the label
+	int16_t     valuex; // where the value's digits end
+} stats[WI_NUMSTATS] =
+{
+	{"WIOSTK",  SP_STATSX,                      SP_STATSY,                             SCREEN_WIDTH_VGA - SP_STATSX},
+	{"WIOSTI",  SP_STATSX,                      SP_STATSY + lineHeight,                SCREEN_WIDTH_VGA - SP_STATSX},
+	{"WISCRT2", SP_STATSX,                      SP_STATSY + 2 * lineHeight,            SCREEN_WIDTH_VGA - SP_STATSX},
+	{"WITIME",  SP_TIMEX,                       SP_TIMEY,                              SCREEN_WIDTH_VGA / 2 - SP_TIMEX},
+	{"WIMSTT",  SP_TIMEX,                       (SP_TIMEY + SCREEN_HEIGHT_VGA) / 2,    SCREEN_WIDTH_VGA / 2 - SP_TIMEX},
+	{"WIPAR",   SCREEN_WIDTH_VGA / 2 + SP_TIMEX, SP_TIMEY,                             SCREEN_WIDTH_VGA - SP_TIMEX},
+};
 
-	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY + lineHeight, items);
-	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY + lineHeight, cnt_items);
 
-	V_DrawNamePatchScaled(SP_STATSX, SP_STATSY + 2 * lineHeight, sp_secret);
-	WI_drawPercent(SCREEN_WIDTH_VGA - SP_STATSX, SP_STATSY + 2 * lineHeight, cnt_secret);
+void WI_drawStatLabels(void)
+{
+	for (int8_t i = 0; i < WI_NUMSTATS; i++)
+		WI_drawNamePatch(stats[i].x, stats[i].y, stats[i].label);
+}
 
-	// Put the times on the screen
-	V_DrawNamePatchScaled(SP_TIMEX, SP_TIMEY, time1);
-	WI_drawTime(SCREEN_WIDTH_VGA / 2 - SP_TIMEX, SP_TIMEY, cnt_time);
 
-	V_DrawNamePatchScaled(SP_TIMEX, (SP_TIMEY + SCREEN_HEIGHT_VGA) / 2, total);
-	WI_drawTime(SCREEN_WIDTH_VGA / 2 - SP_TIMEX, (SP_TIMEY + SCREEN_HEIGHT_VGA) / 2, cnt_total_time);
-
-	V_DrawNamePatchScaled(SCREEN_WIDTH_VGA / 2 + SP_TIMEX, SP_TIMEY, par);
-	WI_drawTime(SCREEN_WIDTH_VGA - SP_TIMEX, SP_TIMEY, cnt_par);
+void WI_drawStat(int8_t i, int32_t value)
+{
+	if (i < 3)
+		WI_drawPercent(stats[i].valuex, stats[i].y, (int16_t)value);
+	else
+		WI_drawTime(stats[i].valuex, stats[i].y, value);
 }
 
 
@@ -243,11 +300,11 @@ static const point_t lnodes[NUMMAPS] =
 
 void WI_drawSplat(int16_t i)
 {
-	V_DrawNamePatchScaled(lnodes[i].x, lnodes[i].y, splat);
+	WI_drawNamePatch(lnodes[i].x, lnodes[i].y, splat);
 }
 
 
 void WI_drawYouAreHere(int16_t i)
 {
-	V_DrawNamePatchScaled(lnodes[i].x, lnodes[i].y, yah);
+	WI_drawNamePatch(lnodes[i].x, lnodes[i].y, yah);
 }
